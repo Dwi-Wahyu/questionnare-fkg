@@ -403,15 +403,18 @@ function SurveyTakingComponent() {
                 </div>
               </div>
 
-              <div className="mt-8 pt-4">
+              <div className="mt-8 pt-4 grid grid-cols-2 gap-3">
+                <Link
+                  to="/"
+                  className="w-full  inline-flex items-center justify-center gap-2 border border-[#747683] text-[#1a1b21] hover:bg-slate-50 font-bold py-3 px-6 rounded-lg transition-colors"
+                >
+                  <span>Kembali</span>
+                </Link>
                 <Button
                   onClick={handleStartSurvey}
-                  className="w-full sm:w-auto bg-[#002972] text-white font-bold py-3 px-8 rounded-lg shadow-sm hover:bg-[#0b3e9c] hover:shadow-md transition-all flex items-center justify-center gap-2 group"
+                  className="w-full  bg-[#002972] text-white font-bold py-3 px-8 rounded-lg shadow-sm hover:bg-[#0b3e9c] hover:shadow-md transition-all flex items-center justify-center gap-2 group"
                 >
-                  <span>Mulai Survey</span>
-                  <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
-                    arrow_forward
-                  </span>
+                  <span>Mulai</span>
                 </Button>
               </div>
             </div>
@@ -750,9 +753,6 @@ function SurveyTakingComponent() {
               onClick={handleBack}
               className="border border-[#747683] text-[#1a1b21] hover:bg-slate-50 font-bold px-6 py-2.5 rounded-lg flex items-center justify-center gap-1 transition-colors scale-98 active:scale-95"
             >
-              <span className="material-symbols-outlined text-sm rotate-180">
-                arrow_forward
-              </span>
               <span>Kembali</span>
             </button>
 
@@ -775,9 +775,6 @@ function SurveyTakingComponent() {
                 className="bg-[#002972] text-white hover:bg-[#0b3e9c] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm"
               >
                 <span>Lanjutkan</span>
-                <span className="material-symbols-outlined text-sm">
-                  arrow_forward
-                </span>
               </button>
             )}
           </div>
