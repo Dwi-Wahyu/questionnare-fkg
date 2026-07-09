@@ -1,0 +1,49 @@
+{
+  "name": "scratch",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "rsbuild dev",
+    "build": "rsbuild build",
+    "start": "rsbuild preview --host 0.0.0.0",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "bun run src/server/db/seed.ts",
+    "lint": "biome lint ./src",
+    "format": "biome format --write ./src",
+    "check": "biome check --write ./src"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.1",
+    "@faker-js/faker": "^10.5.0",
+    "@rsbuild/core": "^2.1.1",
+    "@rsbuild/plugin-react": "^2.1.0",
+    "@tailwindcss/postcss": "^4.3.2",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/bun": "latest",
+    "@types/node": "^26.0.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.2",
+    "drizzle-kit": "^0.31.10",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^4.3.2"
+  },
+  "peerDependencies": {
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "^1.170.16",
+    "@tanstack/react-start": "^1.168.26",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.11.1",
+    "drizzle-orm": "^0.45.2",
+    "lucide-react": "^1.22.0",
+    "mysql2": "^3.22.6",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "yup": "^1.7.1"
+  }
+}
