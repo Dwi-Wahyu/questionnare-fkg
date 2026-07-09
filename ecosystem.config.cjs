@@ -7,10 +7,9 @@
 module.exports = {
   apps: [
     {
-      name: "scratch",
+      name: "",
 
       // rsbuild preview is the production SSR server (bun run start)
-      // We call it through bun so bun:sqlite stays available at runtime
       script: "bun",
       args: "run start",
 
@@ -31,14 +30,9 @@ module.exports = {
 
       // ── Environments ──────────────────────────────────────────────────────
       // pm2 start ecosystem.config.js --env production  (default)
-      env_production: {
+      env: {
         NODE_ENV: "production",
-        PORT: 2635,
-      },
-      // pm2 start ecosystem.config.js --env development
-      env_development: {
-        NODE_ENV: "development",
-        PORT: 2635,
+        PORT: 3438,
       },
 
       // ── Logging ───────────────────────────────────────────────────────────
