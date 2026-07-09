@@ -7,7 +7,7 @@
 module.exports = {
   apps: [
     {
-      name: "",
+      name: "tracerstudy", // App name (PM2 process name)
 
       // rsbuild preview is the production SSR server (bun run start)
       script: "bun",
