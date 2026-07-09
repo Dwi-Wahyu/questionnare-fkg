@@ -86,26 +86,17 @@ function HomeComponent() {
                     </div>
                   )}
                   <div className="absolute top-3 left-3">
-                    <span className="inline-flex items-center bg-[#0b3e9c] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
-                      {survey.category === "tracer"
-                        ? "Tracer Study"
-                        : "Survei Kepuasan"}
+                    <span className="inline-flex gap-2 items-center bg-[#0b3e9c] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
+                      <span className="material-symbols-outlined text-xs">
+                        help
+                      </span>
+                      {survey.questionCount} pertanyaan
                     </span>
                   </div>
                 </div>
 
                 {/* Card Body */}
                 <div className="p-5 flex-1 flex flex-col gap-3">
-                  <div className="flex justify-between items-center text-xs text-[#747683]">
-                    <span className="text-[#0b3e9c] font-semibold">Aktif</span>
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm">
-                        help
-                      </span>
-                      {survey.questionCount} pertanyaan
-                    </span>
-                  </div>
-
                   <div className="flex-grow">
                     <h3 className="font-bold text-base text-[#1a1b21] mb-1 group-hover:text-[#002972] transition-colors line-clamp-2 leading-snug">
                       {survey.title}

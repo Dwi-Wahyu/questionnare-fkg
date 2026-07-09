@@ -16,18 +16,34 @@ export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsOverviewComponent,
 });
 
+// Static mockup survey data with category tags
+const ALL_SURVEYS = [
+  { name: "Tracer Study Alumni FKG", participation: "92%", score: "4.6", status: "Selesai", statusColor: "emerald", category: "tracer" },
+  { name: "Kuesioner Pengelola FKG", participation: "88%", score: "4.4", status: "Aktif", statusColor: "amber", category: "kepuasan" },
+  { name: "Form Kepuasan Mahasiswa", participation: "75%", score: "4.2", status: "Aktif", statusColor: "amber", category: "kepuasan" },
+  { name: "Form Kepuasan Dosen FKG", participation: "81%", score: "3.9", status: "Selesai", statusColor: "emerald", category: "kepuasan" },
+] as const;
+
 function AnalyticsOverviewComponent() {
   const { stats } = Route.useLoaderData();
   const [academicPeriod, setAcademicPeriod] = useState("ganjil_23_24");
   const [surveyCategory, setSurveyCategory] = useState("all");
+  const [appliedCategory, setAppliedCategory] = useState("all");
 
-  // Perform filtering or show mockup states matching the design
   const handleFilterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a production app, we would re-run queries based on period/category.
+    setAppliedCategory(surveyCategory);
   };
 
-  // We can compute a dynamic index based on actual data or show the mockup
+  // Filter surveys table by applied category
+  const filteredSurveys = ALL_SURVEYS.filter(
+    (s) => appliedCategory === "all" || s.category === appliedCategory,
+  );
+
+  // Show/hide chart series based on applied category
+  const showTracer = appliedCategory === "all" || appliedCategory === "tracer";
+  const showKepuasan = appliedCategory === "all" || appliedCategory === "kepuasan";
+
   const totalResponses = stats?.totalResponses || 452;
   const activeSurveys = stats?.recentActivities || [];
 
@@ -154,14 +170,18 @@ function AnalyticsOverviewComponent() {
               </p>
             </div>
             <div className="flex gap-4 text-xs font-bold text-[#434652]">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#0B3E9C]"></div>
-                <span>Tracer Study</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#e2e2ea]"></div>
-                <span>Kepuasan</span>
-              </div>
+              {showTracer && (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#0B3E9C]"></div>
+                  <span>Tracer Study</span>
+                </div>
+              )}
+              {showKepuasan && (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#e2e2ea]"></div>
+                  <span>Kepuasan</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -176,74 +196,38 @@ function AnalyticsOverviewComponent() {
 
             {/* July */}
             <div className="flex-1 flex justify-center gap-1.5 h-full items-end group">
-              <div
-                className="w-4 bg-slate-200 h-[40%] rounded-t"
-                title="Kepuasan: 400"
-              ></div>
-              <div
-                className="w-4 bg-[#0B3E9C] h-[20%] rounded-t"
-                title="Tracer: 200"
-              ></div>
+              {showKepuasan && <div className="w-4 bg-slate-200 h-[40%] rounded-t" title="Kepuasan: 400"></div>}
+              {showTracer && <div className="w-4 bg-[#0B3E9C] h-[20%] rounded-t" title="Tracer: 200"></div>}
             </div>
 
             {/* Aug */}
             <div className="flex-1 flex justify-center gap-1.5 h-full items-end group">
-              <div
-                className="w-4 bg-slate-200 h-[50%] rounded-t"
-                title="Kepuasan: 500"
-              ></div>
-              <div
-                className="w-4 bg-[#0B3E9C] h-[30%] rounded-t"
-                title="Tracer: 300"
-              ></div>
+              {showKepuasan && <div className="w-4 bg-slate-200 h-[50%] rounded-t" title="Kepuasan: 500"></div>}
+              {showTracer && <div className="w-4 bg-[#0B3E9C] h-[30%] rounded-t" title="Tracer: 300"></div>}
             </div>
 
             {/* Sept */}
             <div className="flex-1 flex justify-center gap-1.5 h-full items-end group">
-              <div
-                className="w-4 bg-slate-200 h-[30%] rounded-t"
-                title="Kepuasan: 300"
-              ></div>
-              <div
-                className="w-4 bg-[#0B3E9C] h-[60%] rounded-t"
-                title="Tracer: 600"
-              ></div>
+              {showKepuasan && <div className="w-4 bg-slate-200 h-[30%] rounded-t" title="Kepuasan: 300"></div>}
+              {showTracer && <div className="w-4 bg-[#0B3E9C] h-[60%] rounded-t" title="Tracer: 600"></div>}
             </div>
 
             {/* Oct */}
             <div className="flex-1 flex justify-center gap-1.5 h-full items-end group">
-              <div
-                className="w-4 bg-slate-200 h-[70%] rounded-t"
-                title="Kepuasan: 700"
-              ></div>
-              <div
-                className="w-4 bg-[#0B3E9C] h-[40%] rounded-t"
-                title="Tracer: 400"
-              ></div>
+              {showKepuasan && <div className="w-4 bg-slate-200 h-[70%] rounded-t" title="Kepuasan: 700"></div>}
+              {showTracer && <div className="w-4 bg-[#0B3E9C] h-[40%] rounded-t" title="Tracer: 400"></div>}
             </div>
 
             {/* Nov */}
             <div className="flex-1 flex justify-center gap-1.5 h-full items-end group">
-              <div
-                className="w-4 bg-slate-200 h-[85%] rounded-t"
-                title="Kepuasan: 850"
-              ></div>
-              <div
-                className="w-4 bg-[#0B3E9C] h-[90%] rounded-t"
-                title="Tracer: 900"
-              ></div>
+              {showKepuasan && <div className="w-4 bg-slate-200 h-[85%] rounded-t" title="Kepuasan: 850"></div>}
+              {showTracer && <div className="w-4 bg-[#0B3E9C] h-[90%] rounded-t" title="Tracer: 900"></div>}
             </div>
 
             {/* Dec */}
             <div className="flex-1 flex justify-center gap-1.5 h-full items-end group">
-              <div
-                className="w-4 bg-slate-200 h-[60%] rounded-t"
-                title="Kepuasan: 600"
-              ></div>
-              <div
-                className="w-4 bg-[#0B3E9C] h-[75%] rounded-t"
-                title="Tracer: 750"
-              ></div>
+              {showKepuasan && <div className="w-4 bg-slate-200 h-[60%] rounded-t" title="Kepuasan: 600"></div>}
+              {showTracer && <div className="w-4 bg-[#0B3E9C] h-[75%] rounded-t" title="Tracer: 750"></div>}
             </div>
           </div>
 
@@ -285,54 +269,32 @@ function AnalyticsOverviewComponent() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-semibold">
-                <tr className="hover:bg-slate-50/50">
-                  <td className="py-3 text-[#1a1b21] font-bold">
-                    Tracer Study Alumni FKG
-                  </td>
-                  <td className="py-3 text-slate-500">92%</td>
-                  <td className="py-3 text-emerald-700">4.6</td>
-                  <td className="py-3 text-right">
-                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold">
-                      Selesai
-                    </span>
-                  </td>
-                </tr>
-                <tr className="hover:bg-slate-50/50">
-                  <td className="py-3 text-[#1a1b21] font-bold">
-                    Kuesioner Pengelola FKG
-                  </td>
-                  <td className="py-3 text-slate-500">88%</td>
-                  <td className="py-3 text-emerald-700">4.4</td>
-                  <td className="py-3 text-right">
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-bold">
-                      Aktif
-                    </span>
-                  </td>
-                </tr>
-                <tr className="hover:bg-slate-50/50">
-                  <td className="py-3 text-[#1a1b21] font-bold">
-                    Form Kepuasan Mahasiswa
-                  </td>
-                  <td className="py-3 text-slate-500">75%</td>
-                  <td className="py-3 text-slate-500">4.2</td>
-                  <td className="py-3 text-right">
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-bold">
-                      Aktif
-                    </span>
-                  </td>
-                </tr>
-                <tr className="hover:bg-slate-50/50">
-                  <td className="py-3 text-[#1a1b21] font-bold">
-                    Form Kepuasan Dosen FKG
-                  </td>
-                  <td className="py-3 text-slate-500">81%</td>
-                  <td className="py-3 text-slate-500">3.9</td>
-                  <td className="py-3 text-right">
-                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold">
-                      Selesai
-                    </span>
-                  </td>
-                </tr>
+                {filteredSurveys.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-6 text-center text-xs text-slate-400">
+                      Tidak ada survei untuk kategori ini.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSurveys.map((s) => (
+                    <tr key={s.name} className="hover:bg-slate-50/50">
+                      <td className="py-3 text-[#1a1b21] font-bold">{s.name}</td>
+                      <td className="py-3 text-slate-500">{s.participation}</td>
+                      <td className={`py-3 font-semibold ${
+                        parseFloat(s.score) >= 4.3 ? "text-emerald-700" : "text-slate-500"
+                      }`}>{s.score}</td>
+                      <td className="py-3 text-right">
+                        <span className={`px-2 py-0.5 rounded-full font-bold ${
+                          s.statusColor === "emerald"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-amber-100 text-amber-800"
+                        }`}>
+                          {s.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

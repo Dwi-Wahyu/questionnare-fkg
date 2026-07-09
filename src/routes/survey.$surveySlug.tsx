@@ -384,7 +384,7 @@ function SurveyTakingComponent() {
                   "Selamat datang di Survei FKG Unhas. Partisipasi Anda sangat berharga bagi peningkatan mutu kurikulum dan penjaminan mutu fakultas."}
               </p>
 
-              <div className="flex gap-3 w-full justify-center mt-6">
+              <div className="flex gap-3 w-full justify-center flex-col md:flex-row mt-6">
                 <div className="flex items-center gap-2 bg-slate-50 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200  text-left justify-start sm:justify-center">
                   <span className="material-symbols-outlined text-[#002972] text-xl shrink-0">
                     schedule
@@ -469,7 +469,7 @@ function SurveyTakingComponent() {
           </div>
 
           {/* Section Header */}
-          <div className="mb-8 border-b border-slate-100 pb-6">
+          <div className="mb-4 border-b border-slate-100 pb-4">
             <h1 className="font-bold text-2xl md:text-3xl text-[#002972] mb-2">
               {currentSection?.title}
             </h1>
@@ -481,14 +481,14 @@ function SurveyTakingComponent() {
           </div>
 
           {/* Questions List */}
-          <form ref={formRef} className="flex flex-col gap-8">
+          <form ref={formRef} className="flex flex-col">
             {currentQuestions.map((q) => {
               const isError = !!errors[q.id];
 
               return (
                 <div
                   key={q.id}
-                  className={`flex flex-col gap-3 py-6 transition-all border-b border-slate-100 last:border-b-0 ${
+                  className={`flex flex-col gap-1 py-4 transition-all border-b border-slate-100 last:border-b-0 ${
                     isError
                       ? "border-l-4 border-l-[#ba1a1a] bg-[#ffdad6]/10 px-4 rounded-r-lg error-highlight"
                       : ""
