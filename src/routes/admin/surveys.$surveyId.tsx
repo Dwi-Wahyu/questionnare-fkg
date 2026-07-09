@@ -386,8 +386,8 @@ function SurveyDetailComponent() {
   return (
     <div className="space-y-6">
       {/* Breadcrumbs & Title */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="w-full">
+      <div className="flex flex-col md:flex-row w-full justify-between items-start gap-4">
+        <div className="min-w-0 flex-1">
           <nav className="text-xs font-semibold text-[#434652] flex items-center gap-1.5 mb-2">
             <Link to="/admin/surveys" className="hover:text-[#002972]">
               Kelola Survey
@@ -1197,9 +1197,7 @@ function SurveyDetailComponent() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label
-                className="text-sm font-bold text-[#1a1b21]"
-              >
+              <label className="text-sm font-bold text-[#1a1b21]">
                 Banner Survei (Unggah Gambar)
               </label>
               <input
@@ -1217,12 +1215,16 @@ function SurveyDetailComponent() {
                   disabled={isSavingSettings || user?.role === "visitor"}
                   className="px-4 py-2 bg-[#dbe1ff] text-[#0b3e9c] hover:bg-[#002972] hover:text-white font-semibold rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="material-symbols-outlined text-sm">upload</span>
+                  <span className="material-symbols-outlined text-sm">
+                    upload
+                  </span>
                   Pilih Gambar Banner
                 </button>
                 {settingsBannerUrl && (
                   <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                    <span className="material-symbols-outlined text-sm">
+                      check_circle
+                    </span>
                     Gambar terpilih
                   </span>
                 )}
@@ -1239,11 +1241,14 @@ function SurveyDetailComponent() {
                       type="button"
                       onClick={() => {
                         setSettingsBannerUrl("");
-                        if (bannerFileInputRef.current) bannerFileInputRef.current.value = "";
+                        if (bannerFileInputRef.current)
+                          bannerFileInputRef.current.value = "";
                       }}
                       className="absolute top-3 right-3 bg-white text-[#ba1a1a] p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <span className="material-symbols-outlined text-sm block">delete</span>
+                      <span className="material-symbols-outlined text-sm block">
+                        delete
+                      </span>
                     </button>
                   )}
                 </div>

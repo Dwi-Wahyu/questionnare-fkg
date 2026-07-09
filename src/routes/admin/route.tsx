@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { toast } from "../../components/ui/useToast";
 import { getSessionFn, logoutFn } from "../../server/authFunctions";
+import logoUrl from "../../../logo.webp";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
@@ -42,7 +43,7 @@ function AdminLayoutComponent() {
             <img
               alt="Universitas Hasanuddin Logo"
               className="h-8 md:h-9 w-auto object-contain"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlbiwS80Bgzd7rssG_aQxj3gNLZeToKTKg03AP7nnZpNxDWzSmBeZAy3LfqW70ke1ZJjf3BzgDQMaLxo77D1_ECLszl0H92Q7mGr8mE34PElJDh2YaOtTY4c9kF4tiyuJMSIXNWDOJXVWmiEfVEErUbrW8kl9UlUM-shsqzTVnXRi11LrzRMWpmWil5PvHxsPZ8fbMXnJHdCxIoaKzXmAHhq4NUHmhtMnJ6rirJUsPbsg6nj6CV_3KGC9isRI3cZ9VGw"
+              src={logoUrl}
             />
             <div>
               <h1 className="font-bold text-sm md:text-base text-[#002972] leading-tight">

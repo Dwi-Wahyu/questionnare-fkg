@@ -379,13 +379,13 @@ function SurveyTakingComponent() {
               <h1 className="font-bold text-xl sm:text-2xl md:text-3xl text-[#002972] tracking-tight">
                 {survey.title}
               </h1>
-              <p className="text-xs sm:text-sm md:text-base text-[#434652] max-w-2xl leading-relaxed">
+              <p className="text-xs sm:text-sm md:text-base text-[#434652] leading-relaxed">
                 {survey.description ||
                   "Selamat datang di Survei FKG Unhas. Partisipasi Anda sangat berharga bagi peningkatan mutu kurikulum dan penjaminan mutu fakultas."}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 w-full justify-center mt-6">
-                <div className="flex items-center gap-2 bg-slate-50 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200 w-full sm:w-auto text-left justify-start sm:justify-center">
+              <div className="flex gap-3 w-full justify-center mt-6">
+                <div className="flex items-center gap-2 bg-slate-50 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200  text-left justify-start sm:justify-center">
                   <span className="material-symbols-outlined text-[#002972] text-xl shrink-0">
                     schedule
                   </span>
@@ -393,7 +393,7 @@ function SurveyTakingComponent() {
                     Estimasi waktu: 10-15 menit
                   </span>
                 </div>
-                <div className="flex items-center gap-2 bg-slate-50 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200 w-full sm:w-auto text-left justify-start sm:justify-center">
+                <div className="flex items-center gap-2 bg-slate-50 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200  text-left justify-start sm:justify-center">
                   <span className="material-symbols-outlined text-[#a03f32] text-xl shrink-0">
                     lock
                   </span>
@@ -403,7 +403,7 @@ function SurveyTakingComponent() {
                 </div>
               </div>
 
-              <div className="mt-8 pt-4 w-full sm:w-auto">
+              <div className="mt-8 pt-4">
                 <Button
                   onClick={handleStartSurvey}
                   className="w-full sm:w-auto bg-[#002972] text-white font-bold py-3 px-8 rounded-lg shadow-sm hover:bg-[#0b3e9c] hover:shadow-md transition-all flex items-center justify-center gap-2 group"
@@ -452,327 +452,335 @@ function SurveyTakingComponent() {
         <div className="p-0 md:p-10 flex flex-col">
           {/* Progress Indicator */}
           <div className="w-full mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#434652]">
-              Langkah {currentSectionIndex + 1} dari {sections.length}
-            </span>
-            <span className="text-sm font-bold text-[#a03f32]">
-              {progressPercent}%
-            </span>
-          </div>
-          <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#a03f32] rounded-full transition-all duration-500 ease-in-out"
-              style={{ width: `${progressPercent}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Section Header */}
-        <div className="mb-8 border-b border-slate-100 pb-6">
-          <h1 className="font-bold text-2xl md:text-3xl text-[#002972] mb-2">
-            {currentSection?.title}
-          </h1>
-          {currentSection?.description && (
-            <p className="text-sm text-[#434652]">
-              {currentSection.description}
-            </p>
-          )}
-        </div>
-
-        {/* Questions List */}
-        <form ref={formRef} className="flex flex-col gap-8">
-          {currentQuestions.map((q) => {
-            const isError = !!errors[q.id];
-
-            return (
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#434652]">
+                Langkah {currentSectionIndex + 1} dari {sections.length}
+              </span>
+              <span className="text-sm font-bold text-[#a03f32]">
+                {progressPercent}%
+              </span>
+            </div>
+            <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
               <div
-                key={q.id}
-                className={`flex flex-col gap-3 py-6 transition-all border-b border-slate-100 last:border-b-0 ${
-                  isError
-                    ? "border-l-4 border-l-[#ba1a1a] bg-[#ffdad6]/10 px-4 rounded-r-lg error-highlight"
-                    : ""
-                }`}
-              >
-                {/* Question Label */}
-                <div className="flex items-start justify-between">
-                  <label className="font-bold text-base text-[#1a1b21]">
-                    {q.title}{" "}
-                    {q.required && <span className="text-[#ba1a1a]">*</span>}
-                  </label>
-                </div>
-                {q.description && (
-                  <p className="text-xs text-[#747683] italic">
-                    {q.description}
-                  </p>
-                )}
+                className="h-full bg-[#a03f32] rounded-full transition-all duration-500 ease-in-out"
+                style={{ width: `${progressPercent}%` }}
+              ></div>
+            </div>
+          </div>
 
-                {/* Error message */}
-                {isError && (
-                  <span className="text-xs text-[#ba1a1a] font-semibold flex items-center gap-1 mt-1">
-                    <span className="material-symbols-outlined text-sm">
-                      error
-                    </span>
-                    {errors[q.id]}
-                  </span>
-                )}
+          {/* Section Header */}
+          <div className="mb-8 border-b border-slate-100 pb-6">
+            <h1 className="font-bold text-2xl md:text-3xl text-[#002972] mb-2">
+              {currentSection?.title}
+            </h1>
+            {currentSection?.description && (
+              <p className="text-sm text-[#434652]">
+                {currentSection.description}
+              </p>
+            )}
+          </div>
 
-                {/* Question Fields Rendering */}
-                <div className="mt-2">
-                  {/* SHORT TEXT */}
-                  {q.type === "short_text" && (
-                    <input
-                      type="text"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
-                      placeholder="Masukkan jawaban singkat..."
-                      value={answersState[q.id]?.valueText || ""}
-                      onChange={(e) => handleTextChange(q.id, e.target.value)}
-                    />
+          {/* Questions List */}
+          <form ref={formRef} className="flex flex-col gap-8">
+            {currentQuestions.map((q) => {
+              const isError = !!errors[q.id];
+
+              return (
+                <div
+                  key={q.id}
+                  className={`flex flex-col gap-3 py-6 transition-all border-b border-slate-100 last:border-b-0 ${
+                    isError
+                      ? "border-l-4 border-l-[#ba1a1a] bg-[#ffdad6]/10 px-4 rounded-r-lg error-highlight"
+                      : ""
+                  }`}
+                >
+                  {/* Question Label */}
+                  <div className="flex items-start justify-between">
+                    <label className="font-bold text-base text-[#1a1b21]">
+                      {q.title}{" "}
+                      {q.required && <span className="text-[#ba1a1a]">*</span>}
+                    </label>
+                  </div>
+                  {q.description && (
+                    <p className="text-xs text-[#747683] italic">
+                      {q.description}
+                    </p>
                   )}
 
-                  {/* PARAGRAPH */}
-                  {q.type === "paragraph" && (
-                    <textarea
-                      rows={4}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
-                      placeholder="Masukkan jawaban detail..."
-                      value={answersState[q.id]?.valueText || ""}
-                      onChange={(e) => handleTextChange(q.id, e.target.value)}
-                    />
-                  )}
-
-                  {/* DROPDOWN */}
-                  {q.type === "dropdown" && (
-                    <div className="relative">
-                      <select
-                        className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 pr-10 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors appearance-none cursor-pointer"
-                        value={answersState[q.id]?.valueOptionIds?.[0] || ""}
-                        onChange={(e) =>
-                          handleOptionSelect(q.id, parseInt(e.target.value, 10))
-                        }
-                      >
-                        <option value="" disabled>
-                          Pilih salah satu opsi...
-                        </option>
-                        {q.options.map((opt) => (
-                          <option key={opt.id} value={opt.id}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                        arrow_drop_down
+                  {/* Error message */}
+                  {isError && (
+                    <span className="text-xs text-[#ba1a1a] font-semibold flex items-center gap-1 mt-1">
+                      <span className="material-symbols-outlined text-sm">
+                        error
                       </span>
-                    </div>
+                      {errors[q.id]}
+                    </span>
                   )}
 
-                  {/* MULTIPLE CHOICE (RADIOS) */}
-                  {q.type === "multiple_choice" && (
-                    <div className="flex flex-col gap-2">
-                      {q.options.map((opt) => {
-                        const checked = answersState[
-                          q.id
-                        ]?.valueOptionIds?.includes(opt.id);
-                        return (
-                          <label
-                            key={opt.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
-                          >
-                            <input
-                              type="radio"
-                              name={`question_${q.id}`}
-                              checked={checked}
-                              onChange={() => handleOptionSelect(q.id, opt.id)}
-                              className="w-4 h-4 text-[#002972] focus:ring-[#002972] border-slate-300"
-                            />
-                            <span className="text-sm text-[#1a1b21] font-medium">
+                  {/* Question Fields Rendering */}
+                  <div className="mt-2">
+                    {/* SHORT TEXT */}
+                    {q.type === "short_text" && (
+                      <input
+                        type="text"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
+                        placeholder="Masukkan jawaban singkat..."
+                        value={answersState[q.id]?.valueText || ""}
+                        onChange={(e) => handleTextChange(q.id, e.target.value)}
+                      />
+                    )}
+
+                    {/* PARAGRAPH */}
+                    {q.type === "paragraph" && (
+                      <textarea
+                        rows={4}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
+                        placeholder="Masukkan jawaban detail..."
+                        value={answersState[q.id]?.valueText || ""}
+                        onChange={(e) => handleTextChange(q.id, e.target.value)}
+                      />
+                    )}
+
+                    {/* DROPDOWN */}
+                    {q.type === "dropdown" && (
+                      <div className="relative">
+                        <select
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 pr-10 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors appearance-none cursor-pointer"
+                          value={answersState[q.id]?.valueOptionIds?.[0] || ""}
+                          onChange={(e) =>
+                            handleOptionSelect(
+                              q.id,
+                              parseInt(e.target.value, 10),
+                            )
+                          }
+                        >
+                          <option value="" disabled>
+                            Pilih salah satu opsi...
+                          </option>
+                          {q.options.map((opt) => (
+                            <option key={opt.id} value={opt.id}>
                               {opt.label}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* CHECKBOXES */}
-                  {q.type === "checkboxes" && (
-                    <div className="flex flex-col gap-2">
-                      {q.options.map((opt) => {
-                        const checked = answersState[
-                          q.id
-                        ]?.valueOptionIds?.includes(opt.id);
-                        return (
-                          <label
-                            key={opt.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() =>
-                                handleOptionSelect(q.id, opt.id, true)
-                              }
-                              className="w-4 h-4 text-[#002972] focus:ring-[#002972] border-slate-300 rounded"
-                            />
-                            <span className="text-sm text-[#1a1b21] font-medium">
-                              {opt.label}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* LINEAR SCALE */}
-                  {q.type === "linear_scale" && (
-                    <div className="flex flex-col items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <div className="flex justify-between w-full text-xs font-semibold text-[#747683] px-2">
-                        <span>Sangat Rendah (1)</span>
-                        <span>Sangat Tinggi (5)</span>
+                            </option>
+                          ))}
+                        </select>
+                        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                          arrow_drop_down
+                        </span>
                       </div>
-                      <div className="flex justify-between items-center w-full max-w-sm gap-2">
-                        {q.options.map((opt, idx) => {
-                          const scoreValue = idx + 1;
+                    )}
+
+                    {/* MULTIPLE CHOICE (RADIOS) */}
+                    {q.type === "multiple_choice" && (
+                      <div className="flex flex-col gap-2">
+                        {q.options.map((opt) => {
                           const checked = answersState[
                             q.id
                           ]?.valueOptionIds?.includes(opt.id);
                           return (
-                            <button
+                            <label
                               key={opt.id}
-                              type="button"
-                              onClick={() => handleOptionSelect(q.id, opt.id)}
-                              className={`flex-1 py-3 text-center border font-bold text-sm rounded-lg transition-all ${
-                                checked
-                                  ? "bg-[#0b3e9c] border-[#0b3e9c] text-white shadow-sm"
-                                  : "bg-white border-slate-200 text-[#1a1b21] hover:bg-slate-50"
-                              }`}
+                              className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
                             >
-                              {scoreValue}
-                            </button>
+                              <input
+                                type="radio"
+                                name={`question_${q.id}`}
+                                checked={checked}
+                                onChange={() =>
+                                  handleOptionSelect(q.id, opt.id)
+                                }
+                                className="w-4 h-4 text-[#002972] focus:ring-[#002972] border-slate-300"
+                              />
+                              <span className="text-sm text-[#1a1b21] font-medium">
+                                {opt.label}
+                              </span>
+                            </label>
                           );
                         })}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* MATRIX GRID */}
-                  {q.type === "grid" && (
-                    <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
-                      <table className="w-full min-w-[600px] border-collapse bg-white">
-                        <thead>
-                          <tr className="border-b border-slate-200 bg-slate-50">
-                            <th className="py-3 px-4 text-left text-xs font-bold text-[#434652] uppercase w-1/3">
-                              Kompetensi
-                            </th>
+                    {/* CHECKBOXES */}
+                    {q.type === "checkboxes" && (
+                      <div className="flex flex-col gap-2">
+                        {q.options.map((opt) => {
+                          const checked = answersState[
+                            q.id
+                          ]?.valueOptionIds?.includes(opt.id);
+                          return (
+                            <label
+                              key={opt.id}
+                              className="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  handleOptionSelect(q.id, opt.id, true)
+                                }
+                                className="w-4 h-4 text-[#002972] focus:ring-[#002972] border-slate-300 rounded"
+                              />
+                              <span className="text-sm text-[#1a1b21] font-medium">
+                                {opt.label}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* LINEAR SCALE */}
+                    {q.type === "linear_scale" && (
+                      <div className="flex flex-col items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div className="flex justify-between w-full text-xs font-semibold text-[#747683] px-2">
+                          <span>Sangat Rendah (1)</span>
+                          <span>Sangat Tinggi (5)</span>
+                        </div>
+                        <div className="flex justify-between items-center w-full max-w-sm gap-2">
+                          {q.options.map((opt, idx) => {
+                            const scoreValue = idx + 1;
+                            const checked = answersState[
+                              q.id
+                            ]?.valueOptionIds?.includes(opt.id);
+                            return (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => handleOptionSelect(q.id, opt.id)}
+                                className={`flex-1 py-3 text-center border font-bold text-sm rounded-lg transition-all ${
+                                  checked
+                                    ? "bg-[#0b3e9c] border-[#0b3e9c] text-white shadow-sm"
+                                    : "bg-white border-slate-200 text-[#1a1b21] hover:bg-slate-50"
+                                }`}
+                              >
+                                {scoreValue}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* MATRIX GRID */}
+                    {q.type === "grid" && (
+                      <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
+                        <table className="w-full min-w-[600px] border-collapse bg-white">
+                          <thead>
+                            <tr className="border-b border-slate-200 bg-slate-50">
+                              <th className="py-3 px-4 text-left text-xs font-bold text-[#434652] uppercase w-1/3">
+                                Kompetensi
+                              </th>
+                              {q.options
+                                .filter((o) => o.group === "column")
+                                .map((col, index) => (
+                                  <th
+                                    key={col.id}
+                                    className="py-3 px-2 text-center text-xs font-bold text-[#434652] uppercase"
+                                  >
+                                    {index + 1}
+                                  </th>
+                                ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
                             {q.options
-                              .filter((o) => o.group === "column")
-                              .map((col, index) => (
-                                <th
-                                  key={col.id}
-                                  className="py-3 px-2 text-center text-xs font-bold text-[#434652] uppercase"
+                              .filter((o) => o.group === "row")
+                              .map((row) => (
+                                <tr
+                                  key={row.id}
+                                  className="hover:bg-slate-50/50"
                                 >
-                                  {index + 1}
-                                </th>
+                                  <td className="py-3.5 px-4 text-sm font-medium text-[#1a1b21]">
+                                    {row.label}
+                                  </td>
+                                  {q.options
+                                    .filter((o) => o.group === "column")
+                                    .map((col) => {
+                                      const isChecked =
+                                        answersState[q.id]?.valueGrid?.[
+                                          row.id
+                                        ] === col.id;
+                                      return (
+                                        <td
+                                          key={col.id}
+                                          className="py-3.5 px-2 text-center"
+                                        >
+                                          <input
+                                            type="radio"
+                                            name={`grid_${q.id}_row_${row.id}`}
+                                            checked={isChecked}
+                                            onChange={() =>
+                                              handleGridSelect(
+                                                q.id,
+                                                row.id,
+                                                col.id,
+                                              )
+                                            }
+                                            className="w-4 h-4 text-[#002972] focus:ring-[#002972] border-slate-300"
+                                          />
+                                        </td>
+                                      );
+                                    })}
+                                </tr>
                               ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {q.options
-                            .filter((o) => o.group === "row")
-                            .map((row) => (
-                              <tr key={row.id} className="hover:bg-slate-50/50">
-                                <td className="py-3.5 px-4 text-sm font-medium text-[#1a1b21]">
-                                  {row.label}
-                                </td>
-                                {q.options
-                                  .filter((o) => o.group === "column")
-                                  .map((col) => {
-                                    const isChecked =
-                                      answersState[q.id]?.valueGrid?.[
-                                        row.id
-                                      ] === col.id;
-                                    return (
-                                      <td
-                                        key={col.id}
-                                        className="py-3.5 px-2 text-center"
-                                      >
-                                        <input
-                                          type="radio"
-                                          name={`grid_${q.id}_row_${row.id}`}
-                                          checked={isChecked}
-                                          onChange={() =>
-                                            handleGridSelect(
-                                              q.id,
-                                              row.id,
-                                              col.id,
-                                            )
-                                          }
-                                          className="w-4 h-4 text-[#002972] focus:ring-[#002972] border-slate-300"
-                                        />
-                                      </td>
-                                    );
-                                  })}
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
 
-                  {/* DATE INPUT */}
-                  {q.type === "date" && (
-                    <input
-                      type="date"
-                      className="bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
-                      value={answersState[q.id]?.valueText || ""}
-                      onChange={(e) => handleTextChange(q.id, e.target.value)}
-                    />
-                  )}
+                    {/* DATE INPUT */}
+                    {q.type === "date" && (
+                      <input
+                        type="date"
+                        className="bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
+                        value={answersState[q.id]?.valueText || ""}
+                        onChange={(e) => handleTextChange(q.id, e.target.value)}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </form>
+              );
+            })}
+          </form>
 
-        {/* Action Buttons */}
-        <div className="w-full h-px bg-slate-100 my-8"></div>
-        <div className="flex justify-between gap-4">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="border border-[#747683] text-[#1a1b21] hover:bg-slate-50 font-bold px-6 py-2.5 rounded-lg flex items-center justify-center gap-1 transition-colors scale-98 active:scale-95"
-          >
-            <span className="material-symbols-outlined text-sm rotate-180">
-              arrow_forward
-            </span>
-            <span>Kembali</span>
-          </button>
-
-          {currentSectionIndex === sections.length - 1 ? (
+          {/* Action Buttons */}
+          <div className="w-full h-px bg-slate-100 my-8"></div>
+          <div className="flex justify-between gap-4">
             <button
               type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="bg-[#a03f32] text-white hover:bg-[#741e15] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm"
+              onClick={handleBack}
+              className="border border-[#747683] text-[#1a1b21] hover:bg-slate-50 font-bold px-6 py-2.5 rounded-lg flex items-center justify-center gap-1 transition-colors scale-98 active:scale-95"
             >
-              {loading ? "Mengirim..." : "Kirim Jawaban"}
-              <span className="material-symbols-outlined text-sm">
-                check_circle
-              </span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleNext}
-              className="bg-[#002972] text-white hover:bg-[#0b3e9c] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm"
-            >
-              <span>Lanjutkan</span>
-              <span className="material-symbols-outlined text-sm">
+              <span className="material-symbols-outlined text-sm rotate-180">
                 arrow_forward
               </span>
+              <span>Kembali</span>
             </button>
-          )}
-        </div>
+
+            {currentSectionIndex === sections.length - 1 ? (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="bg-[#a03f32] text-white hover:bg-[#741e15] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm"
+              >
+                {loading ? "Mengirim..." : "Kirim Jawaban"}
+                <span className="material-symbols-outlined text-sm">
+                  check_circle
+                </span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleNext}
+                className="bg-[#002972] text-white hover:bg-[#0b3e9c] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm"
+              >
+                <span>Lanjutkan</span>
+                <span className="material-symbols-outlined text-sm">
+                  arrow_forward
+                </span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </main>
