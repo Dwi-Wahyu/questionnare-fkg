@@ -11,8 +11,11 @@ export const Route = createFileRoute("/login")({
 		// If user is already authenticated, redirect to their proper dashboard
 		const user = await getSessionFn();
 		if (user) {
-			if (user.role === "admin" || user.role === "visitor") {
+			if (user.role === "admin") {
 				throw redirect({ to: "/admin" });
+			}
+			if (user.role === "visitor") {
+				throw redirect({ to: "/admin/surveys" });
 			}
 			throw redirect({ to: "/" });
 		}
@@ -51,11 +54,10 @@ function LoginComponent() {
 				// Invalidate router cache to update navigation/session layout
 				await router.invalidate();
 
-				if (
-					response.user.role === "admin" ||
-					response.user.role === "visitor"
-				) {
+				if (response.user.role === "admin") {
 					router.navigate({ to: "/admin" });
+				} else if (response.user.role === "visitor") {
+					router.navigate({ to: "/admin/surveys" });
 				} else {
 					router.navigate({ to: "/" });
 				}
@@ -77,6 +79,29 @@ function LoginComponent() {
 		}
 	};
 
+	const handleGuestLogin = async () => {
+		setErrors({});
+		setLoading(true);
+
+		try {
+			const response = await loginFn({
+				data: { username: "visitor", password: "visitor123" },
+			});
+
+			if (response.success) {
+				toast.success(`Berhasil masuk sebagai Tamu!`);
+				setUsername("");
+				setPassword("");
+				await router.invalidate();
+				router.navigate({ to: "/admin/surveys" });
+			}
+		} catch (err: any) {
+			toast.error(err.message || "Gagal masuk sebagai tamu");
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	return (
 		<div className="login-page rect-grid-bg">
 			<div className="bg-blob"></div>
@@ -86,18 +111,27 @@ function LoginComponent() {
 				className="card"
 				style={{
 					width: "100%",
-					maxWidth: "520px",
+					maxWidth: "440px",
 					zIndex: 1,
 					position: "relative",
+					background: "rgba(255, 255, 255, 0.85)",
+					backdropFilter: "blur(12px)",
+					WebkitBackdropFilter: "blur(12px)",
 				}}
 			>
-				<span className="badge">Autentikasi</span>
-				<h1>Masuk Akun</h1>
-				<p className="subtitle">
-					Silakan masuk untuk melanjutkan ke Dashboard Tracer Study & Survey
-				</p>
+				<div className="flex flex-col items-center">
+					<span className="inline-flex items-center px-4 py-1.5 rounded-full bg-[#fe8674]/25 text-[#a03f32] text-xs font-bold mb-4">
+						Portal Masuk
+					</span>
+					<h1 className="text-3xl md:text-4xl font-extrabold text-[#1a1b21] tracking-tight text-center mb-2">
+						Selamat Datang
+					</h1>
+					<p className="subtitle text-sm text-[#434652] text-center w-full mb-6">
+						Masuk untuk melanjutkan ke Dashboard Tracer Study & Survey FKG Unhas
+					</p>
+				</div>
 
-				<form onSubmit={handleSubmit}>
+				<form onSubmit={handleSubmit} className="space-y-4">
 					<Input
 						id="username"
 						label="Username"
@@ -123,28 +157,32 @@ function LoginComponent() {
 					<Button
 						type="submit"
 						variant="primary"
-						className="w-full mt-4"
+						className="w-full mt-2"
+						style={{ padding: "14px 20px", fontSize: "0.95rem", borderRadius: "var(--radius-xl)" }}
 						disabled={loading}
 					>
 						{loading ? "Memproses..." : "Masuk"}
 					</Button>
 				</form>
 
-				<div className="mt-6 text-center">
-					<p className="text-secondary" style={{ fontSize: "0.85rem" }}>
-						Gunakan kredensial berikut untuk masuk:
-					</p>
-					<div
-						className="mt-4 flex justify-between text-secondary"
-						style={{ fontSize: "0.8rem" }}
-					>
-						<span>
-							Admin: <strong>admin</strong> / _Admin123_
-						</span>
-						<span>
-							Visitor: <strong>visitor</strong> / visitor123
-						</span>
+				<div className="mt-4">
+					<div className="flex items-center gap-4 my-6">
+						<div className="flex-1 h-px bg-slate-200/80"></div>
+						<span className="text-[10px] text-slate-400 font-bold tracking-wider uppercase">ATAU</span>
+						<div className="flex-1 h-px bg-slate-200/80"></div>
 					</div>
+					
+					<Button
+						type="button"
+						variant="secondary"
+						className="w-full flex items-center justify-center gap-2"
+						style={{ padding: "12px 20px", fontSize: "0.95rem", borderRadius: "var(--radius-xl)" }}
+						disabled={loading}
+						onClick={handleGuestLogin}
+					>
+						<span className="material-symbols-outlined text-lg">account_circle</span>
+						Masuk Sebagai Tamu
+					</Button>
 				</div>
 			</div>
 		</div>

@@ -19,58 +19,32 @@ function HomeComponent() {
 
   return (
     <div className="grow flex flex-col items-center w-full">
-      {/* Hero Section */}
-      <section className="w-full relative border-b border-surface-variant flex flex-col items-center justify-center py-[80px] px-6 overflow-hidden bg-white">
-        {/* Grid background pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: "radial-gradient(#002972 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-        ></div>
-        {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary-fixed opacity-40 rounded-full mix-blend-multiply filter blur-3xl translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary-fixed opacity-20 rounded-full mix-blend-multiply filter blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
-
-        <div className="relative z-10 max-w-[800px] text-center flex flex-col items-center gap-6">
-          <img
-            alt="Logo Unhas"
-            className="h-24 w-auto mb-2 drop-shadow-md"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYJY1XQGTzHS5Ne0th7CSuT_H-kZPorNu5NvD9yVyzDiKAaOW5YygJ3_UOGgKoCx-4eriSMzcSonCnz1AiEL3U9zVuhG2HdJV-lci_T8EvW8UBoq0KYP8IeGq4WcG_fbpJn1ruKDMbfhB2ChTWZEMZ-9EjAoOasT5IUZaeqTb_XrxRzVSRktjdfoDrMYHV0OyRcBEtWURGhLHTX6frMWzrxFmAuP6-8iXOtSd2zUcW2UKKBgpxIS9vu6rQEKSRGuKOVw"
-          />
-          <h1 className="font-bold text-4xl md:text-5xl text-[#002972] tracking-tight">
-            Platform Tracer Study &amp; Survey FKG Unhas
-          </h1>
-          <p className="text-lg text-[#434652] max-w-[600px]">
-            Membangun masa depan pendidikan kedokteran gigi yang lebih baik
-            melalui data yang akurat dan partisipasi aktif seluruh alumni dan
-            sivitas akademika.
-          </p>
-          <div className="mt-4">
-            <a
-              href="#surveys-list"
-              className="bg-[#002972] text-white font-semibold px-8 py-3 rounded-lg hover:scale-95 transition-transform shadow-md inline-block"
-            >
-              Jelajahi Survey
-            </a>
-          </div>
-        </div>
-      </section>
-
       {/* Main Content Canvas */}
-      <section
-        id="surveys-list"
-        className="max-w-[1280px] w-full px-6 py-16 flex flex-col gap-12"
-      >
+      <section className="max-w-[1280px] w-full px-6 py-12 md:py-16 flex flex-col gap-8">
+        {/* Page Header */}
+        <div className="flex flex-col gap-2">
+          <h1 className="font-bold text-3xl md:text-4xl text-[#002972] tracking-tight text-center md:text-left">
+            Fakultas Kedokteran Gigi
+          </h1>
+          <p className="text-[10px] md:text-xs text-[#434652] font-semibold uppercase tracking-widest text-center md:text-left leading-none mt-0.5">
+            Universitas Hasanuddin
+          </p>
+          <p className="text-sm md:text-base text-[#434652] mt-4 w-full text-center md:text-left">
+            Selamat datang di portal kuesioner dan Tracer Study. Silakan pilih
+            salah satu kuesioner aktif di bawah ini untuk mulai memberikan umpan
+            balik Anda. Umpan balik Anda sangat berharga bagi evaluasi kurikulum
+            dan akreditasi fakultas.
+          </p>
+        </div>
+
         {/* Search & Filter Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-[#eeedf6] p-4 rounded-xl border border-surface-variant shadow-sm w-full max-w-[800px] mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-[#eeedf6] rounded-xl shadow-sm w-full">
           <div className="relative w-full grow">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#747683]">
               search
             </span>
             <input
-              className="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg text-sm bg-white focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:outline-none transition-colors"
+              className="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg text-sm bg-white"
               placeholder="Cari judul survey..."
               type="text"
               value={searchQuery}
@@ -94,42 +68,66 @@ function HomeComponent() {
             {filteredSurveys.map((survey) => (
               <div
                 key={survey.id}
-                className="bg-white border border-surface-variant rounded-xl p-6 flex flex-col gap-4 shadow-[0_4px_12px_rgba(11,62,156,0.03)] hover:shadow-[0_8px_24px_rgba(11,62,156,0.08)] transition-shadow duration-300 relative overflow-hidden group"
+                className="bg-white rounded-xl flex flex-col shadow-[0_4px_12px_rgba(11,62,156,0.03)] hover:shadow-[0_8px_24px_rgba(11,62,156,0.08)] transition-all duration-300 relative overflow-hidden group border border-slate-100"
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#ffdad4] opacity-0 group-hover:opacity-20 rounded-bl-full transition-opacity duration-300"></div>
-                <div className="flex justify-between items-start">
-                  <span className="inline-flex items-center bg-[#dbe1ff] text-[#0f409e] text-xs font-semibold px-2.5 py-1 rounded-full">
-                    {survey.category === "tracer"
-                      ? "Tracer Study"
-                      : "Survei Kepuasan"}
-                  </span>
-                  <span className="text-[#747683] text-xs flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">
-                      help
+                {/* Banner Header */}
+                <div className="h-40 w-full relative overflow-hidden bg-slate-100 shrink-0">
+                  {survey.bannerUrl ? (
+                    <img
+                      src={survey.bannerUrl}
+                      alt={survey.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#0b3e9c]/20 to-[#fe8674]/15 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-[#0b3e9c]/45">
+                        poll
+                      </span>
+                    </div>
+                  )}
+                  <div className="absolute top-3 left-3">
+                    <span className="inline-flex items-center bg-[#0b3e9c] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
+                      {survey.category === "tracer"
+                        ? "Tracer Study"
+                        : "Survei Kepuasan"}
                     </span>
-                    {survey.questionCount} pertanyaan
-                  </span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg text-[#1a1b21] mb-1 group-hover:text-[#002972] transition-colors">
-                    {survey.title}
-                  </h3>
-                  <p className="text-sm text-[#434652] line-clamp-2">
-                    {survey.description ||
-                      "Silakan klik tombol di bawah untuk berpartisipasi dalam kuesioner ini."}
-                  </p>
-                </div>
-                <div className="mt-auto pt-4">
-                  <Link
-                    to="/survey/$surveySlug"
-                    params={{ surveySlug: survey.slug }}
-                    className="w-full bg-[#0b3e9c] text-white hover:bg-[#002972] text-sm font-semibold py-2.5 rounded-lg hover:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-                  >
-                    <span>Mulai Survey</span>
-                    <span className="material-symbols-outlined text-sm">
-                      arrow_forward
+
+                {/* Card Body */}
+                <div className="p-5 flex-1 flex flex-col gap-3">
+                  <div className="flex justify-between items-center text-xs text-[#747683]">
+                    <span className="text-[#0b3e9c] font-semibold">Aktif</span>
+                    <span className="flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">
+                        help
+                      </span>
+                      {survey.questionCount} pertanyaan
                     </span>
-                  </Link>
+                  </div>
+
+                  <div className="flex-grow">
+                    <h3 className="font-bold text-base text-[#1a1b21] mb-1 group-hover:text-[#002972] transition-colors line-clamp-2 leading-snug">
+                      {survey.title}
+                    </h3>
+                    <p className="text-xs text-[#434652] line-clamp-2 leading-relaxed">
+                      {survey.description ||
+                        "Silakan klik tombol di bawah untuk berpartisipasi dalam kuesioner ini."}
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <Link
+                      to="/survey/$surveySlug"
+                      params={{ surveySlug: survey.slug }}
+                      className="w-full bg-[#0b3e9c] text-white hover:bg-[#002972] text-xs font-semibold py-2.5 rounded-lg hover:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                    >
+                      <span>Mulai Survey</span>
+                      <span className="material-symbols-outlined text-sm">
+                        arrow_forward
+                      </span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getAdminSurveyDetailFn,
   getAdminSurveyAnswersStatsFn,
@@ -33,6 +33,9 @@ function SurveyDetailComponent() {
   const { detail, stats, surveyId } = Route.useLoaderData();
   const { tab } = Route.useSearch();
   const router = useRouter();
+  const { user } = Route.useRouteContext();
+
+  const bannerFileInputRef = useRef<HTMLInputElement>(null);
 
   // Local state for Questions Tab editor
   const [sections, setSections] = useState<any[]>([]);
@@ -47,6 +50,7 @@ function SurveyDetailComponent() {
     "draft" | "published" | "archived"
   >("draft");
   const [settingsDesc, setSettingsDesc] = useState("");
+  const [settingsBannerUrl, setSettingsBannerUrl] = useState("");
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   // Load loaders data into states
@@ -60,6 +64,7 @@ function SurveyDetailComponent() {
       setSettingsCategory(detail.survey.category || "");
       setSettingsStatus(detail.survey.status || "draft");
       setSettingsDesc(detail.survey.description || "");
+      setSettingsBannerUrl(detail.survey.bannerUrl || "");
     }
   }, [detail]);
 
@@ -129,6 +134,7 @@ function SurveyDetailComponent() {
           category: settingsCategory,
           status: settingsStatus,
           description: settingsDesc,
+          bannerUrl: settingsBannerUrl,
         },
       });
 
@@ -366,11 +372,22 @@ function SurveyDetailComponent() {
     }
   };
 
+  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSettingsBannerUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Breadcrumbs & Title */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="w-full">
           <nav className="text-xs font-semibold text-[#434652] flex items-center gap-1.5 mb-2">
             <Link to="/admin/surveys" className="hover:text-[#002972]">
               Kelola Survey
@@ -380,7 +397,7 @@ function SurveyDetailComponent() {
             </span>
             <span className="text-slate-400">Detail Survey</span>
           </nav>
-          <h2 className="text-2xl font-bold text-[#1a1b21] flex items-center gap-3">
+          <h2 className="text-3xl font-bold text-[#1a1b21] flex items-center gap-3 w-full text-left">
             {detail.survey.title}
             {getStatusBadge(detail.survey.status)}
           </h2>
@@ -498,34 +515,36 @@ function SurveyDetailComponent() {
                         className="p-4 rounded-lg border border-slate-100 bg-slate-50/50 space-y-4 relative group"
                       >
                         {/* Arrow Reordering Controls */}
-                        <div className="absolute right-3 top-3 hidden group-hover:flex items-center gap-1 bg-white p-1 rounded-md border border-slate-200 shadow-sm">
-                          <button
-                            onClick={() =>
-                              handleMoveQuestion(questions.indexOf(q), "up")
-                            }
-                            disabled={questions.indexOf(q) === 0}
-                            className="p-1 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
-                            title="Pindah Ke Atas"
-                          >
-                            <span className="material-symbols-outlined text-sm block">
-                              arrow_upward
-                            </span>
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleMoveQuestion(questions.indexOf(q), "down")
-                            }
-                            disabled={
-                              questions.indexOf(q) === questions.length - 1
-                            }
-                            className="p-1 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
-                            title="Pindah Ke Bawah"
-                          >
-                            <span className="material-symbols-outlined text-sm block">
-                              arrow_downward
-                            </span>
-                          </button>
-                        </div>
+                        {user?.role !== "visitor" && (
+                          <div className="absolute right-3 top-3 hidden group-hover:flex items-center gap-1 bg-white p-1 rounded-md border border-slate-200 shadow-sm">
+                            <button
+                              onClick={() =>
+                                handleMoveQuestion(questions.indexOf(q), "up")
+                              }
+                              disabled={questions.indexOf(q) === 0}
+                              className="p-1 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
+                              title="Pindah Ke Atas"
+                            >
+                              <span className="material-symbols-outlined text-sm block">
+                                arrow_upward
+                              </span>
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleMoveQuestion(questions.indexOf(q), "down")
+                              }
+                              disabled={
+                                questions.indexOf(q) === questions.length - 1
+                              }
+                              className="p-1 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
+                              title="Pindah Ke Bawah"
+                            >
+                              <span className="material-symbols-outlined text-sm block">
+                                arrow_downward
+                              </span>
+                            </button>
+                          </div>
+                        )}
 
                         {/* Title and Type Select */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -545,6 +564,7 @@ function SurveyDetailComponent() {
                               }
                               className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none"
                               placeholder="Masukkan label pertanyaan..."
+                              disabled={user?.role === "visitor"}
                             />
                           </div>
                           <div className="space-y-1">
@@ -561,6 +581,7 @@ function SurveyDetailComponent() {
                                 )
                               }
                               className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer"
+                              disabled={user?.role === "visitor"}
                             >
                               <option value="short_text">
                                 Jawaban Singkat
@@ -601,6 +622,7 @@ function SurveyDetailComponent() {
                             }
                             className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-slate-500 focus:border-[#002972] outline-none"
                             placeholder="Petunjuk pengisian untuk responden..."
+                            disabled={user?.role === "visitor"}
                           />
                         </div>
 
@@ -632,31 +654,36 @@ function SurveyDetailComponent() {
                                       )
                                     }
                                     className="flex-1 bg-white border border-slate-200 rounded-md py-1 px-2.5 text-xs text-[#1a1b21] focus:border-[#002972] outline-none"
+                                    disabled={user?.role === "visitor"}
                                   />
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleDeleteOption(q.id, opt.id)
-                                    }
-                                    className="p-1 hover:text-[#ba1a1a]"
-                                    title="Hapus Opsi"
-                                  >
-                                    <span className="material-symbols-outlined text-sm">
-                                      close
-                                    </span>
-                                  </button>
+                                  {user?.role !== "visitor" && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleDeleteOption(q.id, opt.id)
+                                      }
+                                      className="p-1 hover:text-[#ba1a1a]"
+                                      title="Hapus Opsi"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">
+                                        close
+                                      </span>
+                                    </button>
+                                  )}
                                 </div>
                               ))}
-                              <button
-                                type="button"
-                                onClick={() => handleAddOption(q.id)}
-                                className="text-xs font-bold text-[#0b3e9c] hover:underline flex items-center gap-1 mt-1"
-                              >
-                                <span className="material-symbols-outlined text-xs">
-                                  add
-                                </span>
-                                <span>Tambah Opsi Pilihan</span>
-                              </button>
+                              {user?.role !== "visitor" && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddOption(q.id)}
+                                  className="text-xs font-bold text-[#0b3e9c] hover:underline flex items-center gap-1 mt-1"
+                                >
+                                  <span className="material-symbols-outlined text-xs">
+                                    add
+                                  </span>
+                                  <span>Tambah Opsi Pilihan</span>
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}
@@ -688,30 +715,35 @@ function SurveyDetailComponent() {
                                           )
                                         }
                                         className="flex-1 bg-white border border-slate-200 rounded-md py-1 px-2.5 text-xs text-[#1a1b21] focus:border-[#002972] outline-none"
+                                        disabled={user?.role === "visitor"}
                                       />
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleDeleteOption(q.id, opt.id)
-                                        }
-                                        className="p-1 hover:text-[#ba1a1a]"
-                                      >
-                                        <span className="material-symbols-outlined text-sm">
-                                          close
-                                        </span>
-                                      </button>
+                                      {user?.role !== "visitor" && (
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            handleDeleteOption(q.id, opt.id)
+                                          }
+                                          className="p-1 hover:text-[#ba1a1a]"
+                                        >
+                                          <span className="material-symbols-outlined text-sm">
+                                            close
+                                          </span>
+                                        </button>
+                                      )}
                                     </div>
                                   ))}
-                                <button
-                                  type="button"
-                                  onClick={() => handleAddOption(q.id, "row")}
-                                  className="text-xxs font-bold text-[#0b3e9c] hover:underline flex items-center gap-1"
-                                >
-                                  <span className="material-symbols-outlined text-xs">
-                                    add
-                                  </span>
-                                  <span>Tambah Baris</span>
-                                </button>
+                                {user?.role !== "visitor" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAddOption(q.id, "row")}
+                                    className="text-xxs font-bold text-[#0b3e9c] hover:underline flex items-center gap-1"
+                                  >
+                                    <span className="material-symbols-outlined text-xs">
+                                      add
+                                    </span>
+                                    <span>Tambah Baris</span>
+                                  </button>
+                                )}
                               </div>
                             </div>
 
@@ -739,32 +771,37 @@ function SurveyDetailComponent() {
                                           )
                                         }
                                         className="flex-1 bg-white border border-slate-200 rounded-md py-1 px-2.5 text-xs text-[#1a1b21] focus:border-[#002972] outline-none"
+                                        disabled={user?.role === "visitor"}
                                       />
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleDeleteOption(q.id, opt.id)
-                                        }
-                                        className="p-1 hover:text-[#ba1a1a]"
-                                      >
-                                        <span className="material-symbols-outlined text-sm">
-                                          close
-                                        </span>
-                                      </button>
+                                      {user?.role !== "visitor" && (
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            handleDeleteOption(q.id, opt.id)
+                                          }
+                                          className="p-1 hover:text-[#ba1a1a]"
+                                        >
+                                          <span className="material-symbols-outlined text-sm">
+                                            close
+                                          </span>
+                                        </button>
+                                      )}
                                     </div>
                                   ))}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleAddOption(q.id, "column")
-                                  }
-                                  className="text-xxs font-bold text-[#0b3e9c] hover:underline flex items-center gap-1"
-                                >
-                                  <span className="material-symbols-outlined text-xs">
-                                    add
-                                  </span>
-                                  <span>Tambah Kolom</span>
-                                </button>
+                                {user?.role !== "visitor" && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleAddOption(q.id, "column")
+                                    }
+                                    className="text-xxs font-bold text-[#0b3e9c] hover:underline flex items-center gap-1"
+                                  >
+                                    <span className="material-symbols-outlined text-xs">
+                                      add
+                                    </span>
+                                    <span>Tambah Kolom</span>
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -772,18 +809,22 @@ function SurveyDetailComponent() {
 
                         {/* Bottom Controls */}
                         <div className="pt-2 border-t border-slate-200/60 flex justify-end items-center gap-4 text-[#747683]">
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteQuestion(q.id)}
-                            className="hover:text-[#ba1a1a] flex items-center gap-1 text-xs font-semibold"
-                            title="Hapus Pertanyaan"
-                          >
-                            <span className="material-symbols-outlined text-sm">
-                              delete
-                            </span>
-                            Hapus
-                          </button>
-                          <div className="w-px h-5 bg-slate-200"></div>
+                          {user?.role !== "visitor" && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteQuestion(q.id)}
+                                className="hover:text-[#ba1a1a] flex items-center gap-1 text-xs font-semibold"
+                                title="Hapus Pertanyaan"
+                              >
+                                <span className="material-symbols-outlined text-sm">
+                                  delete
+                                </span>
+                                Hapus
+                              </button>
+                              <div className="w-px h-5 bg-slate-200"></div>
+                            </>
+                          )}
                           <label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
                             <span>Wajib Diisi</span>
                             <input
@@ -797,6 +838,7 @@ function SurveyDetailComponent() {
                                 )
                               }
                               className="rounded border-slate-300 text-[#002972] focus:ring-[#002972] h-4 w-4"
+                              disabled={user?.role === "visitor"}
                             />
                           </label>
                         </div>
@@ -805,36 +847,40 @@ function SurveyDetailComponent() {
                   )}
 
                   {/* Add button inside Section */}
-                  <div className="flex justify-center pt-2">
-                    <button
-                      type="button"
-                      onClick={() => handleAddQuestion(sec.id)}
-                      className="border border-[#747683] text-[#1a1b21] hover:bg-slate-50 text-xs font-bold py-2 px-6 rounded-lg flex items-center gap-1.5 transition-all shadow-sm"
-                    >
-                      <span className="material-symbols-outlined text-base">
-                        add_circle
-                      </span>
-                      <span>Tambah Pertanyaan di Bagian Ini</span>
-                    </button>
-                  </div>
+                  {user?.role !== "visitor" && (
+                    <div className="flex justify-center pt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAddQuestion(sec.id)}
+                        className="border border-[#747683] text-[#1a1b21] hover:bg-slate-50 text-xs font-bold py-2 px-6 rounded-lg flex items-center gap-1.5 transition-all shadow-sm"
+                      >
+                        <span className="material-symbols-outlined text-base">
+                          add_circle
+                        </span>
+                        <span>Tambah Pertanyaan di Bagian Ini</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })}
 
           {/* Saving footer buttons */}
-          <div className="flex justify-end pt-4 border-t border-slate-200">
-            <button
-              onClick={handleSaveQuestions}
-              disabled={isSavingQuestions}
-              className="bg-[#002972] text-white hover:bg-[#0b3e9c] disabled:bg-slate-300 font-bold px-8 py-3 rounded-lg text-sm flex items-center gap-2 shadow-sm transition-all"
-            >
-              {isSavingQuestions
-                ? "Menyimpan Tata Letak..."
-                : "Simpan Semua Pertanyaan"}
-              <span className="material-symbols-outlined text-sm">save</span>
-            </button>
-          </div>
+          {user?.role !== "visitor" && (
+            <div className="flex justify-end pt-4 border-t border-slate-200">
+              <button
+                onClick={handleSaveQuestions}
+                disabled={isSavingQuestions}
+                className="bg-[#002972] text-white hover:bg-[#0b3e9c] disabled:bg-slate-300 font-bold px-8 py-3 rounded-lg text-sm flex items-center gap-2 shadow-sm transition-all"
+              >
+                {isSavingQuestions
+                  ? "Menyimpan Tata Letak..."
+                  : "Simpan Semua Pertanyaan"}
+                <span className="material-symbols-outlined text-sm">save</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -1054,7 +1100,7 @@ function SurveyDetailComponent() {
 
       {/* ============================== SETTINGS TAB ============================== */}
       {tab === "settings" && (
-        <div className="max-w-2xl bg-white border border-[#c4c6d4] rounded-xl p-6 shadow-sm">
+        <div className="max-w-4xl bg-white border border-[#c4c6d4] rounded-xl p-6 shadow-sm">
           <form onSubmit={handleSaveSettings} className="space-y-6">
             <div className="flex flex-col gap-1.5">
               <label
@@ -1070,7 +1116,7 @@ function SurveyDetailComponent() {
                 onChange={(e) => setSettingsTitle(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
                 required
-                disabled={isSavingSettings}
+                disabled={isSavingSettings || user?.role === "visitor"}
               />
             </div>
 
@@ -1092,7 +1138,7 @@ function SurveyDetailComponent() {
                   onChange={(e) => setSettingsSlug(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-r-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
                   required
-                  disabled={isSavingSettings}
+                  disabled={isSavingSettings || user?.role === "visitor"}
                 />
               </div>
             </div>
@@ -1110,7 +1156,7 @@ function SurveyDetailComponent() {
                   value={settingsCategory}
                   onChange={(e) => setSettingsCategory(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 pr-10 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors appearance-none cursor-pointer"
-                  disabled={isSavingSettings}
+                  disabled={isSavingSettings || user?.role === "visitor"}
                 >
                   <option value="tracer">Tracer Study Alumni</option>
                   <option value="kepuasan">
@@ -1136,7 +1182,7 @@ function SurveyDetailComponent() {
                   value={settingsStatus}
                   onChange={(e) => setSettingsStatus(e.target.value as any)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 pr-10 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors appearance-none cursor-pointer"
-                  disabled={isSavingSettings}
+                  disabled={isSavingSettings || user?.role === "visitor"}
                 >
                   <option value="draft">Draft (Hanya Admin)</option>
                   <option value="published">
@@ -1152,6 +1198,60 @@ function SurveyDetailComponent() {
 
             <div className="flex flex-col gap-1.5">
               <label
+                className="text-sm font-bold text-[#1a1b21]"
+              >
+                Banner Survei (Unggah Gambar)
+              </label>
+              <input
+                type="file"
+                ref={bannerFileInputRef}
+                id="settingsBannerUrl"
+                accept="image/*"
+                onChange={handleBannerUpload}
+                className="hidden"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => bannerFileInputRef.current?.click()}
+                  disabled={isSavingSettings || user?.role === "visitor"}
+                  className="px-4 py-2 bg-[#dbe1ff] text-[#0b3e9c] hover:bg-[#002972] hover:text-white font-semibold rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="material-symbols-outlined text-sm">upload</span>
+                  Pilih Gambar Banner
+                </button>
+                {settingsBannerUrl && (
+                  <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                    Gambar terpilih
+                  </span>
+                )}
+              </div>
+              {settingsBannerUrl && (
+                <div className="relative mt-2 h-40 w-full rounded-lg border border-slate-200 overflow-hidden group">
+                  <img
+                    src={settingsBannerUrl}
+                    alt="Banner Preview"
+                    className="h-full w-full object-cover"
+                  />
+                  {user?.role !== "visitor" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSettingsBannerUrl("");
+                        if (bannerFileInputRef.current) bannerFileInputRef.current.value = "";
+                      }}
+                      className="absolute top-3 right-3 bg-white text-[#ba1a1a] p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <span className="material-symbols-outlined text-sm block">delete</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label
                 htmlFor="settingsDesc"
                 className="text-sm font-bold text-[#1a1b21]"
               >
@@ -1163,22 +1263,24 @@ function SurveyDetailComponent() {
                 value={settingsDesc}
                 onChange={(e) => setSettingsDesc(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
-                disabled={isSavingSettings}
+                disabled={isSavingSettings || user?.role === "visitor"}
               />
             </div>
 
             <div className="h-px bg-slate-100 my-4"></div>
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={isSavingSettings}
-                className="bg-[#002972] text-white hover:bg-[#0b3e9c] font-semibold px-6 py-2.5 rounded-lg text-sm shadow-sm transition-colors"
-              >
-                {isSavingSettings
-                  ? "Menyimpan Perubahan..."
-                  : "Simpan Perubahan"}
-              </button>
-            </div>
+            {user?.role !== "visitor" && (
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSavingSettings}
+                  className="bg-[#002972] text-white hover:bg-[#0b3e9c] font-semibold px-6 py-2.5 rounded-lg text-sm shadow-sm transition-colors"
+                >
+                  {isSavingSettings
+                    ? "Menyimpan Perubahan..."
+                    : "Simpan Perubahan"}
+                </button>
+              </div>
+            )}
           </form>
         </div>
       )}

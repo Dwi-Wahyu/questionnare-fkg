@@ -1,0 +1,1 @@
+ALTER TABLE `surveys` MODIFY COLUMN `banner_url` mediumtext;

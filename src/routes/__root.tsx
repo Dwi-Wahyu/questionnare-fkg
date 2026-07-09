@@ -9,10 +9,11 @@ import {
   useLocation,
   useRouter,
 } from "@tanstack/react-router";
-import { Home, LayoutDashboard, LogOut, GraduationCap } from "lucide-react";
+import { Home, LayoutDashboard, LogOut } from "lucide-react";
 import { ToastContainer } from "../components/ui/Toast";
 import { toast } from "../components/ui/useToast";
 import { getSessionFn, logoutFn } from "../server/authFunctions";
+import logoUrl from "../../logo.webp";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -74,7 +75,7 @@ export const Route = createRootRoute({
               background: "rgba(0,0,0,0.3)",
               borderRadius: "8px",
               overflowX: "auto",
-              fontSize: "0.8rem",
+              fontSize: "0.85rem",
               fontFamily: "monospace",
               color: "#94a3b8",
             }}
@@ -134,16 +135,23 @@ function RootComponent() {
   return (
     <RootDocument>
       {!isAdminRoute && !isAuthRoute && (
-        <header className="bg-surface top-0 bg-surface-container-low shadow-sm sticky z-50">
+        <header className="hidden md:block bg-surface top-0 bg-surface-container-low shadow-sm sticky z-50">
           <div className="flex justify-between items-center px-6 py-4 max-w-[1280px] mx-auto w-full">
-            <Link to="/" className="flex items-center gap-2">
-              <GraduationCap
-                size={28}
-                style={{ strokeWidth: 2.5, color: "#002972" }}
+            <Link to="/" className="flex items-center gap-3">
+              <img
+                src={logoUrl}
+                alt="Logo FKG Unhas"
+                className="h-10 w-auto object-contain"
+                suppressHydrationWarning
               />
-              <span className="font-bold text-xl text-[#002972]">
-                FKG Unhas Survey
-              </span>
+              <div className="flex flex-col">
+                <span className="font-bold text-sm md:text-base text-[#002972] leading-tight">
+                  Fakultas Kedokteran Gigi
+                </span>
+                <span className="text-[9px] md:text-[10px] text-[#434652] font-semibold uppercase tracking-wider leading-none mt-0.5">
+                  Universitas Hasanuddin
+                </span>
+              </div>
             </Link>
             <nav className="flex items-center gap-6 text-sm font-medium">
               <Link

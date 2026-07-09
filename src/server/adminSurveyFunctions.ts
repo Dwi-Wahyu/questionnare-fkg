@@ -145,6 +145,7 @@ export const getAdminSurveysListFn = createServerFn({ method: "GET" }).handler(
 				title: surveys.title,
 				status: surveys.status,
 				category: surveys.category,
+				bannerUrl: surveys.bannerUrl,
 				updatedAt: surveys.updatedAt,
 			})
 			.from(surveys)
@@ -180,6 +181,7 @@ export const createAdminSurveyFn = createServerFn({ method: "POST" })
 			slug: string;
 			category: string;
 			description?: string;
+			bannerUrl?: string;
 		}) => data,
 	)
 	.handler(async ({ data }) => {
@@ -190,6 +192,7 @@ export const createAdminSurveyFn = createServerFn({ method: "POST" })
 			slug: data.slug,
 			category: data.category,
 			description: data.description || "",
+			bannerUrl: data.bannerUrl || null,
 			status: "draft",
 			createdBy: user.id,
 		});
@@ -220,6 +223,7 @@ export const updateAdminSurveySettingsFn = createServerFn({ method: "POST" })
 			category: string;
 			status: "draft" | "published" | "archived";
 			description?: string;
+			bannerUrl?: string;
 		}) => data,
 	)
 	.handler(async ({ data }) => {
@@ -233,6 +237,7 @@ export const updateAdminSurveySettingsFn = createServerFn({ method: "POST" })
 				category: data.category,
 				status: data.status,
 				description: data.description || "",
+				bannerUrl: data.bannerUrl || null,
 				updatedAt: new Date(),
 			})
 			.where(eq(surveys.id, data.id));

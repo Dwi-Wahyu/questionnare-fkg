@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { getSessionFn } from "../../server/authFunctions";
 import { useState } from "react";
 import { getAdminDashboardStatsFn } from "../../server/adminSurveyFunctions";
 
@@ -167,9 +168,9 @@ function AnalyticsOverviewComponent() {
           </div>
 
           {/* Simple CSS bar chart */}
-          <div className="grow flex items-end gap-4 h-48 relative border-b border-l border-slate-200 pl-2 pb-2 mt-4">
+          <div className="grow flex items-end gap-4 h-48 relative border-b border-l border-slate-200 ml-8 pl-2 pb-2 mt-4">
             {/* Y Axis markings */}
-            <div className="absolute left-[-32px] top-0 bottom-2 flex flex-col justify-between text-[10px] font-bold text-slate-400 py-1">
+            <div className="absolute left-[-36px] top-0 bottom-2 flex flex-col justify-between text-[10px] font-bold text-slate-400 py-1 w-8 text-right pr-2">
               <span>1.0k</span>
               <span>500</span>
               <span>0</span>
@@ -248,7 +249,7 @@ function AnalyticsOverviewComponent() {
             </div>
           </div>
 
-          <div className="flex justify-between pl-4 pt-2 text-[10px] font-bold text-slate-400">
+          <div className="flex justify-between pl-10 pt-2 text-[10px] font-bold text-slate-400">
             <span className="flex-1 text-center">Jul</span>
             <span className="flex-1 text-center">Ags</span>
             <span className="flex-1 text-center">Sep</span>

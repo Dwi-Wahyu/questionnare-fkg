@@ -1,18 +1,28 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useRouter, redirect } from "@tanstack/react-router";
+import { useState, useRef } from "react";
 import { createAdminSurveyFn } from "../../server/adminSurveyFunctions";
 import { toast } from "../../components/ui/useToast";
+import { getSessionFn } from "../../server/authFunctions";
 
 export const Route = createFileRoute("/admin/surveys/new")({
+	beforeLoad: async () => {
+		const user = await getSessionFn();
+		if (user?.role === "visitor") {
+			toast.error("Anda tidak memiliki akses untuk membuat survei.");
+			throw redirect({ to: "/admin/surveys" });
+		}
+	},
 	component: CreateSurveyComponent,
 });
 
 function CreateSurveyComponent() {
 	const router = useRouter();
+	const bannerFileInputRef = useRef<HTMLInputElement>(null);
 	const [title, setTitle] = useState("");
 	const [slug, setSlug] = useState("");
 	const [category, setCategory] = useState("tracer");
 	const [description, setDescription] = useState("");
+	const [bannerUrl, setBannerUrl] = useState("");
 	const [loading, setLoading] = useState(false);
 
 	const handleTitleChange = (val: string) => {
@@ -23,6 +33,17 @@ function CreateSurveyComponent() {
 			.replace(/[^a-z0-9]+/g, "-")
 			.replace(/(^-|-$)/g, "");
 		setSlug(derivedSlug);
+	};
+
+	const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				setBannerUrl(reader.result as string);
+			};
+			reader.readAsDataURL(file);
+		}
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -40,6 +61,7 @@ function CreateSurveyComponent() {
 					slug,
 					category,
 					description,
+					bannerUrl,
 				},
 			});
 
@@ -59,7 +81,7 @@ function CreateSurveyComponent() {
 	};
 
 	return (
-		<div className="space-y-6 max-w-2xl">
+		<div className="space-y-6 w-full max-w-4xl">
 			{/* Breadcrumbs */}
 			<nav className="text-xs font-semibold text-[#434652] flex items-center gap-1.5">
 				<Link to="/admin/surveys" className="hover:text-[#002972]">
@@ -70,14 +92,16 @@ function CreateSurveyComponent() {
 			</nav>
 
 			{/* Title */}
-			<div>
-				<h1 className="text-2xl font-bold text-[#1a1b21]">
-					Tambah Survey Baru
-				</h1>
-				<p className="text-sm text-[#434652] mt-1">
-					Buat kerangka kuesioner baru. Anda dapat menyusun pertanyaan dan
-					section setelah menyimpannya.
-				</p>
+			<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+				<div className="w-full">
+					<h1 className="text-3xl font-bold text-[#1a1b21] text-left w-full">
+						Tambah Survey Baru
+					</h1>
+					<p className="text-sm text-[#434652] mt-1 text-left">
+						Buat kerangka kuesioner baru. Anda dapat menyusun pertanyaan dan
+						section setelah menyimpannya.
+					</p>
+				</div>
 			</div>
 
 			{/* Form */}
@@ -148,6 +172,57 @@ function CreateSurveyComponent() {
 								arrow_drop_down
 							</span>
 						</div>
+					</div>
+
+					{/* Banner URL input */}
+					<div className="flex flex-col gap-1.5">
+						<label className="text-sm font-bold text-[#1a1b21]">
+							Banner Survei (Unggah Gambar)
+						</label>
+						<input
+							type="file"
+							ref={bannerFileInputRef}
+							id="bannerUrl"
+							accept="image/*"
+							onChange={handleBannerUpload}
+							className="hidden"
+						/>
+						<div className="flex items-center gap-3">
+							<button
+								type="button"
+								onClick={() => bannerFileInputRef.current?.click()}
+								disabled={loading}
+								className="px-4 py-2 bg-[#dbe1ff] text-[#0b3e9c] hover:bg-[#002972] hover:text-white font-semibold rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								<span className="material-symbols-outlined text-sm">upload</span>
+								Pilih Gambar Banner
+							</button>
+							{bannerUrl && (
+								<span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+									<span className="material-symbols-outlined text-sm">check_circle</span>
+									Gambar terpilih
+								</span>
+							)}
+						</div>
+						{bannerUrl && (
+							<div className="relative mt-2 h-40 w-full rounded-lg border border-slate-200 overflow-hidden group">
+								<img
+									src={bannerUrl}
+									alt="Banner Preview"
+									className="h-full w-full object-cover"
+								/>
+								<button
+									type="button"
+									onClick={() => {
+										setBannerUrl("");
+										if (bannerFileInputRef.current) bannerFileInputRef.current.value = "";
+									}}
+									className="absolute top-3 right-3 bg-white text-[#ba1a1a] p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+								>
+									<span className="material-symbols-outlined text-sm block">delete</span>
+								</button>
+							</div>
+						)}
 					</div>
 
 					{/* Description textarea */}

@@ -11,6 +11,7 @@ import {
   startResponseFn,
   submitResponseFn,
 } from "../server/surveyFunctions";
+import { Button } from "../components/ui/Button";
 
 export const Route = createFileRoute("/survey/$surveySlug")({
   loader: async ({ params }) => {
@@ -343,65 +344,76 @@ function SurveyTakingComponent() {
   // 1. Welcome Screen View
   if (currentSectionIndex === -1) {
     return (
-      <main className="grow flex items-center justify-center p-6 relative overflow-hidden bg-slate-50 min-h-[calc(100vh-80px)]">
+      <main className="grow flex items-center justify-center px-3 py-6 sm:p-8 relative overflow-hidden bg-slate-50 min-h-[calc(100vh-80px)]">
         <div
           className="absolute inset-0 opacity-[0.1]"
           style={{
-            backgroundImage:
-              "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBY5jTi3ACJEiR0bz09BYIZYaY5IPSTjWFFpg-tNUh3Ve88ptrGBd9yXQYcPFRuLY0tG3ToVuyxojALfR9FQcKkKI9lt1QCdLUqAhuvpwMTcjz2zWO80vvMGlYSvmIXU9NZfkgRyuV3L_DFnFCcZ6jBNnPIW1XDbuSfm2RjmoyVXY6bzJwkMJopuAmcN8k5Fef4NVcyomzIfGwD9xJjacbYY4MInWLDWEYUjqJMQ3dfpXPaLHiIc2M4')",
+            backgroundImage: `url('${survey.bannerUrl || "https://lh3.googleusercontent.com/aida-public/AB6AXuBY5jTi3ACJEiR0bz09BYIZYaY5IPSTjWFFpg-tNUh3Ve88ptrGBd9yXQYcPFRuLY0tG3ToVuyxojALfR9FQcKkKI9lt1QCdLUqAhuvpwMTcjz2zWO80vvMGlYSvmIXU9NZfkgRyuV3L_DFnFCcZ6jBNnPIW1XDbuSfm2RjmoyVXY6bzJwkMJopuAmcN8k5Fef4NVcyomzIfGwD9xJjacbYY4MInWLDWEYUjqJMQ3dfpXPaLHiIc2M4"}')`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-white/90 to-white/95"></div>
+        <div className="absolute inset-0 bg-linear-to-b from-white/90 to-white/95"></div>
 
         <div className="relative z-10 w-full max-w-4xl">
-          <div className="bg-white rounded-xl p-8 md:p-12 flex flex-col items-center text-center space-y-6 shadow-[0_8px_32px_rgba(11,62,156,0.06)] border border-surface-variant">
-            <div className="inline-flex items-center justify-center p-4 bg-primary-container rounded-full text-[#0b3e9c] mb-2">
-              <span
-                className="material-symbols-outlined text-4xl"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                assignment
-              </span>
-            </div>
-            <h1 className="font-bold text-3xl md:text-4xl text-[#002972] tracking-tight">
-              {survey.title}
-            </h1>
-            <p className="text-base md:text-lg text-[#434652] max-w-2xl">
-              {survey.description ||
-                "Selamat datang di Survei FKG Unhas. Partisipasi Anda sangat berharga bagi peningkatan mutu kurikulum dan penjaminan mutu fakultas."}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center mt-6">
-              <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-                <span className="material-symbols-outlined text-[#002972] text-xl">
-                  schedule
-                </span>
-                <span className="text-xs md:text-sm font-medium text-[#1a1b21]">
-                  Estimasi waktu: 10-15 menit
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-                <span className="material-symbols-outlined text-[#a03f32] text-xl">
-                  lock
-                </span>
-                <span className="text-xs md:text-sm font-medium text-[#1a1b21]">
-                  Data Anda dijamin kerahasiaannya.
-                </span>
-              </div>
+          <div className="bg-white rounded-xl flex flex-col shadow-lg border border-slate-200 w-full overflow-hidden">
+            {/* Banner Header */}
+            <div className="h-48 md:h-64 w-full relative overflow-hidden bg-slate-100 shrink-0">
+              {survey.bannerUrl ? (
+                <img
+                  src={survey.bannerUrl}
+                  alt={survey.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#0b3e9c]/20 to-[#fe8674]/15 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-6xl text-[#0b3e9c]/35">
+                    poll
+                  </span>
+                </div>
+              )}
             </div>
 
-            <div className="mt-8 w-full max-w-md">
-              <button
-                onClick={handleStartSurvey}
-                className="w-full bg-[#002972] text-white font-bold py-3.5 px-8 rounded-lg shadow-sm hover:bg-[#0b3e9c] hover:shadow-md transition-all flex items-center justify-center gap-2 group"
-              >
-                <span>Mulai Survey</span>
-                <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
-                  arrow_forward
-                </span>
-              </button>
+            {/* Body */}
+            <div className="p-5 sm:p-8 md:p-10 flex flex-col items-center text-center space-y-6 w-full">
+              <h1 className="font-bold text-xl sm:text-2xl md:text-3xl text-[#002972] tracking-tight">
+                {survey.title}
+              </h1>
+              <p className="text-xs sm:text-sm md:text-base text-[#434652] max-w-2xl leading-relaxed">
+                {survey.description ||
+                  "Selamat datang di Survei FKG Unhas. Partisipasi Anda sangat berharga bagi peningkatan mutu kurikulum dan penjaminan mutu fakultas."}
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 w-full justify-center mt-6">
+                <div className="flex items-center gap-2 bg-slate-50 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200 w-full sm:w-auto text-left justify-start sm:justify-center">
+                  <span className="material-symbols-outlined text-[#002972] text-xl shrink-0">
+                    schedule
+                  </span>
+                  <span className="text-xs md:text-sm font-medium text-[#1a1b21] break-words">
+                    Estimasi waktu: 10-15 menit
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 bg-slate-50 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200 w-full sm:w-auto text-left justify-start sm:justify-center">
+                  <span className="material-symbols-outlined text-[#a03f32] text-xl shrink-0">
+                    lock
+                  </span>
+                  <span className="text-xs md:text-sm font-medium text-[#1a1b21] break-words">
+                    Data Anda dijamin kerahasiaannya.
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-4 w-full sm:w-auto">
+                <Button
+                  onClick={handleStartSurvey}
+                  className="w-full sm:w-auto bg-[#002972] text-white font-bold py-3 px-8 rounded-lg shadow-sm hover:bg-[#0b3e9c] hover:shadow-md transition-all flex items-center justify-center gap-2 group"
+                >
+                  <span>Mulai Survey</span>
+                  <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
+                    arrow_forward
+                  </span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -416,11 +428,30 @@ function SurveyTakingComponent() {
 
   // 2. Active Form Section View
   return (
-    <main className="grow w-full max-w-4xl mx-auto py-12 px-6 flex flex-col items-center justify-start min-h-[calc(100vh-80px)]">
+    <main className="grow w-full max-w-4xl mx-auto py-6 md:py-12 px-4 md:px-6 flex flex-col items-center justify-start min-h-[calc(100vh-80px)]">
       {/* Survey Card container */}
-      <div className="w-full bg-white border border-slate-200 rounded-xl shadow-[0_8px_32px_rgba(11,62,156,0.04)] p-6 md:p-10 relative overflow-hidden">
-        {/* Progress Indicator */}
-        <div className="w-full mb-8">
+      <div className="w-full bg-transparent md:bg-white border-0 md:border border-slate-200 rounded-none md:rounded-xl shadow-none md:shadow-[0_8px_32px_rgba(11,62,156,0.04)] p-0 relative overflow-hidden flex flex-col">
+        {/* Banner Header */}
+        <div className="h-40 w-full relative overflow-hidden bg-slate-100 hidden md:block shrink-0">
+          {survey.bannerUrl ? (
+            <img
+              src={survey.bannerUrl}
+              alt={survey.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#0b3e9c]/20 to-[#fe8674]/15 flex items-center justify-center">
+              <span className="material-symbols-outlined text-5xl text-[#0b3e9c]/35">
+                poll
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Content body */}
+        <div className="p-0 md:p-10 flex flex-col">
+          {/* Progress Indicator */}
+          <div className="w-full mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#434652]">
               Langkah {currentSectionIndex + 1} dari {sections.length}
@@ -457,10 +488,10 @@ function SurveyTakingComponent() {
             return (
               <div
                 key={q.id}
-                className={`flex flex-col gap-3 p-4 md:p-6 rounded-lg transition-all border ${
+                className={`flex flex-col gap-3 py-6 transition-all border-b border-slate-100 last:border-b-0 ${
                   isError
-                    ? "border-[#ba1a1a] bg-[#ffdad6]/20 error-highlight"
-                    : "border-slate-100 bg-white"
+                    ? "border-l-4 border-l-[#ba1a1a] bg-[#ffdad6]/10 px-4 rounded-r-lg error-highlight"
+                    : ""
                 }`}
               >
                 {/* Question Label */}
@@ -741,6 +772,7 @@ function SurveyTakingComponent() {
               </span>
             </button>
           )}
+        </div>
         </div>
       </div>
     </main>

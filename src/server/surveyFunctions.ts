@@ -20,6 +20,7 @@ export const getPublishedSurveysFn = createServerFn({ method: "GET" }).handler(
 				title: surveys.title,
 				description: surveys.description,
 				category: surveys.category,
+				bannerUrl: surveys.bannerUrl,
 				createdAt: surveys.createdAt,
 			})
 			.from(surveys)

@@ -1,10 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { getSessionFn } from "../../server/authFunctions";
 import {
 	getAdminDashboardStatsFn,
 	getAdminRecentResponsesFn,
 } from "../../server/adminSurveyFunctions";
 
 export const Route = createFileRoute("/admin/")({
+	beforeLoad: async () => {
+		const user = await getSessionFn();
+		if (user?.role === "visitor") {
+			throw redirect({ to: "/admin/surveys" });
+		}
+	},
 	loader: async () => {
 		const [stats, recentResponses] = await Promise.all([
 			getAdminDashboardStatsFn(),

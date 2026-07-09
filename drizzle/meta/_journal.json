@@ -8,6 +8,20 @@
       "when": 1783619114278,
       "tag": "0000_brave_pixie",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1783627075720,
+      "tag": "0001_cool_gorgon",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1783630475102,
+      "tag": "0002_tricky_black_tarantula",
+      "breakpoints": true
     }
   ]
 }

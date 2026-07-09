@@ -6,6 +6,7 @@ import {
 	mysqlEnum,
 	mysqlTable,
 	text,
+	mediumtext,
 	timestamp,
 	varchar,
 } from "drizzle-orm/mysql-core";
@@ -32,6 +33,7 @@ export const surveys = mysqlTable("surveys", {
 	slug: varchar("slug", { length: 150 }).notNull().unique(),
 	title: varchar("title", { length: 255 }).notNull(),
 	description: text("description"),
+	bannerUrl: mediumtext("banner_url"),
 	// Category used to group the admin nav dropdown (PRD §6.5).
 	category: varchar("category", { length: 100 }).notNull(),
 	status: mysqlEnum("status", ["draft", "published", "archived"])

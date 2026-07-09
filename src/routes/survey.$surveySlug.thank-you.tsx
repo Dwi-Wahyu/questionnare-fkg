@@ -6,8 +6,8 @@ export const Route = createFileRoute("/survey/$surveySlug/thank-you")({
 
 function ThankYouComponent() {
   return (
-    <main className="grow flex items-center justify-center p-6 md:p-12 w-full bg-slate-50 min-h-[calc(100vh-80px)]">
-      <div className="w-full max-w-3xl bg-white rounded-xl shadow-[0_8px_32px_rgba(11,62,156,0.04)] border border-slate-200 overflow-hidden">
+    <main className="grow flex items-center justify-center px-3 py-6 sm:p-8 md:p-12 w-full bg-slate-50 min-h-[calc(100vh-80px)]">
+      <div className="w-full max-w-4xl bg-white rounded-xl shadow-[0_8px_32px_rgba(11,62,156,0.04)] border border-slate-200 overflow-hidden">
         {/* Hero Graphic Section */}
         <div className="relative h-48 md:h-64 w-full bg-slate-100 flex items-center justify-center overflow-hidden">
           {/* Gradient backdrop */}

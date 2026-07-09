@@ -1,0 +1,1 @@
+ALTER TABLE `surveys` ADD `banner_url` varchar(500);
