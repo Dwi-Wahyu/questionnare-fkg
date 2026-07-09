@@ -34,16 +34,14 @@ function AnalyticsOverviewComponent() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-[#002972]">
-            Ringkasan Analisis
-          </h2>
-          <p className="text-sm text-[#434652] mt-1">
-            Pantau performa indeks kepuasan, tren pengisian, dan status
-            keterserapan alumni.
-          </p>
-        </div>
+      <div>
+        <h2 className="text-3xl font-bold text-[#002972]">
+          Ringkasan Analisis
+        </h2>
+        <p className="text-sm text-[#434652] mt-1">
+          Pantau performa indeks kepuasan, tren pengisian, dan status
+          keterserapan alumni.
+        </p>
       </div>
 
       {/* Global Filters */}

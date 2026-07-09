@@ -7,7 +7,6 @@ import {
 } from "@tanstack/react-router";
 import { toast } from "../../components/ui/useToast";
 import { getSessionFn, logoutFn } from "../../server/authFunctions";
-import logoUrl from "../../../logo.webp";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
@@ -39,11 +38,14 @@ function AdminLayoutComponent() {
       {/* Top Bar Navigation */}
       <header className="bg-white border-b border-[#c4c6d4] sticky top-0 left-0 right-0 flex justify-between items-center h-16 px-4 md:px-6 z-30 shadow-sm w-full">
         <div className="flex items-center gap-4 md:gap-8 overflow-hidden grow">
-          <Link to="/admin/surveys" className="flex items-center gap-2.5 md:gap-3 shrink-0">
+          <Link
+            to="/admin/surveys"
+            className="flex items-center gap-2.5 md:gap-3 shrink-0"
+          >
             <img
               alt="Universitas Hasanuddin Logo"
               className="h-8 md:h-9 w-auto object-contain"
-              src={logoUrl}
+              src={"/logo.webp"}
             />
             <div>
               <h1 className="font-bold text-sm md:text-base text-[#002972] leading-tight">

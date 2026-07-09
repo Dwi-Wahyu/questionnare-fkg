@@ -13,7 +13,6 @@ import { Home, LayoutDashboard, LogOut } from "lucide-react";
 import { ToastContainer } from "../components/ui/Toast";
 import { toast } from "../components/ui/useToast";
 import { getSessionFn, logoutFn } from "../server/authFunctions";
-import logoUrl from "../../logo.webp";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -139,7 +138,8 @@ function RootComponent() {
           <div className="flex justify-between items-center px-6 py-4 max-w-[1280px] mx-auto w-full">
             <Link to="/" className="flex items-center gap-3">
               <img
-                src={logoUrl}
+                src={"/logo.webp"}
+
                 alt="Logo FKG Unhas"
                 className="h-10 w-auto object-contain"
                 suppressHydrationWarning
