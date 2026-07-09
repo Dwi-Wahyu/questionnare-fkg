@@ -123,7 +123,6 @@ function isGridRowHeader(header: string): boolean {
 }
 
 interface SurveyConfig {
-  cleanedFile: string;
   asliFile: string;
   slug: string;
   title: string;
@@ -132,22 +131,18 @@ interface SurveyConfig {
 
 const surveysToSeed: SurveyConfig[] = [
   {
-    cleanedFile: "form kepuasan dosen fkg (Responses).csv",
     asliFile: "form kepuasan dosen fkg (Responses).csv",
     slug: "kepuasan-dosen",
     title: "Form Kepuasan Dosen FKG",
     category: "kepuasan_dosen",
   },
   {
-    cleanedFile: "Form Kepuasan Pegawai (Responses).csv",
     asliFile: "Form Kepuasan Pegawai (Responses).csv",
     slug: "kepuasan-pegawai",
     title: "Form Kepuasan Pegawai",
     category: "kepuasan_pegawai",
   },
   {
-    cleanedFile:
-      "Kuesioner Mahasiswa terhadap Pengelola FKG - UNHAS (Responses).csv",
     asliFile:
       "Kuesioner Mahasiswa terhadap Pengelola FKG - UNHAS (Responses).csv",
     slug: "kepuasan-pengelola",
@@ -155,42 +150,36 @@ const surveysToSeed: SurveyConfig[] = [
     category: "kepuasan_pengelola",
   },
   {
-    cleanedFile: "Kuisioner Pengguna (Responses).csv",
     asliFile: "Kuisioner Pengguna (Responses).csv",
     slug: "kepuasan-pengguna-lulusan",
     title: "Kuisioner Pengguna Lulusan",
     category: "kepuasan_pengguna_lulusan",
   },
   {
-    cleanedFile: "Copy of Kuisioner Pengguna (Responses).csv",
     asliFile: "Copy of Kuisioner Pengguna (Responses).csv",
     slug: "kepuasan-pengguna-lulusan-copy",
     title: "Kuisioner Pengguna Lulusan (Salinan)",
     category: "kepuasan_pengguna_lulusan",
   },
   {
-    cleanedFile: "Form Kepuasan Mahasiswa (Responses).csv",
     asliFile: "Form Kepuasan Mahasiswa (Responses).csv",
     slug: "kepuasan-mahasiswa",
     title: "Form Kepuasan Mahasiswa",
     category: "kepuasan_mahasiswa",
   },
   {
-    cleanedFile: "Form Kepuasan Mahasiswa 2025 (Responses).csv",
     asliFile: "Form Kepuasan Mahasiswa 2025 (Responses).csv",
     slug: "kepuasan-mahasiswa-2025",
     title: "Form Kepuasan Mahasiswa 2025",
     category: "kepuasan_mahasiswa",
   },
   {
-    cleanedFile: "Form Kepuasan Mahasiswa Rev (Responses).csv",
     asliFile: "Form Kepuasan Mahasiswa Rev (Responses).csv",
     slug: "kepuasan-mahasiswa-rev",
     title: "Form Kepuasan Mahasiswa Rev",
     category: "kepuasan_mahasiswa",
   },
   {
-    cleanedFile: "Kusioner Alumni (Responses).csv",
     asliFile: "Kusioner Alumni (Responses).csv",
     slug: "tracer-alumni",
     title: "Tracer Study Alumni",
@@ -246,7 +235,6 @@ async function main() {
 
   // Paths
   const rootDir = process.cwd();
-  const cleanedDir = resolve(rootDir, "../cleaned");
   const asliDir = resolve(rootDir, "../data-asli");
 
   // 3. Process each survey
@@ -291,38 +279,10 @@ async function main() {
       return Array.from(unique).filter((v) => v !== "");
     });
 
-    // B. Parse Cleaned data to get the 1 real response row
-    const cleanedPath = join(cleanedDir, sDef.cleanedFile);
-    const cleanedContent = readFileSync(cleanedPath, "utf-8");
-    const cleanedLines = cleanedContent
-      .split(/\r?\n/)
-      .map((l) => l.trim())
-      .filter((l) => l !== "");
-
-    if (cleanedLines.length < 2) {
-      console.error(
-        `❌ Cleaned file has less than 2 lines: ${sDef.cleanedFile}`,
-      );
+    if (asliRows.length === 0) {
+      console.error(`❌ No data rows found in asli file: ${sDef.asliFile}`);
       continue;
     }
-
-    // Find header in cleaned
-    let cleanedHeaderIdx = -1;
-    for (let i = 0; i < cleanedLines.length; i++) {
-      if (cleanedLines[i].toLowerCase().includes("timestamp")) {
-        cleanedHeaderIdx = i;
-        break;
-      }
-    }
-
-    if (cleanedHeaderIdx === -1) {
-      console.error(
-        `❌ Header 'Timestamp' not found in cleaned file: ${sDef.cleanedFile}`,
-      );
-      continue;
-    }
-
-    const cleanedRow = parseCSVLine(cleanedLines[cleanedHeaderIdx + 1]);
 
     // C. Create Survey Row
     const [surveyInsert] = await db.insert(surveys).values({
@@ -624,175 +584,44 @@ async function main() {
       }
     };
 
-    // G. Insert the 1 Real Response row from cleaned CSV
-    let realTimestamp = new Date();
-    const tsStr = cleanedRow[0]?.trim();
-    if (tsStr) {
-      const parsed = new Date(tsStr);
-      if (!Number.isNaN(parsed.getTime())) {
-        realTimestamp = parsed;
-      }
-    }
+    // G. Insert EVERY real row from the data-asli CSV as an actual response.
+    // No synthetic/Faker filler — this is the full authentic dataset.
+    let insertedCount = 0;
 
-    const [respInsert] = await db.insert(responses).values({
-      surveyId,
-      status: "completed",
-      startedAt: new Date(realTimestamp.getTime() - 10 * 60 * 1000), // 10 mins before
-      submittedAt: realTimestamp,
-      clientDraftId: faker.string.uuid(),
-    });
-    const realResponseId = (respInsert as any).insertId;
-
-    const realAnswerRows = questionsList.map((q) => ({
-      responseId: realResponseId,
-      ...formatAnswer(q, cleanedRow),
-    }));
-
-    await db.insert(answers).values(realAnswerRows);
-    console.log(`📥 Seeded 1 real response with ID = ${realResponseId}`);
-
-    // H. Generate 20-60 Synthetic Responses
-    const numSynthetic = faker.number.int({ min: 25, max: 45 });
-    console.log(`🎲 Generating ${numSynthetic} synthetic responses...`);
-
-    // Since we need responseId for the answer mapping, let's run them in a transaction:
     await db.transaction(async (tx) => {
-      for (let rIdx = 0; rIdx < numSynthetic; rIdx++) {
-        const isCompleted = rIdx < numSynthetic - 3;
-        const startedAt = faker.date.past({ years: 1 });
-        const submittedAt = isCompleted
-          ? new Date(
-              startedAt.getTime() +
-                faker.number.int({ min: 2, max: 20 }) * 60 * 1000,
-            )
-          : null;
-        const status = isCompleted ? "completed" : "started";
-
-        const [rInsert] = await tx.insert(responses).values({
-          surveyId,
-          status,
-          startedAt,
-          submittedAt,
-          clientDraftId: faker.string.uuid(),
-        });
-        const syntheticResponseId = (rInsert as any).insertId;
-
-        const syntheticAnswers = [];
-
-        for (const q of questionsList) {
-          if (q.type === "grid") {
-            const valueGrid: Record<string, number> = {};
-            q.gridRows.forEach((rowLabel: string) => {
-              const rowOptId = q.rowOptionIdMap[rowLabel];
-
-              // Weights for choices: 60% Sangat Baik/Baik, 30% Cukup, 10% Kurang
-              const roll = Math.random();
-              let selectedColLabel = q.gridOptions[1]; // default to Baik
-
-              if (q.gridOptions === satisfactionOptions) {
-                if (roll < 0.25) selectedColLabel = "Sangat Baik";
-                else if (roll < 0.6) selectedColLabel = "Baik";
-                else if (roll < 0.9) selectedColLabel = "Cukup";
-                else selectedColLabel = "Kurang";
-              } else if (q.gridOptions === satisfactionPuasOptions) {
-                if (roll < 0.25) selectedColLabel = "Sangat Puas";
-                else if (roll < 0.6) selectedColLabel = "Puas";
-                else if (roll < 0.85) selectedColLabel = "Cukup Puas";
-                else if (roll < 0.95) selectedColLabel = "Kurang Puas";
-                else selectedColLabel = "Tidak Puas";
-              } else if (q.gridOptions === relevanceOptions) {
-                if (roll < 0.35) selectedColLabel = "Sangat relevan";
-                else if (roll < 0.7) selectedColLabel = "Relevan";
-                else if (roll < 0.9) selectedColLabel = "Kurang Relevan";
-                else selectedColLabel = "Tidak Relevan";
-              }
-
-              const colOptId = q.colOptionIdMap[selectedColLabel];
-              if (rowOptId && colOptId) {
-                valueGrid[String(rowOptId)] = colOptId;
-              }
-            });
-
-            syntheticAnswers.push({
-              responseId: syntheticResponseId,
-              questionId: q.id,
-              valueText: null,
-              valueOptionIds: null,
-              valueGrid,
-            });
-          } else {
-            // Non-grid question
-            const headerLower = q.title.toLowerCase();
-            let valueText: string | null = null;
-            let valueOptionIds: number[] | null = null;
-
-            if (q.optionsList && q.optionsList.length > 0) {
-              // Multiple choice or dropdown
-              // Pick random option
-              const roll = Math.random();
-              let optLabel = q.optionsList[0];
-
-              if (
-                headerLower.includes("relevan") ||
-                headerLower.includes("puas")
-              ) {
-                // Apply weighted logic if satisfaction-like
-                const optLen = q.optionsList.length;
-                const idx = Math.floor(roll * roll * optLen); // skewed toward index 0/positive
-                optLabel = q.optionsList[idx] || q.optionsList[0];
-              } else {
-                optLabel = faker.helpers.arrayElement(q.optionsList);
-              }
-
-              const optId = q.optionIdMap[optLabel];
-              valueOptionIds = optId ? [optId] : null;
-            } else {
-              // Text or paragraph free-form
-              if (headerLower.includes("nama")) {
-                valueText = faker.person.fullName();
-              } else if (headerLower.includes("email")) {
-                valueText = faker.internet.email();
-              } else if (headerLower.includes("nim")) {
-                valueText = `J0112${faker.string.numeric(5)}`;
-              } else if (
-                headerLower.includes("telp") ||
-                headerLower.includes("whatsapp") ||
-                headerLower.includes("hp")
-              ) {
-                valueText = `08${faker.string.numeric({ length: 10, allowLeadingZeros: false })}`;
-              } else if (headerLower.includes("alamat")) {
-                valueText =
-                  faker.location.streetAddress() + ", " + faker.location.city();
-              } else if (
-                headerLower.includes("tahun masuk") ||
-                headerLower.includes("lulus")
-              ) {
-                valueText = String(faker.number.int({ min: 2015, max: 2024 }));
-              } else if (q.type === "paragraph") {
-                valueText = faker.lorem.paragraph();
-              } else {
-                valueText = faker.lorem.sentence({ min: 3, max: 7 });
-              }
-            }
-
-            syntheticAnswers.push({
-              responseId: syntheticResponseId,
-              questionId: q.id,
-              valueText,
-              valueOptionIds,
-              valueGrid: null,
-            });
+      for (const row of asliRows) {
+        let realTimestamp = new Date();
+        const tsStr = row[0]?.trim();
+        if (tsStr) {
+          const parsed = new Date(tsStr);
+          if (!Number.isNaN(parsed.getTime())) {
+            realTimestamp = parsed;
           }
         }
 
-        if (syntheticAnswers.length > 0) {
-          await tx.insert(answers).values(syntheticAnswers);
+        const [respInsert] = await tx.insert(responses).values({
+          surveyId,
+          status: "completed",
+          startedAt: new Date(realTimestamp.getTime() - 10 * 60 * 1000), // 10 mins before
+          submittedAt: realTimestamp,
+          clientDraftId: faker.string.uuid(),
+        });
+        const responseId = (respInsert as any).insertId;
+
+        const answerRows = questionsList.map((q) => ({
+          responseId,
+          ...formatAnswer(q, row),
+        }));
+
+        if (answerRows.length > 0) {
+          await tx.insert(answers).values(answerRows);
         }
+        insertedCount++;
       }
     });
 
     console.log(
-      `✅ Seeded ${numSynthetic} synthetic responses for ${sDef.title}`,
+      `📥 Seeded ${insertedCount} real responses for ${sDef.title} (from ${sDef.asliFile})`,
     );
   }
 
