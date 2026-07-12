@@ -38,7 +38,11 @@ The modifications were isolated entirely to helper scopes and JSX branches insid
 ### Interaction with Chart Copy Utility (Product Design Notice)
 - **Dynamic Sizing**: The taller dynamic sizes of `bar-horizontal` are captured correctly by `copyElementChartAsPng` because the canvas generator reads the element's live rendered dimensions directly.
 - **Scroll container**: The scrollable container `overflow-y-auto` wraps the inner `ChartContainer`. Because `chartElementToPngBase64` grabs the inner `[data-chart-root]` (which contains the full-height `ChartContainer`), the generated image renders the **entire** chart height including scrolled elements.
-- **Legend Exclusion (Important)**: In accordance with shadcn/ui chart configuration styling rules, the chart legend is rendered as a standard HTML `div/ul` sibling *outside* the SVG itself. Because the copy-to-clipboard utility specifically clones and rasterizes the SVG element, **the legend labels are naturally excluded from the copied PNG**. This conforms to the specified product configuration design.
+- **Legend Inclusion (Fixed & Enhanced)**: Because the HTML legend is rendered as standard DOM elements outside the Recharts SVG, it was originally excluded from copied/exported images. We have resolved this globally by modifying the rasterization walker to find and parse legend markers dynamically. It supports both custom shadcn wrappers (`[data-legend-item]`) and standard Recharts default wrapper elements (`.recharts-legend-item`). It extracts color styles and labels, dynamically expands the cloned SVG's height viewport (`clone.style.height = ...`), and renders vector shapes directly inside the SVG output before conversion.
+- **Animation Disabling**: Set `isAnimationActive={false}` across all chart types (bar-horizontal, bar-vertical, pie, line, grid) to prevent exporting blank or partially animated states.
+- **Defensive Rendering (Anti-Blank-Image Fixes)**:
+  - Copy `display` and `visibility` computed styles recursively to the cloned SVG. Hidden overlays (like Recharts tooltip cursors) that should be `display: none` are now correctly hidden instead of rendering as solid black layers on top of the bars/pie.
+  - Automatically query and fallback to SVG attributes or default dimensions (e.g. `800x300`) if `getBoundingClientRect()` returns 0 width or height, preventing invalid 0-size canvas drawing.
 
 ---
 

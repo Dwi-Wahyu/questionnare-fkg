@@ -13,7 +13,17 @@ async function chartElementToPngBlob(containerEl: HTMLElement): Promise<Blob> {
 	const svg = mainSvg;
 	if (!svg) throw new Error("Grafik tidak ditemukan.");
 
-	const { width, height } = svg.getBoundingClientRect();
+	let { width, height } = svg.getBoundingClientRect();
+	// Fallback to SVG attributes or default dimensions if client bounds are 0
+	if (width <= 0)
+		width = svg.hasAttribute("width") ? Number(svg.getAttribute("width")) : 800;
+	if (height <= 0)
+		height = svg.hasAttribute("height")
+			? Number(svg.getAttribute("height"))
+			: 300;
+	if (width <= 0) width = 800;
+	if (height <= 0) height = 300;
+
 	const scale = 2; // export at 2x for crisper paste
 
 	// Clone so we don't mutate the live chart, inline computed styles Recharts
@@ -23,6 +33,8 @@ async function chartElementToPngBlob(containerEl: HTMLElement): Promise<Blob> {
 	const clone = svg.cloneNode(true) as SVGSVGElement;
 	clone.setAttribute("width", String(width));
 	clone.setAttribute("height", String(height));
+	clone.style.width = `${width}px`;
+	clone.style.height = `${height}px`;
 
 	// Inline computed styles from the live SVG to the clone so it has complete color/font information
 	const originalElements = svg.querySelectorAll("*");
@@ -37,6 +49,15 @@ async function chartElementToPngBlob(containerEl: HTMLElement): Promise<Blob> {
 			}
 
 			const style = window.getComputedStyle(orig);
+
+			// Copy display & visibility to preserve hidden elements (e.g. tooltip cursors)
+			if (style.display === "none") {
+				cloned.style.display = "none";
+				continue; // Skip hidden elements styling
+			}
+			if (style.visibility === "hidden") {
+				cloned.style.visibility = "hidden";
+			}
 
 			// Copy fill (respecting explicit 'none' and transparent/rgba values)
 			if (
@@ -83,6 +104,137 @@ async function chartElementToPngBlob(containerEl: HTMLElement): Promise<Blob> {
 		}
 	}
 
+	// Extract and draw HTML legend items inside the cloned SVG so they are included in exports
+	let renderHeight = height;
+	const legendData: { label: string; color: string }[] = [];
+
+	// 1. Try custom data attributes (shadcn custom legend)
+	const shadcnItems = containerEl.querySelectorAll("[data-legend-item]");
+	if (shadcnItems.length > 0) {
+		for (const el of Array.from(shadcnItems)) {
+			const label = el.getAttribute("data-legend-label") || "";
+			const color = el.getAttribute("data-legend-color") || "#000000";
+			if (label) {
+				legendData.push({ label, color });
+			}
+		}
+	}
+
+	// 2. If no custom items, try default Recharts legend items (e.g. in grid charts)
+	if (legendData.length === 0) {
+		const rechartsItems = containerEl.querySelectorAll(".recharts-legend-item");
+		for (const el of Array.from(rechartsItems)) {
+			const label = el.textContent?.trim() || "";
+			if (!label) continue;
+
+			// Find marker color
+			let color = "#000000";
+			const marker =
+				el.querySelector("path, rect, circle, [style*='background-color']") ||
+				el.querySelector("svg");
+			if (marker) {
+				const style = window.getComputedStyle(marker);
+				if (
+					style.fill &&
+					style.fill !== "none" &&
+					style.fill !== "rgba(0, 0, 0, 0)" &&
+					style.fill !== "transparent"
+				) {
+					color = style.fill;
+				} else if (
+					style.backgroundColor &&
+					style.backgroundColor !== "rgba(0, 0, 0, 0)" &&
+					style.backgroundColor !== "transparent"
+				) {
+					color = style.backgroundColor;
+				} else {
+					color =
+						marker.getAttribute("fill") ||
+						marker.getAttribute("stroke") ||
+						"#000000";
+				}
+			}
+			legendData.push({ label, color });
+		}
+	}
+
+	if (legendData.length > 0) {
+		const legendHeight = 35; // vertical height for legend
+		renderHeight = height + legendHeight;
+
+		// Update clone size
+		clone.setAttribute("height", String(renderHeight));
+		clone.style.height = `${renderHeight}px`;
+		clone.style.maxHeight = `${renderHeight}px`;
+
+		const viewBox = clone.getAttribute("viewBox");
+		if (viewBox) {
+			const parts = viewBox.split(/\s+/);
+			if (parts.length === 4) {
+				parts[3] = String(renderHeight);
+				clone.setAttribute("viewBox", parts.join(" "));
+			}
+		}
+
+		// Create a group container for the legend items
+		const legendGroup = document.createElementNS(
+			"http://www.w3.org/2000/svg",
+			"g",
+		);
+		legendGroup.setAttribute("class", "custom-svg-legend");
+		legendGroup.setAttribute("transform", `translate(0, ${height + 15})`);
+
+		// Estimate width of each item for horizontal centering
+		const itemsWithWidth = legendData.map((item) => {
+			const textWidth = item.label.length * 6.5; // avg width of Outfit 11px font character
+			const itemWidth = 8 + 6 + textWidth + 16; // color rect width (8) + gap (6) + textWidth + horizontal spacer (16)
+			return { ...item, width: itemWidth };
+		});
+
+		const totalLegendWidth = itemsWithWidth.reduce(
+			(sum, item) => sum + item.width,
+			0,
+		);
+		let currentX = Math.max(10, (width - totalLegendWidth) / 2);
+
+		for (const item of itemsWithWidth) {
+			const itemG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+			itemG.setAttribute("transform", `translate(${currentX}, 0)`);
+
+			// Draw color marker
+			const rect = document.createElementNS(
+				"http://www.w3.org/2000/svg",
+				"rect",
+			);
+			rect.setAttribute("x", "0");
+			rect.setAttribute("y", "-4"); // align vertically with text baseline
+			rect.setAttribute("width", "8");
+			rect.setAttribute("height", "8");
+			rect.setAttribute("rx", "1.5");
+			rect.setAttribute("fill", item.color);
+			itemG.appendChild(rect);
+
+			// Draw text label
+			const text = document.createElementNS(
+				"http://www.w3.org/2000/svg",
+				"text",
+			);
+			text.setAttribute("x", "14"); // gap after box
+			text.setAttribute("y", "4");
+			text.setAttribute("fill", "#434652");
+			text.setAttribute("font-family", "Outfit, sans-serif");
+			text.setAttribute("font-size", "11px");
+			text.setAttribute("font-weight", "500");
+			text.textContent = item.label;
+			itemG.appendChild(text);
+
+			legendGroup.appendChild(itemG);
+			currentX += item.width;
+		}
+
+		clone.appendChild(legendGroup);
+	}
+
 	const serialized = new XMLSerializer().serializeToString(clone);
 	const svgBlob = new Blob([serialized], {
 		type: "image/svg+xml;charset=utf-8",
@@ -99,7 +251,7 @@ async function chartElementToPngBlob(containerEl: HTMLElement): Promise<Blob> {
 
 		const canvas = document.createElement("canvas");
 		canvas.width = width * scale;
-		canvas.height = height * scale;
+		canvas.height = renderHeight * scale;
 		const ctx = canvas.getContext("2d");
 		if (!ctx) throw new Error("Canvas tidak didukung.");
 
@@ -109,7 +261,7 @@ async function chartElementToPngBlob(containerEl: HTMLElement): Promise<Blob> {
 		ctx.fillStyle = "#ffffff";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 		ctx.scale(scale, scale);
-		ctx.drawImage(img, 0, 0, width, height);
+		ctx.drawImage(img, 0, 0, width, renderHeight);
 
 		const blob: Blob = await new Promise((resolve, reject) =>
 			canvas.toBlob(

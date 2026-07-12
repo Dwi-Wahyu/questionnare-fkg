@@ -303,6 +303,15 @@ function ChartLegendContent({
 					return (
 						<div
 							key={index}
+							data-legend-item=""
+							data-legend-color={item.color}
+							data-legend-label={
+								typeof itemConfig?.label === "string"
+									? itemConfig.label
+									: typeof item.value === "string"
+										? item.value
+										: String(item.value || "")
+							}
 							className={cn(
 								"flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground",
 							)}

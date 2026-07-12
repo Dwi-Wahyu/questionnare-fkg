@@ -2225,6 +2225,7 @@ function ChartCard({
 													}
 												/>
 												<Pie
+													isAnimationActive={false}
 													data={pieData}
 													dataKey="count"
 													nameKey="label"
@@ -2269,6 +2270,7 @@ function ChartCard({
 									<YAxis tickLine={false} axisLine={false} />
 									<ChartTooltip content={<ChartTooltipContent />} />
 									<Bar
+										isAnimationActive={false}
 										dataKey="count"
 										fill={primaryColor}
 										radius={[4, 4, 0, 0]}
@@ -2301,6 +2303,7 @@ function ChartCard({
 									<YAxis tickLine={false} axisLine={false} />
 									<ChartTooltip content={<ChartTooltipContent />} />
 									<Line
+										isAnimationActive={false}
 										type="monotone"
 										dataKey="count"
 										stroke={primaryColor}
@@ -2359,6 +2362,7 @@ function ChartCard({
 											/>
 											<ChartTooltip content={<ChartTooltipContent />} />
 											<Bar
+												isAnimationActive={false}
 												dataKey="count"
 												fill={primaryColor}
 												radius={[0, 4, 4, 0]}
@@ -2411,11 +2415,12 @@ function ChartCard({
 									/>
 									<YAxis tickLine={false} axisLine={false} />
 									<ChartTooltip content={<ChartTooltipContent />} />
-									<Legend />
+									<ChartLegend content={<ChartLegendContent />} />
 									{stat.data.columns.map((colLabel: string, colIdx: number) => {
 										const cKey = safeKey(colLabel);
 										return (
 											<Bar
+												isAnimationActive={false}
 												key={colIdx}
 												dataKey={colLabel}
 												fill={chartConfig[cKey]?.color || primaryColor}
