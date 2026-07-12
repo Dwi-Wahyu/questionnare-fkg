@@ -1,6 +1,4 @@
-async function chartElementToPngBlob(
-	containerEl: HTMLElement,
-): Promise<Blob> {
+async function chartElementToPngBlob(containerEl: HTMLElement): Promise<Blob> {
 	const svgs = Array.from(containerEl.querySelectorAll("svg"));
 	let mainSvg = svgs[0];
 	let maxArea = 0;
@@ -155,7 +153,7 @@ export async function chartElementToPngBase64(
 ): Promise<string> {
 	const blob = await chartElementToPngBlob(containerEl);
 	const buf = await blob.arrayBuffer();
-	
+
 	// Convert array buffer to base64
 	let binary = "";
 	const bytes = new Uint8Array(buf);
@@ -165,4 +163,3 @@ export async function chartElementToPngBase64(
 	}
 	return btoa(binary);
 }
-

@@ -3,20 +3,22 @@ import * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { toast } from "../../components/ui/useToast";
-import { copyElementChartAsPng, chartElementToPngBase64 } from "../../lib/copyChartImage";
+import {
+	chartElementToPngBase64,
+	copyElementChartAsPng,
+} from "../../lib/copyChartImage";
 import {
 	duplicateAdminSurveyFn,
 	exportAdminSurveyResponsesCSVFn,
 	generateSurveyReportFn,
-	getLatestSurveyReportFn,
 	getAdminSurveyAnswersStatsFn,
 	getAdminSurveyDetailFn,
 	getAdminSurveyResponseDetailFn,
 	getAdminSurveyResponsesListFn,
+	getLatestSurveyReportFn,
 	updateAdminSurveyQuestionsFn,
 	updateAdminSurveySettingsFn,
 } from "../../server/adminSurveyFunctions";
-
 
 export const Route = createFileRoute("/admin/surveys/$surveyId")({
 	validateSearch: (search: Record<string, unknown>) => ({
@@ -96,7 +98,11 @@ function SurveyDetailComponent() {
 	const [isDuplicating, setIsDuplicating] = useState(false);
 	const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 	const [reportCooldown, setReportCooldown] = useState(0);
-	const [latestReport, setLatestReport] = useState<{ fileName: string; base64: string; generatedAt: string } | null>(null);
+	const [latestReport, setLatestReport] = useState<{
+		fileName: string;
+		base64: string;
+		generatedAt: string;
+	} | null>(null);
 
 	const fetchLatestReport = async () => {
 		try {
@@ -399,7 +405,7 @@ function SurveyDetailComponent() {
 	const handleGenerateReport = async () => {
 		if (reportCooldown > 0) {
 			toast.error(
-				`Tunggu ${Math.ceil(reportCooldown / 60)} menit lagi sebelum generate laporan berikutnya untuk survei ini.`
+				`Tunggu ${Math.ceil(reportCooldown / 60)} menit lagi sebelum generate laporan berikutnya untuk survei ini.`,
 			);
 			return;
 		}
@@ -410,7 +416,11 @@ function SurveyDetailComponent() {
 		try {
 			// Find all chart cards rendered in the DOM
 			const chartCardEls = document.querySelectorAll("[data-chart-card]");
-			const charts: { questionId: number; label: string; imageBase64: string }[] = [];
+			const charts: {
+				questionId: number;
+				label: string;
+				imageBase64: string;
+			}[] = [];
 
 			for (const card of chartCardEls) {
 				const cardSvgs = Array.from(card.querySelectorAll("svg"));
@@ -429,7 +439,8 @@ function SurveyDetailComponent() {
 				try {
 					const qId = Number(card.getAttribute("data-question-id"));
 					const label = card.getAttribute("data-chart-label") || "";
-					const rootEl = (svgEl.closest("[data-chart-root]") as HTMLElement) ?? svgEl;
+					const rootEl =
+						(svgEl.closest("[data-chart-root]") as HTMLElement) ?? svgEl;
 					const imageBase64 = await chartElementToPngBase64(rootEl);
 					charts.push({
 						questionId: qId,
@@ -508,8 +519,6 @@ function SurveyDetailComponent() {
 			toast.error("Gagal mengunduh laporan sebelumnya.");
 		}
 	};
-
-
 
 	const getStatusBadge = (status: string) => {
 		switch (status) {
@@ -609,7 +618,9 @@ function SurveyDetailComponent() {
 								disabled={isGeneratingReport || reportCooldown > 0}
 								className={`bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer ${isGeneratingReport || reportCooldown > 0 ? "opacity-75 cursor-not-allowed" : ""}`}
 							>
-								<span className={`material-symbols-outlined text-sm ${isGeneratingReport ? "animate-spin" : ""}`}>
+								<span
+									className={`material-symbols-outlined text-sm ${isGeneratingReport ? "animate-spin" : ""}`}
+								>
 									{isGeneratingReport ? "sync" : "description"}
 								</span>
 								<span>
@@ -621,19 +632,21 @@ function SurveyDetailComponent() {
 								</span>
 							</button>
 						)}
-						{subtab === "ringkasan" && user?.role === "admin" && latestReport && (
-							<button
-								type="button"
-								onClick={handleDownloadLatestReport}
-								title={`Unduh laporan terakhir yang digenerate pada ${new Date(latestReport.generatedAt).toLocaleString("id-ID")}`}
-								className="bg-sky-600 text-white hover:bg-sky-700 text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer"
-							>
-								<span className="material-symbols-outlined text-sm">
-									file_download
-								</span>
-								<span>Unduh Laporan Terakhir</span>
-							</button>
-						)}
+						{subtab === "ringkasan" &&
+							user?.role === "admin" &&
+							latestReport && (
+								<button
+									type="button"
+									onClick={handleDownloadLatestReport}
+									title={`Unduh laporan terakhir yang digenerate pada ${new Date(latestReport.generatedAt).toLocaleString("id-ID")}`}
+									className="bg-sky-600 text-white hover:bg-sky-700 text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer"
+								>
+									<span className="material-symbols-outlined text-sm">
+										file_download
+									</span>
+									<span>Unduh Laporan Terakhir</span>
+								</button>
+							)}
 						<button
 							onClick={handleDownloadCSV}
 							className="bg-[#0b3e9c] text-white hover:bg-[#002972] text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer"
@@ -2015,12 +2028,16 @@ import {
 	Legend,
 	Line,
 	LineChart,
+	Pie,
+	PieChart,
 	Tooltip,
 	XAxis,
 	YAxis,
 } from "recharts";
 import {
 	ChartContainer,
+	ChartLegend,
+	ChartLegendContent,
 	ChartTooltip,
 	ChartTooltipContent,
 } from "../../components/ui/chart";
@@ -2041,7 +2058,7 @@ const pickChartKind = (stat: any) => {
 		return "grid";
 	}
 	if (count <= 4) {
-		return "bar-vertical";
+		return "pie";
 	}
 	if (count <= 8) {
 		return "line";
@@ -2167,7 +2184,6 @@ function ChartCard({
 					</div>
 				) : (
 					<div ref={chartRef} data-chart-root="">
-
 						{chartKind === "text" && (
 							<div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
 								{!stat.data || stat.data.length === 0 ? (
@@ -2188,6 +2204,56 @@ function ChartCard({
 								)}
 							</div>
 						)}
+
+						{chartKind === "pie" &&
+							(() => {
+								const pieData = stat.data.map((item: any, idx: number) => ({
+									...item,
+									fill: primaryPalette[idx % primaryPalette.length],
+								}));
+
+								return (
+									<div className="flex flex-col items-center">
+										<ChartContainer
+											config={chartConfig}
+											className="aspect-square max-h-[280px] w-full"
+										>
+											<PieChart>
+												<ChartTooltip
+													content={
+														<ChartTooltipContent nameKey="label" hideLabel />
+													}
+												/>
+												<Pie
+													data={pieData}
+													dataKey="count"
+													nameKey="label"
+													labelLine={false}
+													label={({ payload, ...props }: any) => (
+														<text
+															cx={props.cx}
+															cy={props.cy}
+															x={props.x}
+															y={props.y}
+															textAnchor={props.textAnchor}
+															dominantBaseline={props.dominantBaseline}
+															fill="#1a1b21"
+															fontSize={11}
+															fontWeight="bold"
+														>
+															{payload.count}
+														</text>
+													)}
+												/>
+												<ChartLegend
+													content={<ChartLegendContent nameKey="label" />}
+													className="flex-wrap gap-2 *:basis-1/2 *:justify-start"
+												/>
+											</PieChart>
+										</ChartContainer>
+									</div>
+								);
+							})()}
 
 						{chartKind === "bar-vertical" && (
 							<ChartContainer
@@ -2255,45 +2321,68 @@ function ChartCard({
 							</ChartContainer>
 						)}
 
-						{chartKind === "bar-horizontal" && (
-							<ChartContainer
-								config={chartConfig}
-								className="min-h-[400px] w-full"
-							>
-								<BarChart
-									data={stat.data}
-									layout="vertical"
-									margin={{ top: 20, right: 30, bottom: 20, left: 100 }}
-								>
-									<CartesianGrid horizontal={false} strokeDasharray="3 3" />
-									<XAxis type="number" tickLine={false} axisLine={false} />
-									<YAxis
-										dataKey="label"
-										type="category"
-										tickLine={false}
-										axisLine={false}
-										width={90}
-										fontSize={10}
-									/>
-									<ChartTooltip content={<ChartTooltipContent />} />
-									<Bar
-										dataKey="count"
-										fill={primaryColor}
-										radius={[0, 4, 4, 0]}
+						{chartKind === "bar-horizontal" &&
+							(() => {
+								const rowHeight = 32; // px per category — enough for an 11px label without collision
+								const computedHeight = Math.max(
+									400,
+									stat.data.length * rowHeight,
+								);
+								const cappedHeight = Math.min(computedHeight, 1200); // hard ceiling so the card can't run away
+								const needsScroll = computedHeight > cappedHeight;
+								const yAxisWidth = 140; // widened from 90 — long prodi/institution names need more room
+
+								const chart = (
+									<ChartContainer
+										config={chartConfig}
+										className="aspect-auto w-full"
+										style={{ height: cappedHeight }}
 									>
-										<LabelList
-											dataKey="count"
-											position="right"
-											style={{
-												fill: "#1a1b21",
-												fontSize: 11,
-												fontWeight: "bold",
-											}}
-										/>
-									</Bar>
-								</BarChart>
-							</ChartContainer>
-						)}
+										<BarChart
+											data={stat.data}
+											layout="vertical"
+											margin={{ top: 20, right: 30, bottom: 20, left: 20 }}
+										>
+											<CartesianGrid horizontal={false} strokeDasharray="3 3" />
+											<XAxis type="number" tickLine={false} axisLine={false} />
+											<YAxis
+												dataKey="label"
+												type="category"
+												tickLine={false}
+												axisLine={false}
+												width={yAxisWidth}
+												fontSize={10}
+												interval={0}
+												tickFormatter={(val: string) =>
+													val.length > 22 ? `${val.slice(0, 22)}…` : val
+												}
+											/>
+											<ChartTooltip content={<ChartTooltipContent />} />
+											<Bar
+												dataKey="count"
+												fill={primaryColor}
+												radius={[0, 4, 4, 0]}
+											>
+												<LabelList
+													dataKey="count"
+													position="right"
+													style={{
+														fill: "#1a1b21",
+														fontSize: 11,
+														fontWeight: "bold",
+													}}
+												/>
+											</Bar>
+										</BarChart>
+									</ChartContainer>
+								);
+
+								return needsScroll ? (
+									<div className="max-h-[600px] overflow-y-auto">{chart}</div>
+								) : (
+									chart
+								);
+							})()}
 
 						{chartKind === "grid" && stat.data && (
 							<ChartContainer

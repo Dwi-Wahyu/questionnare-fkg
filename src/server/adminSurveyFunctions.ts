@@ -13,9 +13,6 @@ import {
 	users,
 } from "./db/schema";
 
-
-
-
 // Middleware to assert user is logged in
 async function assertUser() {
 	const user = await getUserFromSession();
@@ -452,7 +449,10 @@ export const getAdminSurveyResponsesListFn = createServerFn({ method: "GET" })
 	});
 
 // Helper function to compute survey stats (shared between charts tab and report generator)
-async function computeSurveyStats(surveyId: number, userRole: "admin" | "visitor") {
+async function computeSurveyStats(
+	surveyId: number,
+	userRole: "admin" | "visitor",
+) {
 	// Fetch all sections to determine the first section (for personal info identification)
 	const surveySections = await db
 		.select()
@@ -639,7 +639,14 @@ async function computeSurveyStats(surveyId: number, userRole: "admin" | "visitor
 		}
 	});
 
-	return { stats, surveyQuestions, surveyOptions, allAnswers, surveySections, firstSectionId };
+	return {
+		stats,
+		surveyQuestions,
+		surveyOptions,
+		allAnswers,
+		surveySections,
+		firstSectionId,
+	};
 }
 
 // 9. Get detailed response statistics (for the charts)
@@ -650,7 +657,6 @@ export const getAdminSurveyAnswersStatsFn = createServerFn({ method: "GET" })
 		const { stats } = await computeSurveyStats(surveyId, user.role);
 		return stats;
 	});
-
 
 // 10. Update survey questions (reordering, adding, deleting)
 export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
@@ -1305,7 +1311,10 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 	});
 
 // Helper for scale threshold bucketing
-function getScaleBucket(avg: number, options: { value: string | null; label: string }[]) {
+function getScaleBucket(
+	avg: number,
+	options: { value: string | null; label: string }[],
+) {
 	const numericOptions = options
 		.map((o) => ({
 			val: o.value ? Number.parseFloat(o.value) : Number.parseFloat(o.label),
@@ -1361,14 +1370,16 @@ async function assertReportRateLimit(surveyId: number, userId: number) {
 
 // 14. Generate automatic survey report with Groq analysis and Recharts charts embedded (Admin only)
 export const generateSurveyReportFn = createServerFn({ method: "POST" })
-	.validator((data: {
-		surveyId: number;
-		charts: {
-			questionId: number;
-			label: string;
-			imageBase64: string;
-		}[];
-	}) => data)
+	.validator(
+		(data: {
+			surveyId: number;
+			charts: {
+				questionId: number;
+				label: string;
+				imageBase64: string;
+			}[];
+		}) => data,
+	)
 	.handler(async ({ data: { surveyId, charts } }) => {
 		const user = await assertAdmin();
 		const userId = user.id;
@@ -1384,7 +1395,9 @@ export const generateSurveyReportFn = createServerFn({ method: "POST" })
 			totalBase64Length += chart.imageBase64.length;
 		}
 		if (totalBase64Length > 7 * 1024 * 1024) {
-			throw new Error("Ukuran total gambar grafik terlalu besar (maksimal 5MB).");
+			throw new Error(
+				"Ukuran total gambar grafik terlalu besar (maksimal 5MB).",
+			);
 		}
 
 		// Check rate limit
@@ -1404,19 +1417,30 @@ export const generateSurveyReportFn = createServerFn({ method: "POST" })
 			.where(
 				and(
 					eq(responses.surveyId, surveyId),
-					eq(responses.status, "completed")
-				)
+					eq(responses.status, "completed"),
+				),
 			);
 		const responseCount = responseCountResult?.count || 0;
 
 		// 1. Get statistics and metadata
-		const { stats, surveyQuestions, surveyOptions, allAnswers, firstSectionId } =
-			await computeSurveyStats(surveyId, user.role);
+		const {
+			stats,
+			surveyQuestions,
+			surveyOptions,
+			allAnswers,
+			firstSectionId,
+		} = await computeSurveyStats(surveyId, user.role);
 
 		// Compute mean scores for linear_scale & multiple_choice
-		const allMeans: { questionId: number; type: string; mean: number; category: string }[] = [];
+		const allMeans: {
+			questionId: number;
+			type: string;
+			mean: number;
+			category: string;
+		}[] = [];
 		for (const q of surveyQuestions) {
-			const isPersonal = firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
+			const isPersonal =
+				firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
 			if (isPersonal) continue;
 
 			const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
@@ -1426,7 +1450,9 @@ export const generateSurveyReportFn = createServerFn({ method: "POST" })
 				const numericOptions = qOptions
 					.map((o) => ({
 						id: o.id,
-						val: o.value ? Number.parseFloat(o.value) : Number.parseFloat(o.label),
+						val: o.value
+							? Number.parseFloat(o.value)
+							: Number.parseFloat(o.label),
 						label: o.label,
 					}))
 					.filter((o) => !Number.isNaN(o.val));
@@ -1463,9 +1489,13 @@ export const generateSurveyReportFn = createServerFn({ method: "POST" })
 		if (linearScaleMeans.length > 0) {
 			const sum = linearScaleMeans.reduce((acc, m) => acc + m.mean, 0);
 			overallMeanVal = sum / linearScaleMeans.length;
-			const firstScaleQ = surveyQuestions.find((q) => q.type === "linear_scale");
+			const firstScaleQ = surveyQuestions.find(
+				(q) => q.type === "linear_scale",
+			);
 			if (firstScaleQ) {
-				const firstQOptions = surveyOptions.filter((o) => o.questionId === firstScaleQ.id);
+				const firstQOptions = surveyOptions.filter(
+					(o) => o.questionId === firstScaleQ.id,
+				);
 				overallCategoryVal = getScaleBucket(overallMeanVal, firstQOptions);
 			}
 		}
@@ -1479,7 +1509,8 @@ export const generateSurveyReportFn = createServerFn({ method: "POST" })
 		userPrompt += `Jumlah Responden: ${responseCount} orang\n\n`;
 
 		for (const q of surveyQuestions) {
-			const isPersonal = firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
+			const isPersonal =
+				firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
 			if (isPersonal) continue;
 
 			const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
@@ -1556,22 +1587,25 @@ Ketentuan:
 			throw new Error("GROQ_API_KEY tidak dikonfigurasi di server.");
 		}
 
-		const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-			method: "POST",
-			headers: {
-				"Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
-				"Content-Type": "application/json",
+		const groqResponse = await fetch(
+			"https://api.groq.com/openai/v1/chat/completions",
+			{
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					model: "llama-3.3-70b-versatile",
+					messages: [
+						{ role: "system", content: systemPrompt },
+						{ role: "user", content: userPrompt },
+					],
+					response_format: { type: "json_object" },
+					temperature: 0.3,
+				}),
 			},
-			body: JSON.stringify({
-				model: "llama-3.3-70b-versatile",
-				messages: [
-					{ role: "system", content: systemPrompt },
-					{ role: "user", content: userPrompt },
-				],
-				response_format: { type: "json_object" },
-				temperature: 0.3,
-			}),
-		});
+		);
 
 		if (!groqResponse.ok) {
 			const errText = await groqResponse.text();
@@ -1594,11 +1628,17 @@ Ketentuan:
 		try {
 			analysis = JSON.parse(resultText);
 		} catch (e) {
-			throw new Error("Gagal mengurai respon analisis dari AI. Silakan coba lagi.");
+			throw new Error(
+				"Gagal mengurai respon analisis dari AI. Silakan coba lagi.",
+			);
 		}
 
 		// 3. Render DOCX using docx-templates
-		const templatePath = path.join(process.cwd(), "templates", "laporan-survei-template.docx");
+		const templatePath = path.join(
+			process.cwd(),
+			"templates",
+			"laporan-survei-template.docx",
+		);
 		if (!fs.existsSync(templatePath)) {
 			throw new Error("Berkas template laporan tidak ditemukan.");
 		}
@@ -1617,7 +1657,8 @@ Ketentuan:
 		}
 
 		for (const q of surveyQuestions) {
-			const isPersonal = firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
+			const isPersonal =
+				firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
 			if (isPersonal) continue;
 
 			const meanItem = allMeans.find((m) => m.questionId === q.id);
@@ -1640,9 +1681,12 @@ Ketentuan:
 				});
 			}
 
-			const narrative = analysis.interpretations[String(q.id)] || analysis.interpretations[q.id];
+			const narrative =
+				analysis.interpretations[String(q.id)] ||
+				analysis.interpretations[q.id];
 			interpretationParagraphsData.push(
-				narrative || `Indikator "${q.title}" menunjukkan data dengan distribusi respon yang terkumpul.`
+				narrative ||
+					`Indikator "${q.title}" menunjukkan data dengan distribusi respon yang terkumpul.`,
 			);
 		}
 
@@ -1713,5 +1757,3 @@ export const getLatestSurveyReportFn = createServerFn({ method: "GET" })
 			generatedAt: latest.generatedAt.toISOString(),
 		};
 	});
-
-

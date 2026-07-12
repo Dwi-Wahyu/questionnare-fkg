@@ -198,4 +198,3 @@ export const reportGenerations = mysqlTable("report_generations", {
 	fileBase64: mediumtext("file_base_64"),
 	fileName: varchar("file_name", { length: 255 }),
 });
-
