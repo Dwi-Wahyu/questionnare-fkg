@@ -22,6 +22,34 @@
       "when": 1783630475102,
       "tag": "0002_tricky_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1783819849726,
+      "tag": "0003_ambitious_wendell_rand",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1783825303287,
+      "tag": "0004_pale_vampiro",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1783826832251,
+      "tag": "0005_blue_mercury",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1783827855122,
+      "tag": "0006_striped_jamie_braddock",
+      "breakpoints": true
     }
   ]
 }

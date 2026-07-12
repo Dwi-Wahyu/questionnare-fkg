@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
-import { eq, sql, desc, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { getUserFromSession } from "./auth";
 import { db } from "./db";
 import { users } from "./db/schema";
-import { getUserFromSession } from "./auth";
 
 async function assertAdmin() {
 	const user = await getUserFromSession();

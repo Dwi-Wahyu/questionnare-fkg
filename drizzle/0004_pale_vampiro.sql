@@ -1,0 +1,1 @@
+ALTER TABLE `surveys` ADD `period_value_end` varchar(10);

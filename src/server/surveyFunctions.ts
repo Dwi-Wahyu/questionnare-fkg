@@ -1,13 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
-import { eq, and, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
-	surveys,
-	sections,
-	questions,
-	questionOptions,
-	responses,
 	answers,
+	questionOptions,
+	questions,
+	responses,
+	sections,
+	surveys,
 } from "./db/schema";
 
 // 1. Fetch published surveys for landing page
@@ -96,6 +96,47 @@ export const getSurveyDetailsFn = createServerFn({ method: "GET" })
 export const startResponseFn = createServerFn({ method: "POST" })
 	.validator((data: { surveyId: number; clientDraftId: string }) => data)
 	.handler(async ({ data }) => {
+		const [survey] = await db
+			.select()
+			.from(surveys)
+			.where(eq(surveys.id, data.surveyId));
+		if (!survey) throw new Error("Survei tidak ditemukan.");
+
+		if (survey.periodValueEnd) {
+			const now = new Date();
+			let isExpired = false;
+			if (survey.periodType === "month") {
+				const [year, month] = survey.periodValueEnd.split("-");
+				const endOfPeriod = new Date(
+					Number(year),
+					Number(month),
+					0,
+					23,
+					59,
+					59,
+					999,
+				);
+				isExpired = now > endOfPeriod;
+			} else {
+				const [year, month, day] = survey.periodValueEnd.split("-");
+				const endOfPeriod = new Date(
+					Number(year),
+					Number(month) - 1,
+					Number(day),
+					23,
+					59,
+					59,
+					999,
+				);
+				isExpired = now > endOfPeriod;
+			}
+			if (isExpired) {
+				throw new Error(
+					"Maaf, periode pengisian kuesioner ini telah berakhir.",
+				);
+			}
+		}
+
 		const [inserted] = await db.insert(responses).values({
 			surveyId: data.surveyId,
 			status: "started",
@@ -124,6 +165,47 @@ export const submitResponseFn = createServerFn({ method: "POST" })
 		}) => data,
 	)
 	.handler(async ({ data }) => {
+		const [survey] = await db
+			.select()
+			.from(surveys)
+			.where(eq(surveys.id, data.surveyId));
+		if (!survey) throw new Error("Survei tidak ditemukan.");
+
+		if (survey.periodValueEnd) {
+			const now = new Date();
+			let isExpired = false;
+			if (survey.periodType === "month") {
+				const [year, month] = survey.periodValueEnd.split("-");
+				const endOfPeriod = new Date(
+					Number(year),
+					Number(month),
+					0,
+					23,
+					59,
+					59,
+					999,
+				);
+				isExpired = now > endOfPeriod;
+			} else {
+				const [year, month, day] = survey.periodValueEnd.split("-");
+				const endOfPeriod = new Date(
+					Number(year),
+					Number(month) - 1,
+					Number(day),
+					23,
+					59,
+					59,
+					999,
+				);
+				isExpired = now > endOfPeriod;
+			}
+			if (isExpired) {
+				throw new Error(
+					"Maaf, kuesioner ini sudah ditutup karena telah berakhir.",
+				);
+			}
+		}
+
 		return await db.transaction(async (tx) => {
 			// Find if response already exists via clientDraftId, or create new
 			let responseId: number;

@@ -158,7 +158,11 @@ function LoginComponent() {
 						type="submit"
 						variant="primary"
 						className="w-full mt-2"
-						style={{ padding: "14px 20px", fontSize: "0.95rem", borderRadius: "var(--radius-xl)" }}
+						style={{
+							padding: "14px 20px",
+							fontSize: "0.95rem",
+							borderRadius: "var(--radius-xl)",
+						}}
 						disabled={loading}
 					>
 						{loading ? "Memproses..." : "Masuk"}
@@ -168,19 +172,27 @@ function LoginComponent() {
 				<div className="mt-4">
 					<div className="flex items-center gap-4 my-6">
 						<div className="flex-1 h-px bg-slate-200/80"></div>
-						<span className="text-[10px] text-slate-400 font-bold tracking-wider uppercase">ATAU</span>
+						<span className="text-[10px] text-slate-400 font-bold tracking-wider uppercase">
+							ATAU
+						</span>
 						<div className="flex-1 h-px bg-slate-200/80"></div>
 					</div>
-					
+
 					<Button
 						type="button"
 						variant="secondary"
 						className="w-full flex items-center justify-center gap-2"
-						style={{ padding: "12px 20px", fontSize: "0.95rem", borderRadius: "var(--radius-xl)" }}
+						style={{
+							padding: "12px 20px",
+							fontSize: "0.95rem",
+							borderRadius: "var(--radius-xl)",
+						}}
 						disabled={loading}
 						onClick={handleGuestLogin}
 					>
-						<span className="material-symbols-outlined text-lg">account_circle</span>
+						<span className="material-symbols-outlined text-lg">
+							account_circle
+						</span>
 						Masuk Sebagai Tamu
 					</Button>
 				</div>

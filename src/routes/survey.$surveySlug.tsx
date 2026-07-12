@@ -1,34 +1,162 @@
 import {
   createFileRoute,
   Link,
-  useRouter,
-  useLocation,
   Outlet,
+  useLocation,
+  useRouter,
 } from "@tanstack/react-router";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "../components/ui/Button";
 import {
   getSurveyDetailsFn,
   startResponseFn,
   submitResponseFn,
 } from "../server/surveyFunctions";
-import { Button } from "../components/ui/Button";
 
 export const Route = createFileRoute("/survey/$surveySlug")({
   loader: async ({ params }) => {
-    const data = await getSurveyDetailsFn({ data: params.surveySlug });
-    return data;
+    try {
+      const data = await getSurveyDetailsFn({ data: params.surveySlug });
+      return { data, error: null };
+    } catch (err: any) {
+      return {
+        data: null,
+        error:
+          err.message || "Survei tidak ditemukan atau belum dipublikasikan",
+      };
+    }
   },
   component: SurveyTakingComponent,
 });
 
+function getFormattedPeriod(val: string, type: "month" | "date") {
+  if (!val) return "";
+  if (type === "month") {
+    const [year, month] = val.split("-");
+    const date = new Date(Number(year), Number(month) - 1, 1);
+    return date.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+  } else {
+    const date = new Date(val);
+    return date.toLocaleDateString("id-ID", { dateStyle: "long" });
+  }
+}
+
+function isSurveyExpired(
+  valEnd: string | null | undefined,
+  type: "month" | "date",
+) {
+  if (!valEnd) return false;
+  const now = new Date();
+  if (type === "month") {
+    const [year, month] = valEnd.split("-");
+    // Last day of that month
+    const endOfPeriod = new Date(
+      Number(year),
+      Number(month),
+      0,
+      23,
+      59,
+      59,
+      999,
+    );
+    return now > endOfPeriod;
+  } else {
+    const [year, month, day] = valEnd.split("-");
+    const endOfPeriod = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      23,
+      59,
+      59,
+      999,
+    );
+    return now > endOfPeriod;
+  }
+}
+
 function SurveyTakingComponent() {
-  const { survey, sections, questions } = Route.useLoaderData();
+  const loaderData = Route.useLoaderData();
   const router = useRouter();
   const location = useLocation();
 
   // If the active route is the nested thank-you page, render the child Outlet
   if (location.pathname.endsWith("/thank-you")) {
     return <Outlet />;
+  }
+
+  if (loaderData.error) {
+    return (
+      <main className="grow flex  items-center w-full justify-center px-3 py-6 sm:p-8 relative overflow-hidden bg-slate-50">
+        <div className="relative z-10 w-fulltext-center flex justify-center">
+          <div className="bg-white w-fit md:w-120 rounded-xl shadow-lg border border-slate-200 p-8 flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
+              <span className="material-symbols-outlined text-4xl block">
+                search_off
+              </span>
+            </div>
+            <h2 className="text-2xl font-bold text-center text-[#1a1b21] mt-2">
+              Survei Tidak Ditemukan
+            </h2>
+            <p className="text-sm text-[#434652] text-center leading-relaxed">
+              Maaf, kuesioner yang Anda cari tidak dapat ditemukan atau belum
+              dipublikasikan oleh administrator.
+            </p>
+            <Link
+              to="/"
+              className="mt-4 bg-[#002972] hover:bg-[#0b3e9c] text-white text-sm font-semibold py-2 px-5 rounded-lg transition-colors"
+            >
+              Kembali ke Beranda
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const { survey, sections, questions } = loaderData.data!;
+
+  const isExpired = isSurveyExpired(
+    (survey as any).periodValueEnd,
+    (survey as any).periodType || "month",
+  );
+  if (isExpired) {
+    return (
+      <main className="grow flex  items-center w-full justify-center px-3 py-6 sm:p-8 relative overflow-hidden bg-slate-50">
+        <div className="relative z-10 w-fulltext-center flex justify-center">
+          <div className="bg-white w-fit md:w-120 rounded-xl shadow-lg border border-slate-200 p-8 flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
+              <span className="material-symbols-outlined text-4xl block">
+                lock_clock
+              </span>
+            </div>
+            <h2 className="text-2xl font-bold text-[#1a1b21] mt-2">
+              Survei Telah Berakhir
+            </h2>
+            <p className="text-sm text-[#434652] leading-relaxed">
+              Maaf, kuesioner <strong>{survey.title}</strong> telah ditutup dan
+              tidak dapat diisi lagi karena sudah melewati periode pengisian.
+            </p>
+            <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 w-full text-xs font-semibold text-slate-600 flex items-center justify-center gap-1.5">
+              <span className="material-symbols-outlined text-sm block">
+                schedule
+              </span>
+              Batas Waktu:{" "}
+              {getFormattedPeriod(
+                (survey as any).periodValueEnd,
+                (survey as any).periodType || "month",
+              )}
+            </div>
+            <Link
+              to="/"
+              className="mt-4 bg-[#002972] hover:bg-[#0b3e9c] text-white text-sm font-semibold py-2 px-5 rounded-lg transition-colors"
+            >
+              Kembali ke Beranda
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   const [clientDraftId, setClientDraftId] = useState("");

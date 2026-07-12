@@ -3,10 +3,10 @@ import {
 	index,
 	int,
 	json,
+	mediumtext,
 	mysqlEnum,
 	mysqlTable,
 	text,
-	mediumtext,
 	timestamp,
 	varchar,
 } from "drizzle-orm/mysql-core";
@@ -36,6 +36,11 @@ export const surveys = mysqlTable("surveys", {
 	bannerUrl: mediumtext("banner_url"),
 	// Category used to group the admin nav dropdown (PRD §6.5).
 	category: varchar("category", { length: 100 }).notNull(),
+	periodType: mysqlEnum("period_type", ["month", "date"])
+		.notNull()
+		.default("month"),
+	periodValue: varchar("period_value", { length: 10 }),
+	periodValueEnd: varchar("period_value_end", { length: 10 }),
 	status: mysqlEnum("status", ["draft", "published", "archived"])
 		.notNull()
 		.default("draft"),
@@ -177,3 +182,20 @@ export const answers = mysqlTable(
 		questionIdx: index("answers_question_idx").on(table.questionId),
 	}),
 );
+
+// ─────────────────────────────────────────────────────────────
+// REPORT GENERATIONS (for rate limiting, see §C.1)
+// ─────────────────────────────────────────────────────────────
+export const reportGenerations = mysqlTable("report_generations", {
+	id: int("id").autoincrement().primaryKey(),
+	surveyId: int("survey_id")
+		.references(() => surveys.id, { onDelete: "cascade" })
+		.notNull(),
+	userId: int("user_id")
+		.references(() => users.id, { onDelete: "cascade" })
+		.notNull(),
+	generatedAt: timestamp("generated_at").notNull().defaultNow(),
+	fileBase64: mediumtext("file_base_64"),
+	fileName: varchar("file_name", { length: 255 }),
+});
+
