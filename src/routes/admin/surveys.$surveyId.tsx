@@ -1476,17 +1476,23 @@ function SurveyDetailComponent() {
 									}}
 									className="text-xs font-bold text-[#ba1a1a] hover:underline flex items-center gap-0.5 whitespace-nowrap cursor-pointer"
 								>
-									<span className="material-symbols-outlined text-sm">close</span>
+									<span className="material-symbols-outlined text-sm">
+										close
+									</span>
 									<span>Reset</span>
 								</button>
 							)}
 
 							<button
 								onClick={handleDownloadCSV}
-								disabled={!!csvFilterQuestionId && csvFilterOptionIds.length === 0}
+								disabled={
+									!!csvFilterQuestionId && csvFilterOptionIds.length === 0
+								}
 								className="bg-[#0b3e9c] text-white hover:bg-[#002972] disabled:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm active:scale-95 transition-transform cursor-pointer whitespace-nowrap"
 							>
-								<span className="material-symbols-outlined text-sm">download</span>
+								<span className="material-symbols-outlined text-sm">
+									download
+								</span>
 								<span>Download CSV</span>
 							</button>
 						</div>
@@ -2550,6 +2556,10 @@ function ChartCard({
 									...item,
 									fill: primaryPalette[idx % primaryPalette.length],
 								}));
+								const total = pieData.reduce(
+									(acc: number, item: any) => acc + (item.count || 0),
+									0,
+								);
 
 								return (
 									<div className="flex flex-col items-center gap-4">
@@ -2560,7 +2570,39 @@ function ChartCard({
 											<PieChart>
 												<ChartTooltip
 													content={
-														<ChartTooltipContent nameKey="label" hideLabel />
+														<ChartTooltipContent
+															nameKey="label"
+															hideLabel
+															formatter={(value, name, item) => {
+																const percent =
+																	total > 0
+																		? ((Number(value) / total) * 100).toFixed(
+																				1,
+																			) + "%"
+																		: "0%";
+																const indicatorColor =
+																	item.payload?.fill || item.color;
+																return (
+																	<>
+																		<div
+																			className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+																			style={{
+																				backgroundColor: indicatorColor,
+																				borderColor: indicatorColor,
+																			}}
+																		/>
+																		<div className="flex flex-1 justify-between items-center leading-none">
+																			<span className="text-muted-foreground">
+																				{name}
+																			</span>
+																			<span className="font-mono font-medium text-foreground tabular-nums ml-4">
+																				{value} dari {total} ({percent})
+																			</span>
+																		</div>
+																	</>
+																);
+															}}
+														/>
 													}
 												/>
 												<Pie
@@ -2569,21 +2611,28 @@ function ChartCard({
 													dataKey="count"
 													nameKey="label"
 													labelLine={false}
-													label={({ payload, ...props }: any) => (
-														<text
-															cx={props.cx}
-															cy={props.cy}
-															x={props.x}
-															y={props.y}
-															textAnchor={props.textAnchor}
-															dominantBaseline={props.dominantBaseline}
-															fill="#1a1b21"
-															fontSize={11}
-															fontWeight="bold"
-														>
-															{payload.count}
-														</text>
-													)}
+													label={({ payload, ...props }: any) => {
+														const percent =
+															total > 0
+																? ((payload.count / total) * 100).toFixed(1) +
+																	"%"
+																: "0%";
+														return (
+															<text
+																cx={props.cx}
+																cy={props.cy}
+																x={props.x}
+																y={props.y}
+																textAnchor={props.textAnchor}
+																dominantBaseline={props.dominantBaseline}
+																fill="#1a1b21"
+																fontSize={11}
+																fontWeight="bold"
+															>
+																{percent}
+															</text>
+														);
+													}}
 												/>
 											</PieChart>
 										</ChartContainer>
@@ -2591,12 +2640,17 @@ function ChartCard({
 										{/* Legend rendered outside SVG so it is never clipped by the fixed-height viewport */}
 										<div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 w-full px-2">
 											{pieData.map((item: any, idx: number) => (
-												<div key={idx} className="flex items-center gap-1.5 min-w-0">
+												<div
+													key={idx}
+													className="flex items-center gap-1.5 min-w-0"
+												>
 													<span
 														className="shrink-0 inline-block w-2.5 h-2.5 rounded-sm"
 														style={{ backgroundColor: item.fill }}
 													/>
-													<span className="text-xs text-[#434652]">{item.label}</span>
+													<span className="text-xs text-[#434652]">
+														{item.label}
+													</span>
 												</div>
 											))}
 										</div>

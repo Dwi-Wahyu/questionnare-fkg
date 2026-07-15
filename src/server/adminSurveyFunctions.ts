@@ -1070,10 +1070,15 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 		let filterQuestion: (typeof surveyQuestions)[number] | undefined;
 		let filterOptions: (typeof surveyOptions)[number][] = [];
 
-		if (filterQuestionId != null && filterOptionIds && filterOptionIds.length > 0) {
+		if (
+			filterQuestionId != null &&
+			filterOptionIds &&
+			filterOptionIds.length > 0
+		) {
 			filterQuestion = surveyQuestions.find((q) => q.id === filterQuestionId);
 			filterOptions = surveyOptions.filter(
-				(o) => filterOptionIds.includes(o.id) && o.questionId === filterQuestionId,
+				(o) =>
+					filterOptionIds.includes(o.id) && o.questionId === filterQuestionId,
 			);
 			if (!filterQuestion || filterOptions.length === 0) {
 				throw new Error(
