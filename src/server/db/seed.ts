@@ -84,8 +84,17 @@ const relevanceOptions = [
 	"Tidak Relevan",
 ];
 
-// Keywords for grid rows
-const gridRowKeywords = [
+// Keywords that identify a "statement" / Likert-style question — e.g.
+// "Keandalan dan kemampuan dosen dalam memberikan pelayanan terhadap mahasiswa".
+//
+// IMPORTANT: these questions are individual "Pilihan Ganda (Radios)" questions
+// in the real Google Form (confirmed against the live Drive form), NOT one
+// combined "Kisi Pilihan Ganda (Matrix)" question. The CSV export just happens
+// to put one column per statement — that's a Google Forms export artifact,
+// not evidence the source question was a grid. Do not re-introduce
+// column-grouping/matrix logic here; always emit one multiple_choice question
+// per matched column (see the `isStatement` branch below).
+const statementKeywords = [
 	"keandalan",
 	"daya tanggap",
 	"kepastian",
@@ -117,9 +126,17 @@ const gridRowKeywords = [
 	"keselamatan pasien",
 ];
 
-function isGridRowHeader(header: string): boolean {
+function isStatementHeader(header: string): boolean {
 	const h = header.toLowerCase();
-	return gridRowKeywords.some((k) => h.includes(k));
+	return statementKeywords.some((k) => h.includes(k));
+}
+
+// A statement column's title sometimes carries a trailing comma/period that
+// only exists because of how the original sheet quoted the CSV cell (e.g.
+// `"Kecukupan,"`, `"Aksesibilitas,"`). Strip that so the seeded question
+// title reads naturally.
+function cleanStatementTitle(header: string): string {
+	return header.replace(/[,.]+\s*$/, "").trim();
 }
 
 interface SurveyConfig {
@@ -332,11 +349,22 @@ async function main() {
 
 			const currentUnique = colUniqueVals[colIdx];
 			const isDemo = isDemographic(header);
-			const isGrid = isGridRowHeader(header);
+			const isStatement = isStatementHeader(header);
 
-			if (isGrid) {
-				// We have a grid question row. Let's determine the option set.
-				let gridOptions = satisfactionOptions;
+			if (isStatement) {
+				// This is a single Likert-style statement (e.g. "Keandalan dan
+				// kemampuan dosen dalam memberikan pelayanan terhadap mahasiswa").
+				// It is seeded as its own "Pilihan Ganda (Radios)" question
+				// (type: "multiple_choice"), matching how it actually appears in
+				// the source Google Form — never grouped into a "grid" question,
+				// and never adjacent columns merged into rows of one matrix.
+				//
+				// The option set is always the full canonical 4/5-point scale
+				// (e.g. "Sangat Baik" → "Kurang"), not just whatever subset of
+				// values happens to appear in the sampled responses — otherwise a
+				// statement where nobody happened to answer "Kurang" would end up
+				// missing that option entirely.
+				let statementOptions = satisfactionOptions;
 				if (
 					header.toLowerCase().includes("puas") ||
 					currentUnique.some((v) =>
@@ -345,112 +373,55 @@ async function main() {
 						),
 					)
 				) {
-					gridOptions = satisfactionPuasOptions;
+					statementOptions = satisfactionPuasOptions;
 				} else if (
 					header.toLowerCase().includes("relevan") ||
 					currentUnique.some((v) =>
 						relevanceOptions.some((o) => o.toLowerCase() === v.toLowerCase()),
 					)
 				) {
-					gridOptions = relevanceOptions;
+					statementOptions = relevanceOptions;
 				}
 
-				// Find consecutive columns that are also grid rows of the same category
-				const gridRows = [header];
-				const gridColIndices = [colIdx];
-				let lookahead = colIdx + 1;
+				const title = cleanStatementTitle(header);
 
-				while (lookahead < headers.length) {
-					const nextHeader = headers[lookahead];
-					if (!nextHeader) break;
-					const nextIsGrid = isGridRowHeader(nextHeader);
-					if (!nextIsGrid) break;
-
-					let nextOptions = satisfactionOptions;
-					const nextUnique = colUniqueVals[lookahead];
-					if (
-						nextHeader.toLowerCase().includes("puas") ||
-						nextUnique.some((v) =>
-							satisfactionPuasOptions.some(
-								(o) => o.toLowerCase() === v.toLowerCase(),
-							),
-						)
-					) {
-						nextOptions = satisfactionPuasOptions;
-					} else if (
-						nextHeader.toLowerCase().includes("relevan") ||
-						nextUnique.some((v) =>
-							relevanceOptions.some((o) => o.toLowerCase() === v.toLowerCase()),
-						)
-					) {
-						nextOptions = relevanceOptions;
-					}
-
-					// Verify they share the same option set type
-					if (JSON.stringify(gridOptions) === JSON.stringify(nextOptions)) {
-						gridRows.push(nextHeader);
-						gridColIndices.push(lookahead);
-						lookahead++;
-					} else {
-						break;
-					}
-				}
-
-				// Create the GRID question
 				const [qInsert] = await db.insert(questions).values({
 					surveyId,
 					sectionId: utamaSecId,
-					type: "grid",
-					title: `Evaluasi ${gridOptions === satisfactionOptions ? "Layanan dan Kinerja" : gridOptions === satisfactionPuasOptions ? "Kepuasan" : "Relevansi"}`,
+					type: "multiple_choice",
+					title,
 					required: true,
 					order: qOrder++,
 				});
 				const questionId = (qInsert as any).insertId;
 
-				// Insert row options
-				const rowOptionIdMap: Record<string, number> = {};
-				for (let rIdx = 0; rIdx < gridRows.length; rIdx++) {
-					const rowLabel = gridRows[rIdx];
+				const optionIdMap: Record<string, number> = {};
+				for (let oIdx = 0; oIdx < statementOptions.length; oIdx++) {
+					const label = statementOptions[oIdx];
 					const [oInsert] = await db.insert(questionOptions).values({
 						questionId,
-						group: "row",
-						label: rowLabel,
-						value: rowLabel,
-						order: rIdx,
+						group: "choice",
+						label,
+						value: label,
+						order: oIdx,
 					});
-					rowOptionIdMap[rowLabel] = (oInsert as any).insertId;
-				}
-
-				// Insert column options
-				const colOptionIdMap: Record<string, number> = {};
-				for (let cIdx = 0; cIdx < gridOptions.length; cIdx++) {
-					const colLabel = gridOptions[cIdx];
-					const [oInsert] = await db.insert(questionOptions).values({
-						questionId,
-						group: "column",
-						label: colLabel,
-						value: colLabel,
-						order: cIdx,
-					});
-					colOptionIdMap[colLabel] = (oInsert as any).insertId;
+					optionIdMap[label] = (oInsert as any).insertId;
 				}
 
 				questionsList.push({
 					id: questionId,
-					type: "grid",
-					title: `Evaluasi ${gridOptions === satisfactionOptions ? "Layanan dan Kinerja" : gridOptions === satisfactionPuasOptions ? "Kepuasan" : "Relevansi"}`,
-					colIndices: gridColIndices,
-					rowOptionIdMap,
-					colOptionIdMap,
-					gridOptions,
-					gridRows,
+					type: "multiple_choice",
+					title,
+					colIdx,
+					optionIdMap,
+					optionsList: statementOptions,
 				});
 
-				colIdx = lookahead;
+				colIdx++;
 				continue;
 			}
 
-			// Handle non-grid questions (short_text, paragraph, dropdown, multiple_choice)
+			// Handle remaining questions (short_text, paragraph, dropdown, multiple_choice)
 			const sectionId = isDemo ? dataDiriSecId : utamaSecId;
 
 			let type: "short_text" | "paragraph" | "dropdown" | "multiple_choice" =
@@ -525,6 +496,12 @@ async function main() {
 		);
 
 		// F. Helper to convert real cell value to database format
+		//
+		// Note: this generator no longer produces `type: "grid"` questions (see
+		// `isStatement` above — statement columns are always individual
+		// multiple_choice questions now). The grid branch below is kept only for
+		// schema/type compatibility in case a question of that type is added by
+		// other means (e.g. manually in the admin UI).
 		const formatAnswer = (q: any, rowValues: string[]) => {
 			if (q.type === "grid") {
 				const valueGrid: Record<string, number> = {};
@@ -556,19 +533,23 @@ async function main() {
 				};
 			} else {
 				const cellVal = rowValues[q.colIdx]?.trim() || "";
+				// A handful of real rows have punctuation-only artifacts left over
+				// from the sheet (e.g. a lone "."), which isn't a real answer.
+				const isJunkCell = cellVal !== "" && /^[.\-–—\s]*$/.test(cellVal);
 				if (q.optionsList && q.optionsList.length > 0) {
 					// Choice/dropdown
 					let matchedOptLabel = q.optionsList.find(
 						(o: string) => o.toLowerCase() === cellVal.toLowerCase(),
 					);
-					if (!matchedOptLabel && cellVal !== "") {
-						// custom option or other
+					if (!matchedOptLabel && cellVal !== "" && !isJunkCell) {
+						// Custom/free-text option not in the known list — fall back to
+						// the first option rather than dropping the answer entirely.
 						matchedOptLabel = q.optionsList[0];
 					}
 					const optId = matchedOptLabel ? q.optionIdMap[matchedOptLabel] : null;
 					return {
 						questionId: q.id,
-						valueText: cellVal !== "" ? cellVal : null,
+						valueText: cellVal !== "" && !isJunkCell ? cellVal : null,
 						valueOptionIds: optId ? [optId] : null,
 						valueGrid: null,
 					};

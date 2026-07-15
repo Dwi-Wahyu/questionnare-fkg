@@ -76,6 +76,7 @@ function SurveyDetailComponent() {
 	const [sections, setSections] = useState<any[]>([]);
 	const [questions, setQuestions] = useState<any[]>([]);
 	const [isSavingQuestions, setIsSavingQuestions] = useState(false);
+	const [deleteSectionId, setDeleteSectionId] = useState<any>(null);
 
 	// Local state for Settings Tab
 	const [settingsTitle, setSettingsTitle] = useState("");
@@ -94,6 +95,18 @@ function SurveyDetailComponent() {
 	const [isSavingSettings, setIsSavingSettings] = useState(false);
 	const [isCopied, setIsCopied] = useState(false);
 	const [textSearch, setTextSearch] = useState("");
+	const [csvFilterQuestionId, setCsvFilterQuestionId] = useState<string>("");
+	const [csvFilterOptionId, setCsvFilterOptionId] = useState<string>("");
+
+	const filterableQuestions = detail
+		? (detail.questions || []).filter((q: any) =>
+				["multiple_choice", "dropdown", "checkboxes"].includes(q.type),
+			)
+		: [];
+
+	const selectedFilterQuestion = filterableQuestions.find(
+		(q: any) => String(q.id) === csvFilterQuestionId,
+	);
 	const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
 	const [isDuplicating, setIsDuplicating] = useState(false);
 	const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -149,10 +162,24 @@ function SurveyDetailComponent() {
 	const handleSaveQuestions = async () => {
 		setIsSavingQuestions(true);
 		try {
+			// Renumber both arrays to guarantee clean sequences before sending
+			const updatedSections = sections.map((s, idx) => ({
+				...s,
+				order: idx,
+			}));
+			const updatedQuestions = questions.map((q, idx) => ({
+				...q,
+				order: idx,
+			}));
+
+			// Set the local states with clean sequential orders
+			setSections(updatedSections);
+			setQuestions(updatedQuestions);
+
 			// Map questions to matching sections and format for server transaction
-			const questionsPayload = questions.map((q) => {
+			const questionsPayload = updatedQuestions.map((q) => {
 				// Find matching section in current editor
-				const section = sections.find((s) => s.id === q.sectionId);
+				const section = updatedSections.find((s) => s.id === q.sectionId);
 				const sectionOrder = section ? section.order : 0;
 
 				return {
@@ -172,7 +199,7 @@ function SurveyDetailComponent() {
 				};
 			});
 
-			const sectionsPayload = sections.map((s) => ({
+			const sectionsPayload = updatedSections.map((s) => ({
 				id: typeof s.id === "number" ? s.id : undefined,
 				title: s.title,
 				description: s.description || "",
@@ -310,6 +337,111 @@ function SurveyDetailComponent() {
 		);
 	};
 
+	const handleSectionFieldChange = (
+		secId: any,
+		key: "title" | "description",
+		val: string,
+	) => {
+		setSections(
+			sections.map((s) => (s.id === secId ? { ...s, [key]: val } : s)),
+		);
+	};
+
+	const handleAddSection = () => {
+		const newTempId = "new_sec_" + Math.random().toString(36).substring(2, 9);
+		const maxOrder = sections.reduce(
+			(max, s) => (s.order > max ? s.order : max),
+			-1,
+		);
+
+		setSections([
+			...sections,
+			{
+				id: newTempId,
+				title: `Bagian Baru ${sections.length + 1}`,
+				description: "",
+				order: maxOrder + 1,
+			},
+		]);
+	};
+
+	const handleMoveSection = (index: number, direction: "up" | "down") => {
+		const targetIndex = direction === "up" ? index - 1 : index + 1;
+		if (targetIndex < 0 || targetIndex >= sections.length) return;
+
+		const next = [...sections];
+		const temp = next[index];
+		next[index] = next[targetIndex];
+		next[targetIndex] = temp;
+		next.forEach((s, idx) => {
+			s.order = idx;
+		});
+
+		setSections(next);
+	};
+
+	const handleDeleteSection = (secId: any) => {
+		if (sections.length <= 1) return;
+
+		const secToDelete = sections.find((s) => s.id === secId);
+		if (!secToDelete) return;
+
+		const remaining = sections.filter((s) => s.id !== secId);
+		const deletedIdx = sections.findIndex((s) => s.id === secId);
+		const fallbackSection = sections[deletedIdx - 1] ?? remaining[0];
+
+		setQuestions(
+			questions.map((q) =>
+				q.sectionId === secId ? { ...q, sectionId: fallbackSection.id } : q,
+			),
+		);
+		setSections(remaining.map((s, idx) => ({ ...s, order: idx })));
+	};
+
+	const handleSplitSectionAtQuestion = (qId: any) => {
+		const question = questions.find((q) => q.id === qId);
+		if (!question) return;
+
+		const currentSection = sections.find((s) => s.id === question.sectionId);
+		if (!currentSection) return;
+
+		// Questions in the SAME section, in their current display order.
+		const sectionQuestions = questions
+			.filter((q) => q.sectionId === currentSection.id)
+			.sort((a, b) => a.order - b.order);
+
+		const splitIndex = sectionQuestions.findIndex((q) => q.id === qId);
+		// Nothing to split off if this is already the first question in its section.
+		if (splitIndex <= 0) return;
+
+		const movingIds = new Set(
+			sectionQuestions.slice(splitIndex).map((q) => q.id),
+		);
+
+		const newTempId = "new_sec_" + Math.random().toString(36).substring(2, 9);
+		const currentIdx = sections.findIndex((s) => s.id === currentSection.id);
+
+		// Insert the new section directly after the current one, then renumber
+		// every section's `order` to keep the 0-based global sequence intact.
+		const nextSections = [
+			...sections.slice(0, currentIdx + 1),
+			{
+				id: newTempId,
+				title: `${currentSection.title} (Lanjutan)`,
+				description: "",
+				order: 0, // placeholder, fixed below
+			},
+			...sections.slice(currentIdx + 1),
+		].map((s, idx) => ({ ...s, order: idx }));
+
+		setSections(nextSections);
+		setQuestions(
+			questions.map((q) =>
+				movingIds.has(q.id) ? { ...q, sectionId: newTempId } : q,
+			),
+		);
+	};
+
 	const handleAddOption = (
 		qId: any,
 		group: "choice" | "row" | "column" = "choice",
@@ -386,7 +518,17 @@ function SurveyDetailComponent() {
 	// Server-side CSV Download
 	const handleDownloadCSV = async () => {
 		try {
-			const res = await exportAdminSurveyResponsesCSVFn({ data: surveyId });
+			const res = await exportAdminSurveyResponsesCSVFn({
+				data: {
+					surveyId,
+					filterQuestionId: csvFilterQuestionId
+						? Number(csvFilterQuestionId)
+						: undefined,
+					filterOptionId: csvFilterOptionId
+						? Number(csvFilterOptionId)
+						: undefined,
+				},
+			});
 			const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8;" });
 			const url = URL.createObjectURL(blob);
 			const link = document.createElement("a");
@@ -647,15 +789,6 @@ function SurveyDetailComponent() {
 									<span>Unduh Laporan Terakhir</span>
 								</button>
 							)}
-						<button
-							onClick={handleDownloadCSV}
-							className="bg-[#0b3e9c] text-white hover:bg-[#002972] text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer"
-						>
-							<span className="material-symbols-outlined text-sm">
-								download
-							</span>
-							<span>Download CSV</span>
-						</button>
 					</div>
 				)}
 			</div>
@@ -737,11 +870,77 @@ function SurveyDetailComponent() {
 								key={sec.id}
 								className="bg-white rounded-lg border border-[#c4c6d4] shadow-sm overflow-hidden"
 							>
-								<div className="bg-[#eeedf6] px-6 py-2 border-b border-[#c4c6d4] flex items-center justify-between text-xs font-bold text-[#002972]">
-									<span>
-										Bagian {secIdx + 1} dari {sections.length}
-									</span>
-									<span>{sec.title}</span>
+								<div className="bg-[#eeedf6] px-6 py-3 border-b border-[#c4c6d4] space-y-2">
+									<div className="flex items-center justify-between text-xs font-bold text-[#002972]">
+										<span>
+											Bagian {secIdx + 1} dari {sections.length}
+										</span>
+										<div className="flex items-center gap-2">
+											{user?.role !== "visitor" && sections.length > 1 && (
+												<div className="flex items-center gap-1 mr-2 bg-white px-1.5 py-0.5 rounded border border-slate-200 shadow-xxs">
+													<button
+														type="button"
+														onClick={() => handleMoveSection(secIdx, "up")}
+														disabled={secIdx === 0}
+														className="p-0.5 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
+														title="Pindahkan Bagian Ke Atas"
+													>
+														<span className="material-symbols-outlined text-sm block">
+															arrow_upward
+														</span>
+													</button>
+													<button
+														type="button"
+														onClick={() => handleMoveSection(secIdx, "down")}
+														disabled={secIdx === sections.length - 1}
+														className="p-0.5 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
+														title="Pindahkan Bagian Ke Bawah"
+													>
+														<span className="material-symbols-outlined text-sm block">
+															arrow_downward
+														</span>
+													</button>
+												</div>
+											)}
+											{user?.role !== "visitor" && sections.length > 1 && (
+												<button
+													type="button"
+													onClick={() => setDeleteSectionId(sec.id)}
+													className="text-[#ba1a1a] hover:underline flex items-center gap-1 font-semibold"
+													title="Hapus Bagian"
+												>
+													<span className="material-symbols-outlined text-sm">
+														delete
+													</span>
+													Hapus Bagian
+												</button>
+											)}
+										</div>
+									</div>
+									<input
+										type="text"
+										value={sec.title}
+										onChange={(e) =>
+											handleSectionFieldChange(sec.id, "title", e.target.value)
+										}
+										className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-sm font-bold text-[#1a1b21] focus:border-[#002972] outline-none"
+										placeholder="Judul bagian..."
+										disabled={user?.role === "visitor"}
+									/>
+									<input
+										type="text"
+										value={sec.description || ""}
+										onChange={(e) =>
+											handleSectionFieldChange(
+												sec.id,
+												"description",
+												e.target.value,
+											)
+										}
+										className="w-full bg-transparent border-none py-0.5 px-0 text-xs text-[#434652] focus:outline-none"
+										placeholder="Deskripsi bagian (opsional)..."
+										disabled={user?.role === "visitor"}
+									/>
 								</div>
 
 								<div className="p-6 space-y-6">
@@ -1065,6 +1264,31 @@ function SurveyDetailComponent() {
 																Hapus
 															</button>
 															<div className="w-px h-5 bg-slate-200"></div>
+															{(() => {
+																const sectionQuestions = questions
+																	.filter((sq) => sq.sectionId === q.sectionId)
+																	.sort((a, b) => a.order - b.order);
+																const isFirstInSection =
+																	sectionQuestions[0]?.id === q.id;
+
+																return (
+																	<button
+																		type="button"
+																		onClick={() =>
+																			handleSplitSectionAtQuestion(q.id)
+																		}
+																		disabled={isFirstInSection}
+																		className="hover:text-[#002972] flex items-center gap-1 text-xs font-semibold disabled:opacity-30 disabled:pointer-events-none"
+																		title="Pindahkan pertanyaan ini & semua di bawahnya ke bagian baru"
+																	>
+																		<span className="material-symbols-outlined text-sm">
+																			splitscreen
+																		</span>
+																		Pisahkan ke Bagian Baru
+																	</button>
+																);
+															})()}
+															<div className="w-px h-5 bg-slate-200"></div>
 														</>
 													)}
 													<label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
@@ -1107,6 +1331,22 @@ function SurveyDetailComponent() {
 							</div>
 						);
 					})}
+
+					{/* Tambah Bagian Baru */}
+					{user?.role !== "visitor" && (
+						<div className="flex justify-center">
+							<button
+								type="button"
+								onClick={handleAddSection}
+								className="border-2 border-dashed border-[#c4c6d4] text-[#434652] hover:border-[#002972] hover:text-[#002972] text-xs font-bold py-3 px-8 rounded-lg flex items-center gap-1.5 transition-all w-full justify-center"
+							>
+								<span className="material-symbols-outlined text-base">
+									add_box
+								</span>
+								<span>Tambah Bagian Baru</span>
+							</button>
+						</div>
+					)}
 
 					{/* Saving footer buttons */}
 					{user?.role !== "visitor" && (
@@ -1168,6 +1408,70 @@ function SurveyDetailComponent() {
 							Individual
 						</Link>
 					</div>
+
+					{/* CSV Filter bar — visible to non-visitors on the responses tab */}
+					{user?.role !== "visitor" && (
+						<div className="flex flex-wrap items-center gap-2 py-2">
+							<span className="text-xs font-bold text-[#434652] whitespace-nowrap">
+								Filter CSV:
+							</span>
+							<select
+								value={csvFilterQuestionId}
+								onChange={(e) => {
+									setCsvFilterQuestionId(e.target.value);
+									setCsvFilterOptionId("");
+								}}
+								className="min-w-0 flex-1 max-w-xs bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer"
+							>
+								<option value="">Semua Pertanyaan (Tanpa Filter)</option>
+								{filterableQuestions.map((q: any) => (
+									<option key={q.id} value={q.id}>
+										{q.title}
+									</option>
+								))}
+							</select>
+
+							{selectedFilterQuestion && (
+								<select
+									value={csvFilterOptionId}
+									onChange={(e) => setCsvFilterOptionId(e.target.value)}
+									className="min-w-0 flex-1 max-w-xs bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer"
+								>
+									<option value="">Pilih Nilai...</option>
+									{selectedFilterQuestion.options
+										.filter((o: any) => o.group === "choice")
+										.map((o: any) => (
+											<option key={o.id} value={o.id}>
+												{o.label}
+											</option>
+										))}
+								</select>
+							)}
+
+							{csvFilterQuestionId && (
+								<button
+									type="button"
+									onClick={() => {
+										setCsvFilterQuestionId("");
+										setCsvFilterOptionId("");
+									}}
+									className="text-xs font-bold text-[#ba1a1a] hover:underline flex items-center gap-0.5 whitespace-nowrap cursor-pointer"
+								>
+									<span className="material-symbols-outlined text-sm">close</span>
+									<span>Reset</span>
+								</button>
+							)}
+
+							<button
+								onClick={handleDownloadCSV}
+								disabled={!!csvFilterQuestionId && !csvFilterOptionId}
+								className="bg-[#0b3e9c] text-white hover:bg-[#002972] disabled:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm active:scale-95 transition-transform cursor-pointer whitespace-nowrap"
+							>
+								<span className="material-symbols-outlined text-sm">download</span>
+								<span>Download CSV</span>
+							</button>
+						</div>
+					)}
 
 					{/* Sub-tab Content: Ringkasan */}
 					{subtab === "ringkasan" && stats && (
@@ -2011,6 +2315,22 @@ function SurveyDetailComponent() {
 				onConfirm={handleDuplicate}
 				onCancel={() => setIsDuplicateDialogOpen(false)}
 				variant="primary"
+			/>
+
+			<ConfirmDialog
+				isOpen={deleteSectionId !== null}
+				title="Hapus Bagian"
+				message="Bagian ini akan dihapus. Pertanyaan di dalamnya akan dipindahkan ke bagian sebelumnya. Lanjutkan?"
+				confirmText="Ya, Hapus"
+				cancelText="Batal"
+				onConfirm={() => {
+					if (deleteSectionId !== null) {
+						handleDeleteSection(deleteSectionId);
+						setDeleteSectionId(null);
+					}
+				}}
+				onCancel={() => setDeleteSectionId(null)}
+				variant="danger"
 			/>
 		</div>
 	);

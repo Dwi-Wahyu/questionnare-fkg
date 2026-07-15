@@ -729,12 +729,10 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 				.from(sections)
 				.where(eq(sections.surveyId, data.surveyId));
 
-			const sentSectionIds = data.sections
-				.map((s) => s.id)
-				.filter((id): id is number => id !== undefined);
+			const activeSectionIds = Object.values(sectionIdMap);
 			const sectionsToDelete = dbSections
 				.map((s) => s.id)
-				.filter((id) => !sentSectionIds.includes(id));
+				.filter((id) => !activeSectionIds.includes(id));
 
 			if (sectionsToDelete.length > 0) {
 				await tx.delete(sections).where(inArray(sections.id, sectionsToDelete));
@@ -1025,9 +1023,17 @@ export const getAdminSurveyResponseDetailFn = createServerFn({ method: "GET" })
 	});
 
 // 13. Export real row-level CSV data for a survey (Admin only)
+// 13. Export real row-level CSV data for a survey (Admin only)
 export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
-	.validator((surveyId: number) => surveyId)
-	.handler(async ({ data: surveyId }) => {
+	.validator(
+		(data: {
+			surveyId: number;
+			filterQuestionId?: number;
+			filterOptionId?: number;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { surveyId, filterQuestionId, filterOptionId } = data;
 		const user = await assertUser();
 		if (user.role !== "admin") {
 			throw new Error("Akses ditolak. Hanya Admin yang dapat mengekspor data.");
@@ -1061,6 +1067,26 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 					.orderBy(questionOptions.order)
 			: [];
 
+		let filterQuestion: (typeof surveyQuestions)[number] | undefined;
+		let filterOption: (typeof surveyOptions)[number] | undefined;
+
+		if (filterQuestionId != null && filterOptionId != null) {
+			filterQuestion = surveyQuestions.find((q) => q.id === filterQuestionId);
+			filterOption = surveyOptions.find(
+				(o) => o.id === filterOptionId && o.questionId === filterQuestionId,
+			);
+			if (!filterQuestion || !filterOption) {
+				throw new Error(
+					"Filter pertanyaan/nilai tidak valid untuk survei ini.",
+				);
+			}
+			if (filterQuestion.type === "grid") {
+				throw new Error(
+					"Filter berdasarkan pertanyaan tipe Kisi Pilihan Ganda (Matrix) belum didukung.",
+				);
+			}
+		}
+
 		// 2. Load all completed responses and their answers
 		const allCompletedResponses = await db
 			.select()
@@ -1081,6 +1107,22 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 					.where(inArray(answers.responseId, completedResponseIds))
 			: [];
 
+		let filteredResponses = allCompletedResponses;
+		if (filterQuestion && filterOption) {
+			const matchingResponseIds = new Set(
+				allCompletedAnswers
+					.filter((a) => {
+						if (a.questionId !== filterQuestion!.id) return false;
+						const optIds = a.valueOptionIds as number[] | null;
+						return !!optIds && optIds.includes(filterOption!.id);
+					})
+					.map((a) => a.responseId),
+			);
+			filteredResponses = allCompletedResponses.filter((r) =>
+				matchingResponseIds.has(r.id),
+			);
+		}
+
 		// Group answers in memory by responseId
 		const answersByResponseId = new Map<number, typeof allCompletedAnswers>();
 		for (const ans of allCompletedAnswers) {
@@ -1095,90 +1137,16 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 			return `"${String(val).replace(/"/g, '""')}"`;
 		};
 
-		// 3. Build CSV summary block
+		// 3. Build CSV summary block (metadata only — no aggregate table)
 		const summaryRows: string[] = [];
 		summaryRows.push(`Ringkasan Survei — ${survey.title}`);
-		summaryRows.push(`Total Respon (Selesai),${allCompletedResponses.length}`);
+		summaryRows.push(`Total Respon (Selesai),${filteredResponses.length}`);
 		summaryRows.push(`Diekspor pada,${new Date().toISOString()}`);
-		summaryRows.push('""');
-		summaryRows.push("Pertanyaan,Opsi Jawaban,Jumlah,Persentase");
 
-		for (const q of surveyQuestions) {
-			const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
-			const qAnswers = allCompletedAnswers.filter((a) => a.questionId === q.id);
-			const respondentCount = qAnswers.length;
-
-			if (q.type === "grid") {
-				const rows = qOptions.filter((o) => o.group === "row");
-				const cols = qOptions.filter((o) => o.group === "column");
-
-				const matrixStats: Record<string, Record<string, number>> = {};
-				rows.forEach((r) => {
-					matrixStats[r.label] = {};
-					cols.forEach((c) => {
-						matrixStats[r.label][c.label] = 0;
-					});
-				});
-
-				qAnswers.forEach((ans) => {
-					const gridVal = ans.valueGrid as Record<string, number> | null;
-					if (gridVal) {
-						Object.entries(gridVal).forEach(([rowOptIdStr, colOptId]) => {
-							const rowOpt = qOptions.find((o) => String(o.id) === rowOptIdStr);
-							const colOpt = qOptions.find((o) => o.id === colOptId);
-							if (rowOpt && colOpt) {
-								matrixStats[rowOpt.label][colOpt.label] =
-									(matrixStats[rowOpt.label][colOpt.label] || 0) + 1;
-							}
-						});
-					}
-				});
-
-				rows.forEach((r) => {
-					cols.forEach((c) => {
-						const count = matrixStats[r.label][c.label] || 0;
-						const pct =
-							respondentCount > 0
-								? Math.round((count / respondentCount) * 100)
-								: 0;
-						summaryRows.push(
-							`${csvEscape(`${q.title} — ${r.label}`)},${csvEscape(c.label)},${count},${pct}%`,
-						);
-					});
-				});
-			} else if (
-				q.type === "multiple_choice" ||
-				q.type === "dropdown" ||
-				q.type === "linear_scale" ||
-				q.type === "checkboxes"
-			) {
-				const optionCounts: Record<string, number> = {};
-				qOptions.forEach((o) => {
-					optionCounts[o.label] = 0;
-				});
-
-				qAnswers.forEach((ans) => {
-					const optIds = ans.valueOptionIds as number[] | null;
-					if (optIds && optIds.length > 0) {
-						optIds.forEach((id) => {
-							const opt = qOptions.find((o) => o.id === id);
-							if (opt) {
-								optionCounts[opt.label] = (optionCounts[opt.label] || 0) + 1;
-							}
-						});
-					}
-				});
-
-				Object.entries(optionCounts).forEach(([label, count]) => {
-					const pct =
-						respondentCount > 0
-							? Math.round((count / respondentCount) * 100)
-							: 0;
-					summaryRows.push(
-						`${csvEscape(q.title)},${csvEscape(label)},${count},${pct}%`,
-					);
-				});
-			}
+		if (filterQuestion && filterOption) {
+			summaryRows.push(
+				`Filter Diterapkan,${csvEscape(`${filterQuestion.title} = ${filterOption.label}`)}`,
+			);
 		}
 
 		// 4. Build column plans
@@ -1294,7 +1262,7 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 
 		// 5. Generate CSV strings
 		const headerRow = columnPlans.map((cp) => csvEscape(cp.header)).join(",");
-		const dataRows = allCompletedResponses.map((r, idx) => {
+		const dataRows = filteredResponses.map((r, idx) => {
 			const ansList = answersByResponseId.get(r.id) || [];
 			return columnPlans
 				.map((cp) => csvEscape(cp.resolve(r, idx, ansList)))
@@ -1304,9 +1272,21 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 		const csvContent =
 			"\uFEFF" + [...summaryRows, "", headerRow, ...dataRows].join("\n");
 
+		const slugify = (s: string) =>
+			s
+				.toLowerCase()
+				.normalize("NFKD")
+				.replace(/[^a-z0-9]+/g, "-")
+				.replace(/(^-|-$)/g, "");
+
+		const filenameSuffix =
+			filterQuestion && filterOption
+				? `_${slugify(filterQuestion.title)}-${slugify(filterOption.label)}`
+				: "";
+
 		return {
 			csv: csvContent,
-			filename: `responses_survey_${survey.slug}.csv`,
+			filename: `responses_survey_${survey.slug}${filenameSuffix}.csv`,
 		};
 	});
 
