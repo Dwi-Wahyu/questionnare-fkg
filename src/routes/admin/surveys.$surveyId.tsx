@@ -96,7 +96,7 @@ function SurveyDetailComponent() {
 	const [isCopied, setIsCopied] = useState(false);
 	const [textSearch, setTextSearch] = useState("");
 	const [csvFilterQuestionId, setCsvFilterQuestionId] = useState<string>("");
-	const [csvFilterOptionId, setCsvFilterOptionId] = useState<string>("");
+	const [csvFilterOptionIds, setCsvFilterOptionIds] = useState<string[]>([]);
 
 	const filterableQuestions = detail
 		? (detail.questions || []).filter((q: any) =>
@@ -524,9 +524,10 @@ function SurveyDetailComponent() {
 					filterQuestionId: csvFilterQuestionId
 						? Number(csvFilterQuestionId)
 						: undefined,
-					filterOptionId: csvFilterOptionId
-						? Number(csvFilterOptionId)
-						: undefined,
+					filterOptionIds:
+						csvFilterOptionIds.length > 0
+							? csvFilterOptionIds.map(Number)
+							: undefined,
 				},
 			});
 			const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8;" });
@@ -1419,7 +1420,7 @@ function SurveyDetailComponent() {
 								value={csvFilterQuestionId}
 								onChange={(e) => {
 									setCsvFilterQuestionId(e.target.value);
-									setCsvFilterOptionId("");
+									setCsvFilterOptionIds([]);
 								}}
 								className="min-w-0 flex-1 max-w-xs bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer"
 							>
@@ -1432,20 +1433,38 @@ function SurveyDetailComponent() {
 							</select>
 
 							{selectedFilterQuestion && (
-								<select
-									value={csvFilterOptionId}
-									onChange={(e) => setCsvFilterOptionId(e.target.value)}
-									className="min-w-0 flex-1 max-w-xs bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer"
-								>
-									<option value="">Pilih Nilai...</option>
+								<div className="flex flex-wrap items-center gap-1.5">
 									{selectedFilterQuestion.options
 										.filter((o: any) => o.group === "choice")
-										.map((o: any) => (
-											<option key={o.id} value={o.id}>
-												{o.label}
-											</option>
-										))}
-								</select>
+										.map((o: any) => {
+											const checked = csvFilterOptionIds.includes(String(o.id));
+											return (
+												<label
+													key={o.id}
+													className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs cursor-pointer select-none transition-colors ${
+														checked
+															? "bg-[#0b3e9c] border-[#0b3e9c] text-white font-semibold"
+															: "bg-white border-slate-200 text-[#434652] hover:border-[#0b3e9c] hover:text-[#0b3e9c]"
+													}`}
+												>
+													<input
+														type="checkbox"
+														className="sr-only"
+														checked={checked}
+														onChange={() => {
+															const sid = String(o.id);
+															setCsvFilterOptionIds((prev) =>
+																prev.includes(sid)
+																	? prev.filter((id) => id !== sid)
+																	: [...prev, sid],
+															);
+														}}
+													/>
+													{o.label}
+												</label>
+											);
+										})}
+								</div>
 							)}
 
 							{csvFilterQuestionId && (
@@ -1453,7 +1472,7 @@ function SurveyDetailComponent() {
 									type="button"
 									onClick={() => {
 										setCsvFilterQuestionId("");
-										setCsvFilterOptionId("");
+										setCsvFilterOptionIds([]);
 									}}
 									className="text-xs font-bold text-[#ba1a1a] hover:underline flex items-center gap-0.5 whitespace-nowrap cursor-pointer"
 								>
@@ -1464,7 +1483,7 @@ function SurveyDetailComponent() {
 
 							<button
 								onClick={handleDownloadCSV}
-								disabled={!!csvFilterQuestionId && !csvFilterOptionId}
+								disabled={!!csvFilterQuestionId && csvFilterOptionIds.length === 0}
 								className="bg-[#0b3e9c] text-white hover:bg-[#002972] disabled:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm active:scale-95 transition-transform cursor-pointer whitespace-nowrap"
 							>
 								<span className="material-symbols-outlined text-sm">download</span>

@@ -1029,11 +1029,11 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 		(data: {
 			surveyId: number;
 			filterQuestionId?: number;
-			filterOptionId?: number;
+			filterOptionIds?: number[];
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { surveyId, filterQuestionId, filterOptionId } = data;
+		const { surveyId, filterQuestionId, filterOptionIds } = data;
 		const user = await assertUser();
 		if (user.role !== "admin") {
 			throw new Error("Akses ditolak. Hanya Admin yang dapat mengekspor data.");
@@ -1068,14 +1068,14 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 			: [];
 
 		let filterQuestion: (typeof surveyQuestions)[number] | undefined;
-		let filterOption: (typeof surveyOptions)[number] | undefined;
+		let filterOptions: (typeof surveyOptions)[number][] = [];
 
-		if (filterQuestionId != null && filterOptionId != null) {
+		if (filterQuestionId != null && filterOptionIds && filterOptionIds.length > 0) {
 			filterQuestion = surveyQuestions.find((q) => q.id === filterQuestionId);
-			filterOption = surveyOptions.find(
-				(o) => o.id === filterOptionId && o.questionId === filterQuestionId,
+			filterOptions = surveyOptions.filter(
+				(o) => filterOptionIds.includes(o.id) && o.questionId === filterQuestionId,
 			);
-			if (!filterQuestion || !filterOption) {
+			if (!filterQuestion || filterOptions.length === 0) {
 				throw new Error(
 					"Filter pertanyaan/nilai tidak valid untuk survei ini.",
 				);
@@ -1108,13 +1108,14 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 			: [];
 
 		let filteredResponses = allCompletedResponses;
-		if (filterQuestion && filterOption) {
+		if (filterQuestion && filterOptions.length > 0) {
+			const filterOptionIdSet = new Set(filterOptions.map((o) => o.id));
 			const matchingResponseIds = new Set(
 				allCompletedAnswers
 					.filter((a) => {
 						if (a.questionId !== filterQuestion!.id) return false;
 						const optIds = a.valueOptionIds as number[] | null;
-						return !!optIds && optIds.includes(filterOption!.id);
+						return !!optIds && optIds.some((id) => filterOptionIdSet.has(id));
 					})
 					.map((a) => a.responseId),
 			);
@@ -1143,9 +1144,10 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 		summaryRows.push(`Total Respon (Selesai),${filteredResponses.length}`);
 		summaryRows.push(`Diekspor pada,${new Date().toISOString()}`);
 
-		if (filterQuestion && filterOption) {
+		if (filterQuestion && filterOptions.length > 0) {
+			const labels = filterOptions.map((o) => o.label).join(", ");
 			summaryRows.push(
-				`Filter Diterapkan,${csvEscape(`${filterQuestion.title} = ${filterOption.label}`)}`,
+				`Filter Diterapkan,${csvEscape(`${filterQuestion.title} = ${labels}`)}`,
 			);
 		}
 
@@ -1280,8 +1282,8 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 				.replace(/(^-|-$)/g, "");
 
 		const filenameSuffix =
-			filterQuestion && filterOption
-				? `_${slugify(filterQuestion.title)}-${slugify(filterOption.label)}`
+			filterQuestion && filterOptions.length > 0
+				? `_${slugify(filterQuestion.title)}-${filterOptions.map((o) => slugify(o.label)).join("+")}`
 				: "";
 
 		return {
