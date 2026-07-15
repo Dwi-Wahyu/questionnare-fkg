@@ -2552,7 +2552,7 @@ function ChartCard({
 								}));
 
 								return (
-									<div className="flex flex-col items-center">
+									<div className="flex flex-col items-center gap-4">
 										<ChartContainer
 											config={chartConfig}
 											className="aspect-square max-h-[280px] w-full"
@@ -2585,12 +2585,21 @@ function ChartCard({
 														</text>
 													)}
 												/>
-												<ChartLegend
-													content={<ChartLegendContent nameKey="label" />}
-													className="flex-wrap gap-2 *:basis-1/2 *:justify-start"
-												/>
 											</PieChart>
 										</ChartContainer>
+
+										{/* Legend rendered outside SVG so it is never clipped by the fixed-height viewport */}
+										<div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 w-full px-2">
+											{pieData.map((item: any, idx: number) => (
+												<div key={idx} className="flex items-center gap-1.5 min-w-0">
+													<span
+														className="shrink-0 inline-block w-2.5 h-2.5 rounded-sm"
+														style={{ backgroundColor: item.fill }}
+													/>
+													<span className="text-xs text-[#434652]">{item.label}</span>
+												</div>
+											))}
+										</div>
 									</div>
 								);
 							})()}
