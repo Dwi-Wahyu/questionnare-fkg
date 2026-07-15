@@ -2396,6 +2396,9 @@ const pickChartKind = (stat: any) => {
 	const type = stat.type;
 	const count = stat.optionCount || 0;
 
+	if (stat.title?.toLowerCase().includes("tahun masuk")) {
+		return "bar-vertical";
+	}
 	if (type === "short_text" || type === "paragraph" || type === "date") {
 		return "text";
 	}
@@ -2658,38 +2661,74 @@ function ChartCard({
 								);
 							})()}
 
-						{chartKind === "bar-vertical" && (
-							<ChartContainer
-								config={chartConfig}
-								className="min-h-[300px] w-full"
-							>
-								<BarChart
-									data={stat.data}
-									margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+						{chartKind === "bar-vertical" && (() => {
+							const total = stat.data?.reduce((acc: number, item: any) => acc + (item.count || 0), 0) || 0;
+							const isTahunMasuk = stat.title?.toLowerCase().includes("tahun masuk");
+
+							return (
+								<ChartContainer
+									config={chartConfig}
+									className="min-h-[300px] w-full"
 								>
-									<CartesianGrid vertical={false} strokeDasharray="3 3" />
-									<XAxis dataKey="label" tickLine={false} axisLine={false} />
-									<YAxis tickLine={false} axisLine={false} />
-									<ChartTooltip content={<ChartTooltipContent />} />
-									<Bar
-										isAnimationActive={false}
-										dataKey="count"
-										fill={primaryColor}
-										radius={[4, 4, 0, 0]}
+									<BarChart
+										data={stat.data}
+										margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
 									>
-										<LabelList
-											dataKey="count"
-											position="top"
-											style={{
-												fill: "#1a1b21",
-												fontSize: 11,
-												fontWeight: "bold",
-											}}
+										<CartesianGrid vertical={false} strokeDasharray="3 3" />
+										<XAxis dataKey="label" tickLine={false} axisLine={false} />
+										<YAxis tickLine={false} axisLine={false} />
+										<ChartTooltip
+											content={
+												<ChartTooltipContent
+													formatter={isTahunMasuk ? (value, name, item) => {
+														const percent = total > 0 ? ((Number(value) / total) * 100).toFixed(1) + "%" : "0%";
+														const indicatorColor = item.payload?.fill || item.color || primaryColor;
+														return (
+															<>
+																<div
+																	className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+																	style={{
+																		backgroundColor: indicatorColor,
+																		borderColor: indicatorColor,
+																	}}
+																/>
+																<div className="flex flex-1 justify-between items-center leading-none">
+																	<span className="text-muted-foreground">
+																		{name}
+																	</span>
+																	<span className="font-mono font-medium text-foreground tabular-nums ml-4">
+																		{value} ({percent})
+																	</span>
+																</div>
+															</>
+														);
+													} : undefined}
+												/>
+											}
 										/>
-									</Bar>
-								</BarChart>
-							</ChartContainer>
-						)}
+										<Bar
+											isAnimationActive={false}
+											dataKey="count"
+											fill={primaryColor}
+											radius={[4, 4, 0, 0]}
+										>
+											<LabelList
+												dataKey="count"
+												position="top"
+												style={{
+													fill: "#1a1b21",
+													fontSize: 11,
+													fontWeight: "bold",
+												}}
+												formatter={isTahunMasuk ? (value: any) => {
+													return total > 0 ? ((Number(value) / total) * 100).toFixed(1) + "%" : "0%";
+												} : undefined}
+											/>
+										</Bar>
+									</BarChart>
+								</ChartContainer>
+							);
+						})()}
 
 						{chartKind === "line" && (
 							<ChartContainer
