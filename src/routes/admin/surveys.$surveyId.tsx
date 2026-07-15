@@ -8,8 +8,10 @@ import {
 	copyElementChartAsPng,
 } from "../../lib/copyChartImage";
 import {
+	deleteAdminSurveyResponseFn,
 	duplicateAdminSurveyFn,
 	exportAdminSurveyResponsesCSVFn,
+	exportAdminSurveyResponsesXLSXFn,
 	generateSurveyReportFn,
 	getAdminSurveyAnswersStatsFn,
 	getAdminSurveyDetailFn,
@@ -98,6 +100,25 @@ function SurveyDetailComponent() {
 	const [csvFilterQuestionId, setCsvFilterQuestionId] = useState<string>("");
 	const [csvFilterOptionIds, setCsvFilterOptionIds] = useState<string[]>([]);
 
+	const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+	const exportMenuRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!isExportMenuOpen) return;
+		const handleClickOutside = (e: MouseEvent) => {
+			if (
+				exportMenuRef.current &&
+				!exportMenuRef.current.contains(e.target as Node)
+			) {
+				setIsExportMenuOpen(false);
+			}
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [isExportMenuOpen]);
+
 	const filterableQuestions = detail
 		? (detail.questions || []).filter((q: any) =>
 				["multiple_choice", "dropdown", "checkboxes"].includes(q.type),
@@ -109,6 +130,8 @@ function SurveyDetailComponent() {
 	);
 	const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
 	const [isDuplicating, setIsDuplicating] = useState(false);
+	const [isDeleteResponseDialogOpen, setIsDeleteResponseDialogOpen] = useState(false);
+	const [isDeletingResponse, setIsDeletingResponse] = useState(false);
 	const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 	const [reportCooldown, setReportCooldown] = useState(0);
 	const [latestReport, setLatestReport] = useState<{
@@ -298,6 +321,56 @@ function SurveyDetailComponent() {
 			toast.error(err.message || "Gagal menduplikat survei.");
 			setIsDuplicating(false);
 		}
+	};
+
+	const handleConfirmDeleteResponse = async () => {
+		if (!responseDetail) return;
+		if (isDeletingResponse) return;
+		setIsDeletingResponse(true);
+		try {
+			await deleteAdminSurveyResponseFn({
+				data: { surveyId, responseId: responseDetail.responseId },
+			});
+			toast.success("Respon berhasil dihapus.");
+			setIsDeleteResponseDialogOpen(false);
+
+			const newTotal = (responsesIndex?.totalCount || 0) - 1;
+			const nextPage = page > newTotal ? Math.max(1, newTotal) : page;
+			await router.navigate({ search: (prev) => ({ ...prev, page: nextPage }) });
+			await router.invalidate();
+		} catch (err: any) {
+			toast.error(err.message || "Gagal menghapus respon.");
+		} finally {
+			setIsDeletingResponse(false);
+		}
+	};
+
+	const handlePrintResponse = () => {
+		// Cari elemen print-only
+		const printEl = document.querySelector(".print-only") as HTMLElement | null;
+		if (!printEl) { window.print(); return; }
+
+		// Clone konten print dan taruh langsung di body
+		const printClone = printEl.cloneNode(true) as HTMLElement;
+		printClone.id = "__print_clone__";
+		printClone.style.display = "block";
+
+		// Simpan body asli dan ganti dengan konten print saja
+		const originalBody = document.body.innerHTML;
+		document.body.innerHTML = "";
+		document.body.appendChild(printClone);
+
+		window.print();
+
+		// Restore body asli setelah print (afterprint / setelah dialog ditutup)
+		const restore = () => {
+			document.body.innerHTML = originalBody;
+			// Re-attach React root setelah restore
+			window.removeEventListener("afterprint", restore);
+			// Reload halaman untuk mengembalikan React state
+			window.location.reload();
+		};
+		window.addEventListener("afterprint", restore);
 	};
 
 	// Editor helper actions
@@ -531,6 +604,42 @@ function SurveyDetailComponent() {
 				},
 			});
 			const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8;" });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = res.filename;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+		} catch (err: any) {
+			toast.error(err.message || "Gagal mengekspor data.");
+		}
+	};
+
+	const handleDownloadXLSX = async () => {
+		try {
+			const res = await exportAdminSurveyResponsesXLSXFn({
+				data: {
+					surveyId,
+					filterQuestionId: csvFilterQuestionId
+						? Number(csvFilterQuestionId)
+						: undefined,
+					filterOptionIds:
+						csvFilterOptionIds.length > 0
+							? csvFilterOptionIds.map(Number)
+							: undefined,
+				},
+			});
+			const byteChars = atob(res.base64);
+			const byteNumbers = new Array(byteChars.length);
+			for (let i = 0; i < byteChars.length; i++) {
+				byteNumbers[i] = byteChars.charCodeAt(i);
+			}
+			const byteArray = new Uint8Array(byteNumbers);
+			const blob = new Blob([byteArray], {
+				type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+			});
 			const url = URL.createObjectURL(blob);
 			const link = document.createElement("a");
 			link.href = url;
@@ -1422,11 +1531,14 @@ function SurveyDetailComponent() {
 									setCsvFilterQuestionId(e.target.value);
 									setCsvFilterOptionIds([]);
 								}}
-								className="min-w-0 flex-1 max-w-xs bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer"
+								title={selectedFilterQuestion?.title ?? "Semua Pertanyaan (Tanpa Filter)"}
+								className="min-w-0 flex-1 max-w-md bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer truncate"
 							>
-								<option value="">Semua Pertanyaan (Tanpa Filter)</option>
+								<option value="" title="Semua Pertanyaan (Tanpa Filter)">
+									Semua Pertanyaan (Tanpa Filter)
+								</option>
 								{filterableQuestions.map((q: any) => (
-									<option key={q.id} value={q.id}>
+									<option key={q.id} value={String(q.id)} title={q.title}>
 										{q.title}
 									</option>
 								))}
@@ -1435,7 +1547,6 @@ function SurveyDetailComponent() {
 							{selectedFilterQuestion && (
 								<div className="flex flex-wrap items-center gap-1.5">
 									{selectedFilterQuestion.options
-										.filter((o: any) => o.group === "choice")
 										.map((o: any) => {
 											const checked = csvFilterOptionIds.includes(String(o.id));
 											return (
@@ -1483,18 +1594,55 @@ function SurveyDetailComponent() {
 								</button>
 							)}
 
-							<button
-								onClick={handleDownloadCSV}
-								disabled={
-									!!csvFilterQuestionId && csvFilterOptionIds.length === 0
-								}
-								className="bg-[#0b3e9c] text-white hover:bg-[#002972] disabled:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm active:scale-95 transition-transform cursor-pointer whitespace-nowrap"
-							>
-								<span className="material-symbols-outlined text-sm">
-									download
-								</span>
-								<span>Download CSV</span>
-							</button>
+							<div className="relative" ref={exportMenuRef}>
+								<button
+									type="button"
+									onClick={() => setIsExportMenuOpen((v) => !v)}
+									disabled={
+										!!csvFilterQuestionId && csvFilterOptionIds.length === 0
+									}
+									className="bg-[#0b3e9c] text-white hover:bg-[#002972] disabled:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm active:scale-95 transition-transform cursor-pointer whitespace-nowrap"
+								>
+									<span className="material-symbols-outlined text-sm">
+										download
+									</span>
+									<span>Ekspor</span>
+									<span className="material-symbols-outlined text-sm">
+										{isExportMenuOpen ? "expand_less" : "expand_more"}
+									</span>
+								</button>
+
+								{isExportMenuOpen && (
+									<div className="absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-10 overflow-hidden">
+										<button
+											type="button"
+											onClick={() => {
+												setIsExportMenuOpen(false);
+												handleDownloadXLSX();
+											}}
+											className="w-full text-left px-3 py-2 text-xs font-semibold text-[#1a1b21] hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+										>
+											<span className="material-symbols-outlined text-sm">
+												table_view
+											</span>
+											<span>Ekspor sebagai Excel (.xlsx)</span>
+										</button>
+										<button
+											type="button"
+											onClick={() => {
+												setIsExportMenuOpen(false);
+												handleDownloadCSV();
+											}}
+											className="w-full text-left px-3 py-2 text-xs font-semibold text-[#1a1b21] hover:bg-slate-50 flex items-center gap-2 cursor-pointer border-t border-slate-100"
+										>
+											<span className="material-symbols-outlined text-sm">
+												description
+											</span>
+											<span>Ekspor sebagai CSV (.csv)</span>
+										</button>
+									</div>
+								)}
+							</div>
 						</div>
 					)}
 
@@ -1764,6 +1912,26 @@ function SurveyDetailComponent() {
 											<span className="text-sm font-bold text-[#1a1b21]">
 												Respon #{page} dari {responsesIndex.totalCount}
 											</span>
+
+											<button
+												type="button"
+												onClick={handlePrintResponse}
+												className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[#434652] hover:text-[#002972] transition-colors cursor-pointer"
+												title="Cetak respon ini"
+											>
+												<span className="material-symbols-outlined text-sm block">print</span>
+											</button>
+
+											{user?.role !== "visitor" && (
+												<button
+													type="button"
+													onClick={() => setIsDeleteResponseDialogOpen(true)}
+													className="p-1.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-[#ba1a1a] transition-colors cursor-pointer"
+													title="Hapus respon ini"
+												>
+													<span className="material-symbols-outlined text-sm block">delete</span>
+												</button>
+											)}
 										</div>
 
 										{/* submitted time */}
@@ -1859,11 +2027,6 @@ function SurveyDetailComponent() {
 																	</p>
 																)}
 															</div>
-															{item.required && (
-																<span className="text-xxs font-bold text-rose-600 bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded uppercase">
-																	Wajib
-																</span>
-															)}
 														</div>
 
 														{/* Rendering input control */}
@@ -2047,6 +2210,132 @@ function SurveyDetailComponent() {
 													</div>
 												);
 											})}
+									</div>
+
+									{/* Print-only region for window.print() */}
+									<div className="print-only hidden p-8 max-w-4xl mx-auto space-y-6 bg-white text-[#1a1b21]">
+										{/* Header/letterhead */}
+										<div className="flex items-center justify-between border-b-2 border-[#002972] pb-4">
+											<div className="flex items-center gap-4">
+												<img src="/logo.webp" alt="Logo" className="h-16 w-auto object-contain" />
+												<div className="text-left">
+													<h1 className="text-xl font-extrabold text-[#002972] uppercase tracking-wide">
+														TRACER STUDY FKG UH
+													</h1>
+													<p className="text-xs text-[#747683] font-medium">
+														Fakultas Kedokteran Gigi Universitas Hasanuddin
+													</p>
+												</div>
+											</div>
+											<div className="text-right">
+												<h2 className="text-sm font-bold text-[#1a1b21] uppercase">
+													Detail Respon Individual
+												</h2>
+												<p className="text-xxs text-[#747683] mt-0.5">
+													Kuesioner Tracer Study
+												</p>
+											</div>
+										</div>
+
+										{/* Survey Title & Metadata */}
+										<div className="bg-slate-50 border border-slate-200 rounded-lg p-4 grid grid-cols-2 gap-4 text-xs">
+											<div className="space-y-1">
+												<div className="text-[#747683] font-semibold uppercase tracking-wider text-[10px]">
+													Nama Kuesioner
+												</div>
+												<div className="font-bold text-sm text-[#1a1b21]">{detail.survey.title}</div>
+											</div>
+											<div className="grid grid-cols-2 gap-2">
+												<div className="space-y-0.5">
+													<div className="text-[#747683] font-semibold uppercase tracking-wider text-[10px]">
+														Nomor Respon
+													</div>
+													<div className="font-bold text-[#1a1b21]">
+														Respon #{page} dari {responsesIndex.totalCount}
+													</div>
+												</div>
+												<div className="space-y-0.5">
+													<div className="text-[#747683] font-semibold uppercase tracking-wider text-[10px]">
+														Waktu Pengiriman
+													</div>
+													<div className="font-medium text-[#1a1b21]">
+														{responseDetail.submittedAt
+															? new Date(responseDetail.submittedAt).toLocaleString("id-ID", {
+																	dateStyle: "medium",
+																	timeStyle: "short",
+																})
+															: "-"}
+													</div>
+												</div>
+											</div>
+										</div>
+
+										{/* Print metadata */}
+										<div className="flex justify-end items-center text-[10px] text-[#747683] border-b border-slate-100 pb-2">
+											<span>
+												Dicetak pada:{" "}
+												{new Date().toLocaleString("id-ID", {
+													dateStyle: "long",
+													timeStyle: "medium",
+												})}
+											</span>
+										</div>
+
+										{/* Questions and Answers */}
+										<div className="space-y-6 pt-2">
+											{responseDetail.items.map((item: any, idx: number) => {
+												return (
+													<div key={item.questionId} className="page-break-inside-avoid space-y-1.5 border-b border-slate-100 pb-4 last:border-0">
+														<div className="flex justify-between items-start gap-4">
+															<h3 className="font-bold text-xs text-[#1a1b21]">
+																{idx + 1}. {item.title}
+															</h3>
+														</div>
+														{item.description && (
+															<p className="text-[10px] text-[#747683] italic">
+																{item.description}
+															</p>
+														)}
+														<div className="pl-4 pt-1">
+															{item.hidden ? (
+																<div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-dashed border-slate-200 rounded text-[#ba1a1a] text-xs font-semibold">
+																	<span className="material-symbols-outlined text-xs block">lock</span>
+																	<span>Informasi pribadi disembunyikan untuk peninjau</span>
+																</div>
+															) : item.type === "grid" ? (
+																<div className="space-y-1 border-l border-slate-200 pl-3">
+																	{(() => {
+																		const rows = item.options.filter((o: any) => o.group === "row");
+																		const cols = item.options.filter((o: any) => o.group === "column");
+																		return rows.map((r: any) => {
+																			const selectedColId = item.valueGrid?.[String(r.id)];
+																			const selectedCol = cols.find((c: any) => c.id === selectedColId);
+																			return (
+																				<div key={r.id} className="text-xs text-[#1a1b21] flex items-center">
+																					<span className="font-semibold min-w-32">{r.label}</span>
+																					<span className="text-[#747683] mx-2">&rarr;</span>
+																					<span className="font-medium text-slate-800">{selectedCol ? selectedCol.label : "-"}</span>
+																				</div>
+																			);
+																		});
+																	})()}
+																</div>
+															) : (
+																<p className="text-xs text-slate-800 font-medium whitespace-pre-wrap leading-relaxed">
+																	{formatAnswerForPrint(item)}
+																</p>
+															)}
+														</div>
+													</div>
+												);
+											})}
+										</div>
+
+										{/* Footer */}
+										<div className="border-t border-slate-200 pt-4 flex justify-between items-center text-[10px] text-[#747683] font-medium">
+											<span>{detail.survey.title}</span>
+											<span>Respon #{page}</span>
+										</div>
 									</div>
 								</div>
 							);
@@ -2343,6 +2632,17 @@ function SurveyDetailComponent() {
 			/>
 
 			<ConfirmDialog
+				isOpen={isDeleteResponseDialogOpen}
+				title="Hapus Respon"
+				message={`Apakah Anda yakin ingin menghapus Respon #${page}? Tindakan ini tidak dapat dibatalkan.`}
+				confirmText={isDeletingResponse ? "Menghapus..." : "Ya, Hapus"}
+				cancelText="Batal"
+				onConfirm={handleConfirmDeleteResponse}
+				onCancel={() => setIsDeleteResponseDialogOpen(false)}
+				variant="danger"
+			/>
+
+			<ConfirmDialog
 				isOpen={deleteSectionId !== null}
 				title="Hapus Bagian"
 				message="Bagian ini akan dihapus. Pertanyaan di dalamnya akan dipindahkan ke bagian sebelumnya. Lanjutkan?"
@@ -2386,6 +2686,35 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "../../components/ui/chart";
+
+const formatAnswerForPrint = (item: any) => {
+	if (item.hidden) {
+		return "Informasi pribadi disembunyikan untuk peninjau";
+	}
+	switch (item.type) {
+		case "short_text":
+		case "paragraph":
+		case "date":
+			return item.valueText && item.valueText.trim() !== "" ? item.valueText : "-";
+		case "multiple_choice":
+		case "dropdown": {
+			const selectedOption = item.options.find((opt: any) => item.valueOptionIds?.includes(opt.id));
+			return selectedOption ? selectedOption.label : "-";
+		}
+		case "checkboxes": {
+			const selectedLabels = item.options
+				.filter((opt: any) => item.valueOptionIds?.includes(opt.id))
+				.map((opt: any) => opt.label);
+			return selectedLabels.length > 0 ? selectedLabels.join(", ") : "-";
+		}
+		case "linear_scale": {
+			const selectedOption = item.options.find((opt: any) => item.valueOptionIds?.includes(opt.id));
+			return selectedOption ? selectedOption.label : "-";
+		}
+		default:
+			return "-";
+	}
+};
 
 const safeKey = (str: string | null | undefined) => {
 	if (typeof str !== "string") return "";

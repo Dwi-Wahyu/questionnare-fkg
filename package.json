@@ -46,6 +46,7 @@
     "clsx": "^2.1.1",
     "docx-templates": "^4.15.0",
     "drizzle-orm": "^0.45.2",
+    "exceljs": "^4.4.0",
     "lucide-react": "^1.22.0",
     "mysql2": "^3.22.6",
     "react": "^19.2.7",

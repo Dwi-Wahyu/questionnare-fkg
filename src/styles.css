@@ -652,3 +652,37 @@
 		color: var(--on-surface-variant);
 	}
 }
+
+.print-only {
+	display: none !important;
+}
+
+@media print {
+	@page {
+		margin: 16mm 12mm;
+		size: A4;
+	}
+
+	body {
+		margin: 0 !important;
+		padding: 0 !important;
+		background: white !important;
+	}
+
+	/* .print-only sudah menjadi satu-satunya elemen di body saat printing
+	   berkat teknik DOM clone di JS. Pastikan flow normal dan tidak ada clipping */
+	.print-only {
+		display: block !important;
+		position: static !important;
+		width: 100% !important;
+		height: auto !important;
+		overflow: visible !important;
+		visibility: visible !important;
+	}
+
+	/* Avoid page break inside questions during printing */
+	.page-break-inside-avoid {
+		page-break-inside: avoid !important;
+		break-inside: avoid !important;
+	}
+}

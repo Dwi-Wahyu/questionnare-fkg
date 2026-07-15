@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { getUserFromSession } from "./auth";
 import { db } from "./db";
 import {
@@ -333,6 +333,29 @@ export const deleteAdminSurveyFn = createServerFn({ method: "POST" })
 		return { success: true, archived: false };
 	});
 
+// Delete a single response (and its cascaded answers) — Admin only
+export const deleteAdminSurveyResponseFn = createServerFn({ method: "POST" })
+	.validator((data: { surveyId: number; responseId: number }) => data)
+	.handler(async ({ data }) => {
+		await assertAdmin();
+
+		const [existing] = await db
+			.select({ id: responses.id })
+			.from(responses)
+			.where(
+				and(
+					eq(responses.id, data.responseId),
+					eq(responses.surveyId, data.surveyId),
+				),
+			);
+		if (!existing) throw new Error("Respon tidak ditemukan.");
+
+		// FK CASCADE (answers.responseId -> responses.id) deletes the answers too.
+		await db.delete(responses).where(eq(responses.id, data.responseId));
+
+		return { success: true };
+	});
+
 // 7. Get full survey details for detail view
 export const getAdminSurveyDetailFn = createServerFn({ method: "GET" })
 	.validator((id: number) => id)
@@ -399,7 +422,7 @@ export const getAdminSurveyResponsesListFn = createServerFn({ method: "GET" })
 					eq(responses.status, "completed"),
 				),
 			)
-			.orderBy(desc(responses.submittedAt))
+			.orderBy(asc(responses.submittedAt))
 			.limit(data.limit)
 			.offset(offset);
 
@@ -1022,8 +1045,258 @@ export const getAdminSurveyResponseDetailFn = createServerFn({ method: "GET" })
 		};
 	});
 
-// 13. Export real row-level CSV data for a survey (Admin only)
-// 13. Export real row-level CSV data for a survey (Admin only)
+// 13. Export real row-level CSV/XLSX data for a survey (Admin only)
+const slugify = (s: string) =>
+	s
+		.toLowerCase()
+		.normalize("NFKD")
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/(^-|-$)/g, "");
+
+// Shared helper to build survey response export data
+async function buildSurveyResponseExport(data: {
+	surveyId: number;
+	filterQuestionId?: number;
+	filterOptionIds?: number[];
+}) {
+	const { surveyId, filterQuestionId, filterOptionIds } = data;
+	const user = await assertUser();
+	if (user.role !== "admin") {
+		throw new Error("Akses ditolak. Hanya Admin yang dapat mengekspor data.");
+	}
+
+	// 1. Load survey, sections, questions, options (ordered)
+	const [survey] = await db
+		.select()
+		.from(surveys)
+		.where(eq(surveys.id, surveyId));
+	if (!survey) throw new Error("Survei tidak ditemukan");
+
+	const surveySections = await db
+		.select()
+		.from(sections)
+		.where(eq(sections.surveyId, surveyId))
+		.orderBy(sections.order);
+
+	const surveyQuestions = await db
+		.select()
+		.from(questions)
+		.where(eq(questions.surveyId, surveyId))
+		.orderBy(questions.order);
+
+	const questionIds = surveyQuestions.map((q) => q.id);
+	const surveyOptions = questionIds.length
+		? await db
+				.select()
+				.from(questionOptions)
+				.where(inArray(questionOptions.questionId, questionIds))
+				.orderBy(questionOptions.order)
+		: [];
+
+	let filterQuestion: (typeof surveyQuestions)[number] | undefined;
+	let filterOptions: (typeof surveyOptions)[number][] = [];
+
+	if (
+		filterQuestionId != null &&
+		filterOptionIds &&
+		filterOptionIds.length > 0
+	) {
+		filterQuestion = surveyQuestions.find((q) => q.id === filterQuestionId);
+		filterOptions = surveyOptions.filter(
+			(o) =>
+				filterOptionIds.includes(o.id) && o.questionId === filterQuestionId,
+		);
+		if (!filterQuestion || filterOptions.length === 0) {
+			throw new Error(
+				"Filter pertanyaan/nilai tidak valid untuk survei ini.",
+			);
+		}
+		if (filterQuestion.type === "grid") {
+			throw new Error(
+				"Filter berdasarkan pertanyaan tipe Kisi Pilihan Ganda (Matrix) belum didukung.",
+			);
+		}
+	}
+
+	// 2. Load all completed responses and their answers
+	const allCompletedResponses = await db
+		.select()
+		.from(responses)
+		.where(
+			and(
+				eq(responses.surveyId, surveyId),
+				eq(responses.status, "completed"),
+			),
+		)
+		.orderBy(responses.submittedAt);
+
+	const completedResponseIds = allCompletedResponses.map((r) => r.id);
+	const allCompletedAnswers = completedResponseIds.length
+		? await db
+				.select()
+				.from(answers)
+				.where(inArray(answers.responseId, completedResponseIds))
+		: [];
+
+	let filteredResponses = allCompletedResponses;
+	if (filterQuestion && filterOptions.length > 0) {
+		const filterOptionIdSet = new Set(filterOptions.map((o) => o.id));
+		const matchingResponseIds = new Set(
+			allCompletedAnswers
+				.filter((a) => {
+					if (a.questionId !== filterQuestion!.id) return false;
+					const optIds = a.valueOptionIds as number[] | null;
+					return !!optIds && optIds.some((id) => filterOptionIdSet.has(id));
+				})
+				.map((a) => a.responseId),
+		);
+		filteredResponses = allCompletedResponses.filter((r) =>
+			matchingResponseIds.has(r.id),
+		);
+	}
+
+	// Group answers in memory by responseId
+	const answersByResponseId = new Map<number, typeof allCompletedAnswers>();
+	for (const ans of allCompletedAnswers) {
+		if (!answersByResponseId.has(ans.responseId)) {
+			answersByResponseId.set(ans.responseId, []);
+		}
+		answersByResponseId.get(ans.responseId)!.push(ans);
+	}
+
+	// 4. Build column plans
+	interface ColumnPlan {
+		header: string;
+		resolve: (r: any, idx: number, ansList: any[]) => string;
+	}
+
+	const columnPlans: ColumnPlan[] = [
+		{
+			header: "No. Respon",
+			resolve: (r, idx) => String(idx + 1),
+		},
+		{
+			header: "Timestamp",
+			resolve: (r) =>
+				r.submittedAt ? new Date(r.submittedAt).toISOString() : "",
+		},
+	];
+
+	// Check for grid row label collisions across different questions
+	const gridRowLabels = new Set<string>();
+	const duplicateGridRowLabels = new Set<string>();
+	for (const q of surveyQuestions) {
+		if (q.type === "grid") {
+			const rows = surveyOptions.filter(
+				(o) => o.questionId === q.id && o.group === "row",
+			);
+			for (const r of rows) {
+				if (gridRowLabels.has(r.label)) {
+					duplicateGridRowLabels.add(r.label);
+				} else {
+					gridRowLabels.add(r.label);
+				}
+			}
+		}
+	}
+
+	for (const q of surveyQuestions) {
+		const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
+		if (q.type === "grid") {
+			const rows = qOptions.filter((o) => o.group === "row");
+			const cols = qOptions.filter((o) => o.group === "column");
+			for (const r of rows) {
+				const headerText = duplicateGridRowLabels.has(r.label)
+					? `${q.title} — ${r.label}`
+					: r.label;
+
+				columnPlans.push({
+					header: headerText,
+					resolve: (rObj, idx, ansList) => {
+						const answer = ansList.find((a) => a.questionId === q.id);
+						if (!answer || !answer.valueGrid) return "";
+						const gridVal = answer.valueGrid as Record<string, number>;
+						const colOptId = gridVal[String(r.id)];
+						if (!colOptId) return "";
+						const colOpt = cols.find((c) => c.id === colOptId);
+						return colOpt ? colOpt.label : "";
+					},
+				});
+			}
+		} else if (
+			q.type === "multiple_choice" ||
+			q.type === "dropdown" ||
+			q.type === "linear_scale"
+		) {
+			columnPlans.push({
+				header: q.title,
+				resolve: (rObj, idx, ansList) => {
+					const answer = ansList.find((a) => a.questionId === q.id);
+					if (
+						!answer ||
+						!answer.valueOptionIds ||
+						answer.valueOptionIds.length === 0
+					)
+						return "";
+					const optId = answer.valueOptionIds[0];
+					const opt = qOptions.find((o) => o.id === optId);
+					return opt ? opt.label : "";
+				},
+			});
+		} else if (q.type === "checkboxes") {
+			columnPlans.push({
+				header: q.title,
+				resolve: (rObj, idx, ansList) => {
+					const answer = ansList.find((a) => a.questionId === q.id);
+					if (
+						!answer ||
+						!answer.valueOptionIds ||
+						answer.valueOptionIds.length === 0
+					)
+						return "";
+					const labels = answer.valueOptionIds
+						.map((id: number) => {
+							const opt = qOptions.find((o) => o.id === id);
+							return opt ? opt.label : null;
+						})
+						.filter((l: string | null): l is string => l !== null);
+					return labels.join("; ");
+				},
+			});
+		} else {
+			// short_text, paragraph, date
+			columnPlans.push({
+				header: q.title,
+				resolve: (rObj, idx, ansList) => {
+					const answer = ansList.find((a) => a.questionId === q.id);
+					return answer?.valueText ?? "";
+				},
+			});
+		}
+	}
+
+	const filenameSuffix =
+		filterQuestion && filterOptions.length > 0
+			? `_${slugify(filterQuestion.title)}-${filterOptions.map((o) => slugify(o.label)).join("+")}`
+			: "";
+
+	return {
+		survey,
+		filteredResponses,
+		answersByResponseId,
+		columnPlans,
+		summaryLines: [
+			`Ringkasan Survei — ${survey.title}`,
+			`Total Respon (Selesai): ${filteredResponses.length}`,
+			`Diekspor pada: ${new Date().toISOString()}`,
+			...(filterQuestion && filterOptions.length > 0
+				? [`Filter Diterapkan: ${filterQuestion.title} = ${filterOptions.map((o) => o.label).join(", ")}`]
+				: []),
+		],
+		filenameSuffix,
+	};
+}
+
 export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 	.validator(
 		(data: {
@@ -1033,241 +1306,26 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { surveyId, filterQuestionId, filterOptionIds } = data;
-		const user = await assertUser();
-		if (user.role !== "admin") {
-			throw new Error("Akses ditolak. Hanya Admin yang dapat mengekspor data.");
-		}
-
-		// 1. Load survey, sections, questions, options (ordered)
-		const [survey] = await db
-			.select()
-			.from(surveys)
-			.where(eq(surveys.id, surveyId));
-		if (!survey) throw new Error("Survei tidak ditemukan");
-
-		const surveySections = await db
-			.select()
-			.from(sections)
-			.where(eq(sections.surveyId, surveyId))
-			.orderBy(sections.order);
-
-		const surveyQuestions = await db
-			.select()
-			.from(questions)
-			.where(eq(questions.surveyId, surveyId))
-			.orderBy(questions.order);
-
-		const questionIds = surveyQuestions.map((q) => q.id);
-		const surveyOptions = questionIds.length
-			? await db
-					.select()
-					.from(questionOptions)
-					.where(inArray(questionOptions.questionId, questionIds))
-					.orderBy(questionOptions.order)
-			: [];
-
-		let filterQuestion: (typeof surveyQuestions)[number] | undefined;
-		let filterOptions: (typeof surveyOptions)[number][] = [];
-
-		if (
-			filterQuestionId != null &&
-			filterOptionIds &&
-			filterOptionIds.length > 0
-		) {
-			filterQuestion = surveyQuestions.find((q) => q.id === filterQuestionId);
-			filterOptions = surveyOptions.filter(
-				(o) =>
-					filterOptionIds.includes(o.id) && o.questionId === filterQuestionId,
-			);
-			if (!filterQuestion || filterOptions.length === 0) {
-				throw new Error(
-					"Filter pertanyaan/nilai tidak valid untuk survei ini.",
-				);
-			}
-			if (filterQuestion.type === "grid") {
-				throw new Error(
-					"Filter berdasarkan pertanyaan tipe Kisi Pilihan Ganda (Matrix) belum didukung.",
-				);
-			}
-		}
-
-		// 2. Load all completed responses and their answers
-		const allCompletedResponses = await db
-			.select()
-			.from(responses)
-			.where(
-				and(
-					eq(responses.surveyId, surveyId),
-					eq(responses.status, "completed"),
-				),
-			)
-			.orderBy(responses.submittedAt);
-
-		const completedResponseIds = allCompletedResponses.map((r) => r.id);
-		const allCompletedAnswers = completedResponseIds.length
-			? await db
-					.select()
-					.from(answers)
-					.where(inArray(answers.responseId, completedResponseIds))
-			: [];
-
-		let filteredResponses = allCompletedResponses;
-		if (filterQuestion && filterOptions.length > 0) {
-			const filterOptionIdSet = new Set(filterOptions.map((o) => o.id));
-			const matchingResponseIds = new Set(
-				allCompletedAnswers
-					.filter((a) => {
-						if (a.questionId !== filterQuestion!.id) return false;
-						const optIds = a.valueOptionIds as number[] | null;
-						return !!optIds && optIds.some((id) => filterOptionIdSet.has(id));
-					})
-					.map((a) => a.responseId),
-			);
-			filteredResponses = allCompletedResponses.filter((r) =>
-				matchingResponseIds.has(r.id),
-			);
-		}
-
-		// Group answers in memory by responseId
-		const answersByResponseId = new Map<number, typeof allCompletedAnswers>();
-		for (const ans of allCompletedAnswers) {
-			if (!answersByResponseId.has(ans.responseId)) {
-				answersByResponseId.set(ans.responseId, []);
-			}
-			answersByResponseId.get(ans.responseId)!.push(ans);
-		}
+		const {
+			survey,
+			filteredResponses,
+			answersByResponseId,
+			columnPlans,
+			summaryLines,
+			filenameSuffix,
+		} = await buildSurveyResponseExport(data);
 
 		const csvEscape = (val: string | null | undefined) => {
 			if (val === null || val === undefined) return '""';
 			return `"${String(val).replace(/"/g, '""')}"`;
 		};
 
-		// 3. Build CSV summary block (metadata only — no aggregate table)
-		const summaryRows: string[] = [];
-		summaryRows.push(`Ringkasan Survei — ${survey.title}`);
-		summaryRows.push(`Total Respon (Selesai),${filteredResponses.length}`);
-		summaryRows.push(`Diekspor pada,${new Date().toISOString()}`);
+		const summaryRows = summaryLines.map((line) => {
+			const idx = line.indexOf(": ");
+			if (idx === -1) return line;
+			return `${line.slice(0, idx)},${csvEscape(line.slice(idx + 2))}`;
+		});
 
-		if (filterQuestion && filterOptions.length > 0) {
-			const labels = filterOptions.map((o) => o.label).join(", ");
-			summaryRows.push(
-				`Filter Diterapkan,${csvEscape(`${filterQuestion.title} = ${labels}`)}`,
-			);
-		}
-
-		// 4. Build column plans
-		interface ColumnPlan {
-			header: string;
-			resolve: (r: any, idx: number, ansList: any[]) => string;
-		}
-
-		const columnPlans: ColumnPlan[] = [
-			{
-				header: "No. Respon",
-				resolve: (r, idx) => String(idx + 1),
-			},
-			{
-				header: "Timestamp",
-				resolve: (r) =>
-					r.submittedAt ? new Date(r.submittedAt).toISOString() : "",
-			},
-		];
-
-		// Check for grid row label collisions across different questions
-		const gridRowLabels = new Set<string>();
-		const duplicateGridRowLabels = new Set<string>();
-		for (const q of surveyQuestions) {
-			if (q.type === "grid") {
-				const rows = surveyOptions.filter(
-					(o) => o.questionId === q.id && o.group === "row",
-				);
-				for (const r of rows) {
-					if (gridRowLabels.has(r.label)) {
-						duplicateGridRowLabels.add(r.label);
-					} else {
-						gridRowLabels.add(r.label);
-					}
-				}
-			}
-		}
-
-		for (const q of surveyQuestions) {
-			const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
-			if (q.type === "grid") {
-				const rows = qOptions.filter((o) => o.group === "row");
-				const cols = qOptions.filter((o) => o.group === "column");
-				for (const r of rows) {
-					const headerText = duplicateGridRowLabels.has(r.label)
-						? `${q.title} — ${r.label}`
-						: r.label;
-
-					columnPlans.push({
-						header: headerText,
-						resolve: (rObj, idx, ansList) => {
-							const answer = ansList.find((a) => a.questionId === q.id);
-							if (!answer || !answer.valueGrid) return "";
-							const gridVal = answer.valueGrid as Record<string, number>;
-							const colOptId = gridVal[String(r.id)];
-							if (!colOptId) return "";
-							const colOpt = cols.find((c) => c.id === colOptId);
-							return colOpt ? colOpt.label : "";
-						},
-					});
-				}
-			} else if (
-				q.type === "multiple_choice" ||
-				q.type === "dropdown" ||
-				q.type === "linear_scale"
-			) {
-				columnPlans.push({
-					header: q.title,
-					resolve: (rObj, idx, ansList) => {
-						const answer = ansList.find((a) => a.questionId === q.id);
-						if (
-							!answer ||
-							!answer.valueOptionIds ||
-							answer.valueOptionIds.length === 0
-						)
-							return "";
-						const optId = answer.valueOptionIds[0];
-						const opt = qOptions.find((o) => o.id === optId);
-						return opt ? opt.label : "";
-					},
-				});
-			} else if (q.type === "checkboxes") {
-				columnPlans.push({
-					header: q.title,
-					resolve: (rObj, idx, ansList) => {
-						const answer = ansList.find((a) => a.questionId === q.id);
-						if (
-							!answer ||
-							!answer.valueOptionIds ||
-							answer.valueOptionIds.length === 0
-						)
-							return "";
-						const labels = answer.valueOptionIds
-							.map((id: number) => {
-								const opt = qOptions.find((o) => o.id === id);
-								return opt ? opt.label : null;
-							})
-							.filter((l: string | null): l is string => l !== null);
-						return labels.join("; ");
-					},
-				});
-			} else {
-				// short_text, paragraph, date
-				columnPlans.push({
-					header: q.title,
-					resolve: (rObj, idx, ansList) => {
-						const answer = ansList.find((a) => a.questionId === q.id);
-						return answer?.valueText ?? "";
-					},
-				});
-			}
-		}
-
-		// 5. Generate CSV strings
 		const headerRow = columnPlans.map((cp) => csvEscape(cp.header)).join(",");
 		const dataRows = filteredResponses.map((r, idx) => {
 			const ansList = answersByResponseId.get(r.id) || [];
@@ -1279,21 +1337,90 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 		const csvContent =
 			"\uFEFF" + [...summaryRows, "", headerRow, ...dataRows].join("\n");
 
-		const slugify = (s: string) =>
-			s
-				.toLowerCase()
-				.normalize("NFKD")
-				.replace(/[^a-z0-9]+/g, "-")
-				.replace(/(^-|-$)/g, "");
-
-		const filenameSuffix =
-			filterQuestion && filterOptions.length > 0
-				? `_${slugify(filterQuestion.title)}-${filterOptions.map((o) => slugify(o.label)).join("+")}`
-				: "";
-
 		return {
 			csv: csvContent,
 			filename: `responses_survey_${survey.slug}${filenameSuffix}.csv`,
+		};
+	});
+
+export const exportAdminSurveyResponsesXLSXFn = createServerFn({ method: "GET" })
+	.validator(
+		(data: {
+			surveyId: number;
+			filterQuestionId?: number;
+			filterOptionIds?: number[];
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const {
+			survey,
+			filteredResponses,
+			answersByResponseId,
+			columnPlans,
+			summaryLines,
+			filenameSuffix,
+		} = await buildSurveyResponseExport(data);
+
+		const ExcelJS = (await import("exceljs")).default;
+		const workbook = new ExcelJS.Workbook();
+		workbook.creator = "Tracer Study";
+		workbook.created = new Date();
+
+		const sheet = workbook.addWorksheet("Respon");
+
+		summaryLines.forEach((line) => {
+			sheet.addRow([line]);
+		});
+		sheet.addRow([]);
+
+		const headerRowIndex = summaryLines.length + 2;
+		const headerRow = sheet.addRow(columnPlans.map((cp) => cp.header));
+
+		headerRow.eachCell((cell) => {
+			cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+			cell.fill = {
+				type: "pattern",
+				pattern: "solid",
+				fgColor: { argb: "FF002972" },
+			};
+			cell.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+		});
+		filteredResponses.forEach((r, idx) => {
+			const ansList = answersByResponseId.get(r.id) || [];
+			sheet.addRow(columnPlans.map((cp) => cp.resolve(r, idx, ansList)));
+		});
+
+		// Auto-size column widths and estimate header row height
+		let maxHeaderLines = 1;
+		sheet.columns.forEach((col, i) => {
+			const headerText = String(columnPlans[i]?.header ?? "");
+			const headerLen = headerText.length;
+			let maxLen = headerLen;
+			col.eachCell?.({ includeEmpty: false }, (cell) => {
+				const len = String(cell.value ?? "").length;
+				if (len > maxLen) maxLen = len;
+			});
+			const colWidth = Math.min(Math.max(maxLen + 2, 12), 40);
+			col.width = colWidth;
+
+			// Sane line estimation (wrapText)
+			const contentWidth = Math.max(colWidth - 2, 8);
+			const lines = Math.ceil(headerLen / contentWidth);
+			if (lines > maxHeaderLines) maxHeaderLines = lines;
+		});
+
+		headerRow.height = Math.max(maxHeaderLines * 15 + 6, 22);
+
+		sheet.views = [{ state: "frozen", xSplit: 0, ySplit: headerRowIndex }];
+		sheet.autoFilter = {
+			from: { row: headerRowIndex, column: 1 },
+			to: { row: headerRowIndex + filteredResponses.length, column: columnPlans.length },
+		};
+
+		const buffer = await workbook.xlsx.writeBuffer();
+		return {
+			base64: Buffer.from(buffer as any).toString("base64"),
+			filename: `responses_survey_${survey.slug}${filenameSuffix}.xlsx`,
 		};
 	});
 
