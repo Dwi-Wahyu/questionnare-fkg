@@ -28,6 +28,10 @@ export const Route = createRootRoute({
 				title: "Tracer Study & Survey FKG Unhas",
 			},
 		],
+		links: [
+			{ rel: "icon", type: "image/png", href: "/favicon.png" },
+			{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
+		],
 	}),
 	loader: async () => {
 		const user = await getSessionFn();

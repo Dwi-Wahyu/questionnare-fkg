@@ -637,6 +637,46 @@ async function computeSurveyStats(
 							: 0,
 				})),
 			};
+		} else if (q.title?.toLowerCase().includes("tahun masuk")) {
+			if (hidden) {
+				return {
+					questionId: q.id,
+					title: q.title,
+					type: q.type,
+					redacted: true,
+					data: [],
+				};
+			}
+
+			// Free-text year aggregation: raw valueText -> count, sorted ascending.
+			const yearCounts: Record<string, number> = {};
+			const respondentCount = qAnswers.length;
+
+			qAnswers.forEach((ans) => {
+				const raw =
+					typeof ans.valueText === "string" ? ans.valueText.trim() : "";
+				if (raw !== "") {
+					yearCounts[raw] = (yearCounts[raw] || 0) + 1;
+				}
+			});
+
+			return {
+				questionId: q.id,
+				title: q.title,
+				type: q.type,
+				data: Object.entries(yearCounts)
+					.map(([label, count]) => ({
+						label,
+						count,
+						percentage:
+							respondentCount > 0
+								? Math.round((count / respondentCount) * 100)
+								: 0,
+					}))
+					.sort((a, b) =>
+						a.label.localeCompare(b.label, undefined, { numeric: true }),
+					),
+			};
 		} else {
 			if (hidden) {
 				return {
@@ -1107,9 +1147,7 @@ async function buildSurveyResponseExport(data: {
 				filterOptionIds.includes(o.id) && o.questionId === filterQuestionId,
 		);
 		if (!filterQuestion || filterOptions.length === 0) {
-			throw new Error(
-				"Filter pertanyaan/nilai tidak valid untuk survei ini.",
-			);
+			throw new Error("Filter pertanyaan/nilai tidak valid untuk survei ini.");
 		}
 		if (filterQuestion.type === "grid") {
 			throw new Error(
@@ -1123,10 +1161,7 @@ async function buildSurveyResponseExport(data: {
 		.select()
 		.from(responses)
 		.where(
-			and(
-				eq(responses.surveyId, surveyId),
-				eq(responses.status, "completed"),
-			),
+			and(eq(responses.surveyId, surveyId), eq(responses.status, "completed")),
 		)
 		.orderBy(responses.submittedAt);
 
@@ -1290,7 +1325,9 @@ async function buildSurveyResponseExport(data: {
 			`Total Respon (Selesai): ${filteredResponses.length}`,
 			`Diekspor pada: ${new Date().toISOString()}`,
 			...(filterQuestion && filterOptions.length > 0
-				? [`Filter Diterapkan: ${filterQuestion.title} = ${filterOptions.map((o) => o.label).join(", ")}`]
+				? [
+						`Filter Diterapkan: ${filterQuestion.title} = ${filterOptions.map((o) => o.label).join(", ")}`,
+					]
 				: []),
 		],
 		filenameSuffix,
@@ -1343,7 +1380,9 @@ export const exportAdminSurveyResponsesCSVFn = createServerFn({ method: "GET" })
 		};
 	});
 
-export const exportAdminSurveyResponsesXLSXFn = createServerFn({ method: "GET" })
+export const exportAdminSurveyResponsesXLSXFn = createServerFn({
+	method: "GET",
+})
 	.validator(
 		(data: {
 			surveyId: number;
@@ -1383,7 +1422,11 @@ export const exportAdminSurveyResponsesXLSXFn = createServerFn({ method: "GET" }
 				pattern: "solid",
 				fgColor: { argb: "FF002972" },
 			};
-			cell.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+			cell.alignment = {
+				vertical: "middle",
+				horizontal: "left",
+				wrapText: true,
+			};
 		});
 		filteredResponses.forEach((r, idx) => {
 			const ansList = answersByResponseId.get(r.id) || [];
@@ -1414,7 +1457,10 @@ export const exportAdminSurveyResponsesXLSXFn = createServerFn({ method: "GET" }
 		sheet.views = [{ state: "frozen", xSplit: 0, ySplit: headerRowIndex }];
 		sheet.autoFilter = {
 			from: { row: headerRowIndex, column: 1 },
-			to: { row: headerRowIndex + filteredResponses.length, column: columnPlans.length },
+			to: {
+				row: headerRowIndex + filteredResponses.length,
+				column: columnPlans.length,
+			},
 		};
 
 		const buffer = await workbook.xlsx.writeBuffer();

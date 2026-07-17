@@ -130,7 +130,8 @@ function SurveyDetailComponent() {
 	);
 	const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
 	const [isDuplicating, setIsDuplicating] = useState(false);
-	const [isDeleteResponseDialogOpen, setIsDeleteResponseDialogOpen] = useState(false);
+	const [isDeleteResponseDialogOpen, setIsDeleteResponseDialogOpen] =
+		useState(false);
 	const [isDeletingResponse, setIsDeletingResponse] = useState(false);
 	const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 	const [reportCooldown, setReportCooldown] = useState(0);
@@ -336,7 +337,9 @@ function SurveyDetailComponent() {
 
 			const newTotal = (responsesIndex?.totalCount || 0) - 1;
 			const nextPage = page > newTotal ? Math.max(1, newTotal) : page;
-			await router.navigate({ search: (prev) => ({ ...prev, page: nextPage }) });
+			await router.navigate({
+				search: (prev) => ({ ...prev, page: nextPage }),
+			});
 			await router.invalidate();
 		} catch (err: any) {
 			toast.error(err.message || "Gagal menghapus respon.");
@@ -348,7 +351,10 @@ function SurveyDetailComponent() {
 	const handlePrintResponse = () => {
 		// Cari elemen print-only
 		const printEl = document.querySelector(".print-only") as HTMLElement | null;
-		if (!printEl) { window.print(); return; }
+		if (!printEl) {
+			window.print();
+			return;
+		}
 
 		// Clone konten print dan taruh langsung di body
 		const printClone = printEl.cloneNode(true) as HTMLElement;
@@ -1531,7 +1537,10 @@ function SurveyDetailComponent() {
 									setCsvFilterQuestionId(e.target.value);
 									setCsvFilterOptionIds([]);
 								}}
-								title={selectedFilterQuestion?.title ?? "Semua Pertanyaan (Tanpa Filter)"}
+								title={
+									selectedFilterQuestion?.title ??
+									"Semua Pertanyaan (Tanpa Filter)"
+								}
 								className="min-w-0 flex-1 max-w-md bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer truncate"
 							>
 								<option value="" title="Semua Pertanyaan (Tanpa Filter)">
@@ -1546,35 +1555,34 @@ function SurveyDetailComponent() {
 
 							{selectedFilterQuestion && (
 								<div className="flex flex-wrap items-center gap-1.5">
-									{selectedFilterQuestion.options
-										.map((o: any) => {
-											const checked = csvFilterOptionIds.includes(String(o.id));
-											return (
-												<label
-													key={o.id}
-													className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs cursor-pointer select-none transition-colors ${
-														checked
-															? "bg-[#0b3e9c] border-[#0b3e9c] text-white font-semibold"
-															: "bg-white border-slate-200 text-[#434652] hover:border-[#0b3e9c] hover:text-[#0b3e9c]"
-													}`}
-												>
-													<input
-														type="checkbox"
-														className="sr-only"
-														checked={checked}
-														onChange={() => {
-															const sid = String(o.id);
-															setCsvFilterOptionIds((prev) =>
-																prev.includes(sid)
-																	? prev.filter((id) => id !== sid)
-																	: [...prev, sid],
-															);
-														}}
-													/>
-													{o.label}
-												</label>
-											);
-										})}
+									{selectedFilterQuestion.options.map((o: any) => {
+										const checked = csvFilterOptionIds.includes(String(o.id));
+										return (
+											<label
+												key={o.id}
+												className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs cursor-pointer select-none transition-colors ${
+													checked
+														? "bg-[#0b3e9c] border-[#0b3e9c] text-white font-semibold"
+														: "bg-white border-slate-200 text-[#434652] hover:border-[#0b3e9c] hover:text-[#0b3e9c]"
+												}`}
+											>
+												<input
+													type="checkbox"
+													className="sr-only"
+													checked={checked}
+													onChange={() => {
+														const sid = String(o.id);
+														setCsvFilterOptionIds((prev) =>
+															prev.includes(sid)
+																? prev.filter((id) => id !== sid)
+																: [...prev, sid],
+														);
+													}}
+												/>
+												{o.label}
+											</label>
+										);
+									})}
 								</div>
 							)}
 
@@ -1919,7 +1927,9 @@ function SurveyDetailComponent() {
 												className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[#434652] hover:text-[#002972] transition-colors cursor-pointer"
 												title="Cetak respon ini"
 											>
-												<span className="material-symbols-outlined text-sm block">print</span>
+												<span className="material-symbols-outlined text-sm block">
+													print
+												</span>
 											</button>
 
 											{user?.role !== "visitor" && (
@@ -1929,7 +1939,9 @@ function SurveyDetailComponent() {
 													className="p-1.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-[#ba1a1a] transition-colors cursor-pointer"
 													title="Hapus respon ini"
 												>
-													<span className="material-symbols-outlined text-sm block">delete</span>
+													<span className="material-symbols-outlined text-sm block">
+														delete
+													</span>
 												</button>
 											)}
 										</div>
@@ -2217,7 +2229,11 @@ function SurveyDetailComponent() {
 										{/* Header/letterhead */}
 										<div className="flex items-center justify-between border-b-2 border-[#002972] pb-4">
 											<div className="flex items-center gap-4">
-												<img src="/logo.webp" alt="Logo" className="h-16 w-auto object-contain" />
+												<img
+													src="/logo.webp"
+													alt="Logo"
+													className="h-16 w-auto object-contain"
+												/>
 												<div className="text-left">
 													<h1 className="text-xl font-extrabold text-[#002972] uppercase tracking-wide">
 														TRACER STUDY FKG UH
@@ -2243,7 +2259,9 @@ function SurveyDetailComponent() {
 												<div className="text-[#747683] font-semibold uppercase tracking-wider text-[10px]">
 													Nama Kuesioner
 												</div>
-												<div className="font-bold text-sm text-[#1a1b21]">{detail.survey.title}</div>
+												<div className="font-bold text-sm text-[#1a1b21]">
+													{detail.survey.title}
+												</div>
 											</div>
 											<div className="grid grid-cols-2 gap-2">
 												<div className="space-y-0.5">
@@ -2260,7 +2278,9 @@ function SurveyDetailComponent() {
 													</div>
 													<div className="font-medium text-[#1a1b21]">
 														{responseDetail.submittedAt
-															? new Date(responseDetail.submittedAt).toLocaleString("id-ID", {
+															? new Date(
+																	responseDetail.submittedAt,
+																).toLocaleString("id-ID", {
 																	dateStyle: "medium",
 																	timeStyle: "short",
 																})
@@ -2285,7 +2305,10 @@ function SurveyDetailComponent() {
 										<div className="space-y-6 pt-2">
 											{responseDetail.items.map((item: any, idx: number) => {
 												return (
-													<div key={item.questionId} className="page-break-inside-avoid space-y-1.5 border-b border-slate-100 pb-4 last:border-0">
+													<div
+														key={item.questionId}
+														className="page-break-inside-avoid space-y-1.5 border-b border-slate-100 pb-4 last:border-0"
+													>
 														<div className="flex justify-between items-start gap-4">
 															<h3 className="font-bold text-xs text-[#1a1b21]">
 																{idx + 1}. {item.title}
@@ -2299,22 +2322,45 @@ function SurveyDetailComponent() {
 														<div className="pl-4 pt-1">
 															{item.hidden ? (
 																<div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-dashed border-slate-200 rounded text-[#ba1a1a] text-xs font-semibold">
-																	<span className="material-symbols-outlined text-xs block">lock</span>
-																	<span>Informasi pribadi disembunyikan untuk peninjau</span>
+																	<span className="material-symbols-outlined text-xs block">
+																		lock
+																	</span>
+																	<span>
+																		Informasi pribadi disembunyikan untuk
+																		peninjau
+																	</span>
 																</div>
 															) : item.type === "grid" ? (
 																<div className="space-y-1 border-l border-slate-200 pl-3">
 																	{(() => {
-																		const rows = item.options.filter((o: any) => o.group === "row");
-																		const cols = item.options.filter((o: any) => o.group === "column");
+																		const rows = item.options.filter(
+																			(o: any) => o.group === "row",
+																		);
+																		const cols = item.options.filter(
+																			(o: any) => o.group === "column",
+																		);
 																		return rows.map((r: any) => {
-																			const selectedColId = item.valueGrid?.[String(r.id)];
-																			const selectedCol = cols.find((c: any) => c.id === selectedColId);
+																			const selectedColId =
+																				item.valueGrid?.[String(r.id)];
+																			const selectedCol = cols.find(
+																				(c: any) => c.id === selectedColId,
+																			);
 																			return (
-																				<div key={r.id} className="text-xs text-[#1a1b21] flex items-center">
-																					<span className="font-semibold min-w-32">{r.label}</span>
-																					<span className="text-[#747683] mx-2">&rarr;</span>
-																					<span className="font-medium text-slate-800">{selectedCol ? selectedCol.label : "-"}</span>
+																				<div
+																					key={r.id}
+																					className="text-xs text-[#1a1b21] flex items-center"
+																				>
+																					<span className="font-semibold min-w-32">
+																						{r.label}
+																					</span>
+																					<span className="text-[#747683] mx-2">
+																						&rarr;
+																					</span>
+																					<span className="font-medium text-slate-800">
+																						{selectedCol
+																							? selectedCol.label
+																							: "-"}
+																					</span>
 																				</div>
 																			);
 																		});
@@ -2695,10 +2741,14 @@ const formatAnswerForPrint = (item: any) => {
 		case "short_text":
 		case "paragraph":
 		case "date":
-			return item.valueText && item.valueText.trim() !== "" ? item.valueText : "-";
+			return item.valueText && item.valueText.trim() !== ""
+				? item.valueText
+				: "-";
 		case "multiple_choice":
 		case "dropdown": {
-			const selectedOption = item.options.find((opt: any) => item.valueOptionIds?.includes(opt.id));
+			const selectedOption = item.options.find((opt: any) =>
+				item.valueOptionIds?.includes(opt.id),
+			);
 			return selectedOption ? selectedOption.label : "-";
 		}
 		case "checkboxes": {
@@ -2708,7 +2758,9 @@ const formatAnswerForPrint = (item: any) => {
 			return selectedLabels.length > 0 ? selectedLabels.join(", ") : "-";
 		}
 		case "linear_scale": {
-			const selectedOption = item.options.find((opt: any) => item.valueOptionIds?.includes(opt.id));
+			const selectedOption = item.options.find((opt: any) =>
+				item.valueOptionIds?.includes(opt.id),
+			);
 			return selectedOption ? selectedOption.label : "-";
 		}
 		default:
@@ -2990,74 +3042,106 @@ function ChartCard({
 								);
 							})()}
 
-						{chartKind === "bar-vertical" && (() => {
-							const total = stat.data?.reduce((acc: number, item: any) => acc + (item.count || 0), 0) || 0;
-							const isTahunMasuk = stat.title?.toLowerCase().includes("tahun masuk");
+						{chartKind === "bar-vertical" &&
+							(() => {
+								const total =
+									stat.data?.reduce(
+										(acc: number, item: any) => acc + (item.count || 0),
+										0,
+									) || 0;
+								const isTahunMasuk = stat.title
+									?.toLowerCase()
+									.includes("tahun masuk");
 
-							return (
-								<ChartContainer
-									config={chartConfig}
-									className="min-h-[300px] w-full"
-								>
-									<BarChart
-										data={stat.data}
-										margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+								return (
+									<ChartContainer
+										config={chartConfig}
+										className="min-h-[300px] w-full"
 									>
-										<CartesianGrid vertical={false} strokeDasharray="3 3" />
-										<XAxis dataKey="label" tickLine={false} axisLine={false} />
-										<YAxis tickLine={false} axisLine={false} />
-										<ChartTooltip
-											content={
-												<ChartTooltipContent
-													formatter={isTahunMasuk ? (value, name, item) => {
-														const percent = total > 0 ? ((Number(value) / total) * 100).toFixed(1) + "%" : "0%";
-														const indicatorColor = item.payload?.fill || item.color || primaryColor;
-														return (
-															<>
-																<div
-																	className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-																	style={{
-																		backgroundColor: indicatorColor,
-																		borderColor: indicatorColor,
-																	}}
-																/>
-																<div className="flex flex-1 justify-between items-center leading-none">
-																	<span className="text-muted-foreground">
-																		{name}
-																	</span>
-																	<span className="font-mono font-medium text-foreground tabular-nums ml-4">
-																		{value} ({percent})
-																	</span>
-																</div>
-															</>
-														);
-													} : undefined}
-												/>
-											}
-										/>
-										<Bar
-											isAnimationActive={false}
-											dataKey="count"
-											fill={primaryColor}
-											radius={[4, 4, 0, 0]}
+										<BarChart
+											data={stat.data}
+											margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
 										>
-											<LabelList
-												dataKey="count"
-												position="top"
-												style={{
-													fill: "#1a1b21",
-													fontSize: 11,
-													fontWeight: "bold",
-												}}
-												formatter={isTahunMasuk ? (value: any) => {
-													return total > 0 ? ((Number(value) / total) * 100).toFixed(1) + "%" : "0%";
-												} : undefined}
+											<CartesianGrid vertical={false} strokeDasharray="3 3" />
+											<XAxis
+												dataKey="label"
+												tickLine={false}
+												axisLine={false}
 											/>
-										</Bar>
-									</BarChart>
-								</ChartContainer>
-							);
-						})()}
+											<YAxis tickLine={false} axisLine={false} />
+											<ChartTooltip
+												content={
+													<ChartTooltipContent
+														formatter={
+															isTahunMasuk
+																? (value, name, item) => {
+																		const percent =
+																			total > 0
+																				? (
+																						(Number(value) / total) *
+																						100
+																					).toFixed(1) + "%"
+																				: "0%";
+																		const indicatorColor =
+																			item.payload?.fill ||
+																			item.color ||
+																			primaryColor;
+																		return (
+																			<>
+																				<div
+																					className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+																					style={{
+																						backgroundColor: indicatorColor,
+																						borderColor: indicatorColor,
+																					}}
+																				/>
+																				<div className="flex flex-1 justify-between items-center leading-none">
+																					<span className="text-muted-foreground">
+																						{name}
+																					</span>
+																					<span className="font-mono font-medium text-foreground tabular-nums ml-4">
+																						{value} ({percent})
+																					</span>
+																				</div>
+																			</>
+																		);
+																	}
+																: undefined
+														}
+													/>
+												}
+											/>
+											<Bar
+												isAnimationActive={false}
+												dataKey="count"
+												fill={primaryColor}
+												radius={[4, 4, 0, 0]}
+											>
+												<LabelList
+													dataKey="count"
+													position="top"
+													style={{
+														fill: "#1a1b21",
+														fontSize: 11,
+														fontWeight: "bold",
+													}}
+													formatter={
+														isTahunMasuk
+															? (value: any) => {
+																	return total > 0
+																		? ((Number(value) / total) * 100).toFixed(
+																				1,
+																			) + "%"
+																		: "0%";
+																}
+															: undefined
+													}
+												/>
+											</Bar>
+										</BarChart>
+									</ChartContainer>
+								);
+							})()}
 
 						{chartKind === "line" && (
 							<ChartContainer
