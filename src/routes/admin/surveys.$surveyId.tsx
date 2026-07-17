@@ -100,6 +100,46 @@ function SurveyDetailComponent() {
 	const [csvFilterQuestionId, setCsvFilterQuestionId] = useState<string>("");
 	const [csvFilterOptionIds, setCsvFilterOptionIds] = useState<string[]>([]);
 
+	const [activeStats, setActiveStats] = useState(stats);
+	const [isLoadingStats, setIsLoadingStats] = useState(false);
+	const [isExporting, setIsExporting] = useState(false);
+
+	useEffect(() => {
+		setActiveStats(stats);
+	}, [stats]);
+
+	useEffect(() => {
+		if (tab !== "responses" || user?.role === "visitor") return;
+		let cancelled = false;
+		setIsLoadingStats(true);
+		getAdminSurveyAnswersStatsFn({
+			data: {
+				surveyId,
+				filterQuestionId: csvFilterQuestionId
+					? Number(csvFilterQuestionId)
+					: undefined,
+				filterOptionIds:
+					csvFilterOptionIds.length > 0
+						? csvFilterOptionIds.map(Number)
+						: undefined,
+			},
+		})
+			.then((res) => {
+				if (!cancelled) setActiveStats(res);
+			})
+			.catch((err) => {
+				if (!cancelled)
+					toast.error(err.message || "Gagal memuat statistik terfilter.");
+			})
+			.finally(() => {
+				if (!cancelled) setIsLoadingStats(false);
+			});
+		return () => {
+			cancelled = true;
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [surveyId, tab, csvFilterQuestionId, csvFilterOptionIds]);
+
 	const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 	const exportMenuRef = useRef<HTMLDivElement>(null);
 
@@ -143,17 +183,28 @@ function SurveyDetailComponent() {
 
 	const fetchLatestReport = async () => {
 		try {
-			const report = await getLatestSurveyReportFn({ data: surveyId });
+			const report = await getLatestSurveyReportFn({
+				data: {
+					surveyId,
+					filterQuestionId: csvFilterQuestionId
+						? Number(csvFilterQuestionId)
+						: undefined,
+					filterOptionIds:
+						csvFilterOptionIds.length > 0
+							? csvFilterOptionIds.map(Number)
+							: undefined,
+				},
+			});
 			setLatestReport(report);
 		} catch (err) {
 			console.error("Gagal memuat laporan terakhir:", err);
 		}
 	};
 
-	// Fetch latest report on mount/reload
+	// Fetch latest report on mount/reload or filter changes
 	useEffect(() => {
 		fetchLatestReport();
-	}, [surveyId]);
+	}, [surveyId, csvFilterQuestionId, csvFilterOptionIds]);
 
 	// Decrement report generation cooldown timer
 	useEffect(() => {
@@ -669,15 +720,21 @@ function SurveyDetailComponent() {
 		}
 
 		setIsGeneratingReport(true);
+		setIsExporting(true);
 		toast.info("Sedang memproses grafik dan narasi AI laporan...");
 
 		try {
+			// Wait for layout to fully settle after switching to export full height
+			await new Promise((resolve) => setTimeout(resolve, 150));
+
 			// Find all chart cards rendered in the DOM
 			const chartCardEls = document.querySelectorAll("[data-chart-card]");
 			const charts: {
 				questionId: number;
 				label: string;
 				imageBase64: string;
+				pxWidth: number;
+				pxHeight: number;
 			}[] = [];
 
 			for (const card of chartCardEls) {
@@ -699,11 +756,17 @@ function SurveyDetailComponent() {
 					const label = card.getAttribute("data-chart-label") || "";
 					const rootEl =
 						(svgEl.closest("[data-chart-root]") as HTMLElement) ?? svgEl;
-					const imageBase64 = await chartElementToPngBase64(rootEl);
+					const {
+						base64: imageBase64,
+						width: pxWidth,
+						height: pxHeight,
+					} = await chartElementToPngBase64(rootEl);
 					charts.push({
 						questionId: qId,
 						label,
 						imageBase64,
+						pxWidth,
+						pxHeight,
 					});
 				} catch (err) {
 					console.error("Gagal menangkap gambar chart:", err);
@@ -715,6 +778,13 @@ function SurveyDetailComponent() {
 				data: {
 					surveyId,
 					charts,
+					filterQuestionId: csvFilterQuestionId
+						? Number(csvFilterQuestionId)
+						: undefined,
+					filterOptionIds:
+						csvFilterOptionIds.length > 0
+							? csvFilterOptionIds.map(Number)
+							: undefined,
 				},
 			});
 
@@ -748,6 +818,7 @@ function SurveyDetailComponent() {
 			toast.error(err.message || "Gagal membuat laporan.");
 		} finally {
 			setIsGeneratingReport(false);
+			setIsExporting(false);
 		}
 	};
 
@@ -1602,6 +1673,12 @@ function SurveyDetailComponent() {
 								</button>
 							)}
 
+							{activeStats?.subtitle && (
+								<span className="text-xs text-[#434652] italic whitespace-nowrap">
+									Cakupan: <strong>{activeStats.subtitle}</strong>
+								</span>
+							)}
+
 							<div className="relative" ref={exportMenuRef}>
 								<button
 									type="button"
@@ -1655,8 +1732,10 @@ function SurveyDetailComponent() {
 					)}
 
 					{/* Sub-tab Content: Ringkasan */}
-					{subtab === "ringkasan" && stats && (
-						<div className="space-y-6">
+					{subtab === "ringkasan" && activeStats && (
+						<div
+							className={`space-y-6 transition-opacity duration-200 ${isLoadingStats ? "opacity-50" : ""}`}
+						>
 							{/* Summary stats Bento */}
 							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 								<div className="bg-white rounded-xl p-6 border border-[#c4c6d4] shadow-sm flex items-center justify-between">
@@ -1665,7 +1744,7 @@ function SurveyDetailComponent() {
 											Total Jawaban
 										</span>
 										<p className="text-4xl font-bold text-[#002972] mt-1">
-											{detail.responseCount}
+											{activeStats.responseCount ?? detail.responseCount}
 										</p>
 									</div>
 									<div className="w-12 h-12 rounded-full bg-[#dbe1ff] flex items-center justify-center text-[#0f409e]">
@@ -1700,13 +1779,13 @@ function SurveyDetailComponent() {
 
 							{/* Visual Charts list */}
 							<div className="space-y-6">
-								{stats
+								{activeStats.stats
 									.filter((stat: any) => !stat.redacted)
 									.map((stat: any) => (
 										<ChartCard
 											key={stat.questionId}
 											stat={stat}
-											responseCount={detail.responseCount}
+											responseCount={activeStats.responseCount}
 										/>
 									))}
 							</div>
@@ -1715,7 +1794,7 @@ function SurveyDetailComponent() {
 
 					{/* Sub-tab Content: Pertanyaan */}
 					{subtab === "pertanyaan" &&
-						stats &&
+						activeStats &&
 						(() => {
 							const surveySections = detail.sections || [];
 							const sortedSections = [...surveySections].sort(
@@ -1743,12 +1822,14 @@ function SurveyDetailComponent() {
 							const selectedQuestion = detail.questions.find(
 								(q: any) => q.id === activeQid,
 							);
-							const selectedStat = stats.find(
+							const selectedStat = activeStats.stats.find(
 								(s: any) => s.questionId === activeQid,
 							);
 
 							return (
-								<div className="space-y-6">
+								<div
+									className={`space-y-6 transition-opacity duration-200 ${isLoadingStats ? "opacity-50" : ""}`}
+								>
 									{/* Question Selector */}
 									<div className="flex flex-col gap-1.5 w-full sm:w-80">
 										<label className="text-xs font-bold text-[#434652] text-left">
@@ -1790,7 +1871,7 @@ function SurveyDetailComponent() {
 											{/* Same chart card as Ringkasan, but standalone */}
 											<ChartCard
 												stat={selectedStat}
-												responseCount={detail.responseCount}
+												responseCount={activeStats.responseCount}
 											/>
 
 											{/* Breakdown table for Choice types */}
@@ -3027,6 +3108,9 @@ function ChartCard({
 												<div
 													key={idx}
 													className="flex items-center gap-1.5 min-w-0"
+													data-legend-item=""
+													data-legend-label={item.label}
+													data-legend-color={item.fill}
 												>
 													<span
 														className="shrink-0 inline-block w-2.5 h-2.5 rounded-sm"
@@ -3180,14 +3264,54 @@ function ChartCard({
 
 						{chartKind === "bar-horizontal" &&
 							(() => {
-								const rowHeight = 32; // px per category — enough for an 11px label without collision
+								const rowHeight = 52; // px per category — enough for 2-3 lines wrapped label
 								const computedHeight = Math.max(
-									400,
+									300,
 									stat.data.length * rowHeight,
 								);
-								const cappedHeight = Math.min(computedHeight, 1200); // hard ceiling so the card can't run away
-								const needsScroll = computedHeight > cappedHeight;
-								const yAxisWidth = 140; // widened from 90 — long prodi/institution names need more room
+								const cappedHeight = isExporting
+									? computedHeight
+									: Math.min(computedHeight, 1200);
+								const needsScroll =
+									computedHeight > cappedHeight && !isExporting;
+								const yAxisWidth = 140;
+
+								const renderYAxisTick = ({ x, y, payload }: any) => {
+									const text: string = payload.value || "";
+									const words = text.split(" ");
+									const lines: string[] = [];
+									let currentLine = "";
+									for (const word of words) {
+										if ((currentLine + " " + word).trim().length > 20) {
+											if (currentLine) lines.push(currentLine);
+											currentLine = word;
+										} else {
+											currentLine = (currentLine + " " + word).trim();
+										}
+									}
+									if (currentLine) lines.push(currentLine);
+
+									return (
+										<text
+											x={x - 8}
+											y={y}
+											textAnchor="end"
+											fill="#434652"
+											fontSize={10}
+											fontFamily="Outfit, sans-serif"
+										>
+											{lines.map((line, idx) => (
+												<tspan
+													key={idx}
+													x={x - 8}
+													dy={idx === 0 ? -((lines.length - 1) * 6) + 3 : 12}
+												>
+													{line}
+												</tspan>
+											))}
+										</text>
+									);
+								};
 
 								const chart = (
 									<ChartContainer
@@ -3210,9 +3334,7 @@ function ChartCard({
 												width={yAxisWidth}
 												fontSize={10}
 												interval={0}
-												tickFormatter={(val: string) =>
-													val.length > 22 ? `${val.slice(0, 22)}…` : val
-												}
+												tick={renderYAxisTick}
 											/>
 											<ChartTooltip content={<ChartTooltipContent />} />
 											<Bar

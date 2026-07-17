@@ -197,4 +197,5 @@ export const reportGenerations = mysqlTable("report_generations", {
 	generatedAt: timestamp("generated_at").notNull().defaultNow(),
 	fileBase64: mediumtext("file_base_64"),
 	fileName: varchar("file_name", { length: 255 }),
+	filterKey: varchar("filter_key", { length: 255 }).notNull().default(""),
 });

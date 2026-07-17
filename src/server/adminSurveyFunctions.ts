@@ -475,6 +475,7 @@ export const getAdminSurveyResponsesListFn = createServerFn({ method: "GET" })
 async function computeSurveyStats(
 	surveyId: number,
 	userRole: "admin" | "visitor",
+	filter?: { filterQuestionId?: number; filterOptionIds?: number[] },
 ) {
 	// Fetch all sections to determine the first section (for personal info identification)
 	const surveySections = await db
@@ -523,10 +524,64 @@ async function computeSurveyStats(
 					)
 			: [];
 
+	let filterQuestion: (typeof surveyQuestions)[number] | undefined;
+	let filterOptions: (typeof surveyOptions)[number][] = [];
+
+	if (
+		filter?.filterQuestionId != null &&
+		filter.filterOptionIds &&
+		filter.filterOptionIds.length > 0
+	) {
+		filterQuestion = surveyQuestions.find(
+			(q) => q.id === filter!.filterQuestionId,
+		);
+		filterOptions = surveyOptions.filter(
+			(o) =>
+				filter!.filterOptionIds!.includes(o.id) &&
+				o.questionId === filter!.filterQuestionId,
+		);
+		if (!filterQuestion || filterOptions.length === 0) {
+			throw new Error("Filter pertanyaan/nilai tidak valid untuk survei ini.");
+		}
+		if (filterQuestion.type === "grid") {
+			throw new Error(
+				"Filter berdasarkan pertanyaan tipe Kisi Pilihan Ganda (Matrix) belum didukung.",
+			);
+		}
+	}
+
+	const allCompletedResponses = await db
+		.select({ id: responses.id })
+		.from(responses)
+		.where(
+			and(eq(responses.surveyId, surveyId), eq(responses.status, "completed")),
+		);
+
+	let responseCount = allCompletedResponses.length;
+	let scopedAnswers = allAnswers;
+	if (filterQuestion && filterOptions.length > 0) {
+		const filterOptionIdSet = new Set(filterOptions.map((o) => o.id));
+		const matchingResponseIds = new Set(
+			allAnswers
+				.filter((a) => a.questionId === filterQuestion!.id)
+				.filter((a) => {
+					const optIds = a.valueOptionIds as number[] | null;
+					return !!optIds && optIds.some((id) => filterOptionIdSet.has(id));
+				})
+				.map((a) => a.responseId),
+		);
+		scopedAnswers = allAnswers.filter((a) =>
+			matchingResponseIds.has(a.responseId),
+		);
+		responseCount = allCompletedResponses.filter((r) =>
+			matchingResponseIds.has(r.id),
+		).length;
+	}
+
 	// Aggregate statistics per question
 	const stats = surveyQuestions.map((q) => {
 		const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
-		const qAnswers = allAnswers.filter((a) => a.questionId === q.id);
+		const qAnswers = scopedAnswers.filter((a) => a.questionId === q.id);
 		const isPersonal =
 			firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
 		const hidden = isPersonal && userRole === "visitor";
@@ -706,19 +761,36 @@ async function computeSurveyStats(
 		stats,
 		surveyQuestions,
 		surveyOptions,
-		allAnswers,
+		allAnswers: scopedAnswers,
 		surveySections,
 		firstSectionId,
+		filterQuestion,
+		filterOptions,
+		subtitle: buildFilterSubtitle(filterQuestion, filterOptions),
+		responseCount,
 	};
 }
 
 // 9. Get detailed response statistics (for the charts)
 export const getAdminSurveyAnswersStatsFn = createServerFn({ method: "GET" })
-	.validator((surveyId: number) => surveyId)
-	.handler(async ({ data: surveyId }) => {
+	.validator(
+		(data: {
+			surveyId: number;
+			filterQuestionId?: number;
+			filterOptionIds?: number[];
+		}) => data,
+	)
+	.handler(async ({ data }) => {
 		const user = await assertUser();
-		const { stats } = await computeSurveyStats(surveyId, user.role);
-		return stats;
+		const { stats, subtitle, responseCount } = await computeSurveyStats(
+			data.surveyId,
+			user.role,
+			{
+				filterQuestionId: data.filterQuestionId,
+				filterOptionIds: data.filterOptionIds,
+			},
+		);
+		return { stats, subtitle, responseCount };
 	});
 
 // 10. Update survey questions (reordering, adding, deleting)
@@ -1084,6 +1156,19 @@ export const getAdminSurveyResponseDetailFn = createServerFn({ method: "GET" })
 			items,
 		};
 	});
+
+// Human-readable description of the currently applied response filter —
+// used as the docx subtitle, the Groq prompt context line, and the
+// on-screen "cakupan data" preview. Keep this the single source of wording.
+function buildFilterSubtitle(
+	filterQuestion: { title: string } | undefined,
+	filterOptions: { label: string }[],
+): string {
+	if (!filterQuestion || filterOptions.length === 0) {
+		return "Seluruh Data Responden";
+	}
+	return filterOptions.map((o) => o.label).join(", ");
+}
 
 // 13. Export real row-level CSV/XLSX data for a survey (Admin only)
 const slugify = (s: string) =>
@@ -1470,34 +1555,64 @@ export const exportAdminSurveyResponsesXLSXFn = createServerFn({
 		};
 	});
 
-// Helper for scale threshold bucketing
-function getScaleBucket(
-	avg: number,
-	options: { value: string | null; label: string }[],
-) {
-	const numericOptions = options
-		.map((o) => ({
-			val: o.value ? Number.parseFloat(o.value) : Number.parseFloat(o.label),
-			label: o.label,
-		}))
-		.filter((o) => !Number.isNaN(o.val))
-		.sort((a, b) => a.val - b.val);
+// Helper to get numeric value for Likert options
+function getNumericValueForOption(
+	option: { id: number; value: string | null; label: string; order: number },
+	allOptions: {
+		id: number;
+		value: string | null;
+		label: string;
+		order: number;
+	}[],
+): number | null {
+	const parsedVal = Number.parseFloat(option.value || "");
+	if (!Number.isNaN(parsedVal)) return parsedVal;
+	const parsedLabel = Number.parseFloat(option.label || "");
+	if (!Number.isNaN(parsedLabel)) return parsedLabel;
 
-	if (numericOptions.length === 0) return "-";
-	if (numericOptions.length === 1) return numericOptions[0].label;
+	const sortedOptions = [...allOptions].sort((a, b) => a.order - b.order);
+	const index = sortedOptions.findIndex((o) => o.id === option.id);
+	if (index === -1) return null;
 
-	// Find the option with the closest value
-	let closestOption = numericOptions[0];
-	let minDiff = Math.abs(avg - numericOptions[0].val);
+	const likertKeywords = [
+		"baik",
+		"puas",
+		"relevan",
+		"setuju",
+		"sangat",
+		"cukup",
+		"kurang",
+		"tidak",
+	];
+	const isLikert = sortedOptions.some((o) => {
+		const l = (o.label || "").toLowerCase();
+		return likertKeywords.some((k) => l.includes(k));
+	});
 
-	for (const opt of numericOptions) {
-		const diff = Math.abs(avg - opt.val);
-		if (diff < minDiff) {
-			minDiff = diff;
-			closestOption = opt;
-		}
+	if (!isLikert) return null;
+
+	const firstLabel = (sortedOptions[0].label || "").toLowerCase().trim();
+	const isPositiveFirst =
+		firstLabel.includes("sangat") ||
+		firstLabel.includes("puas") ||
+		firstLabel.includes("baik") ||
+		firstLabel.includes("relevan") ||
+		firstLabel.includes("setuju");
+
+	if (isPositiveFirst) {
+		return sortedOptions.length - index;
+	} else {
+		return index + 1;
 	}
-	return closestOption.label;
+}
+
+// Helper for standard score categorization (1-4 scale)
+function getScoreCategory(mean: number): string {
+	// TODO: parameterize by scale if a 1-5 survey shows up
+	if (mean >= 3.25) return "Sangat Baik";
+	if (mean >= 2.5) return "Baik";
+	if (mean >= 1.75) return "Cukup";
+	return "Kurang";
 }
 
 // Helper to assert report rate limit
@@ -1537,189 +1652,237 @@ export const generateSurveyReportFn = createServerFn({ method: "POST" })
 				questionId: number;
 				label: string;
 				imageBase64: string;
+				pxWidth?: number;
+				pxHeight?: number;
 			}[];
+			filterQuestionId?: number;
+			filterOptionIds?: number[];
 		}) => data,
 	)
-	.handler(async ({ data: { surveyId, charts } }) => {
-		const user = await assertAdmin();
-		const userId = user.id;
+	.handler(
+		async ({
+			data: { surveyId, charts, filterQuestionId, filterOptionIds },
+		}) => {
+			const user = await assertAdmin();
+			const userId = user.id;
 
-		const docxTemplates = await import("docx-templates");
-		const createReport = docxTemplates.default || docxTemplates.createReport;
-		const fs = await import("node:fs");
-		const path = await import("node:path");
+			const docxTemplates = await import("docx-templates");
+			const createReport = docxTemplates.default || docxTemplates.createReport;
+			const fs = await import("node:fs");
+			const path = await import("node:path");
 
-		// Check payload size
-		let totalBase64Length = 0;
-		for (const chart of charts) {
-			totalBase64Length += chart.imageBase64.length;
-		}
-		if (totalBase64Length > 7 * 1024 * 1024) {
-			throw new Error(
-				"Ukuran total gambar grafik terlalu besar (maksimal 5MB).",
-			);
-		}
+			// Check payload size
+			let totalBase64Length = 0;
+			for (const chart of charts) {
+				totalBase64Length += chart.imageBase64.length;
+			}
+			if (totalBase64Length > 7 * 1024 * 1024) {
+				throw new Error(
+					"Ukuran total gambar grafik terlalu besar (maksimal 5MB).",
+				);
+			}
 
-		// Check rate limit
-		await assertReportRateLimit(surveyId, userId);
+			// Check rate limit
+			await assertReportRateLimit(surveyId, userId);
 
-		// Load survey details
-		const [survey] = await db
-			.select()
-			.from(surveys)
-			.where(eq(surveys.id, surveyId));
-		if (!survey) throw new Error("Survei tidak ditemukan");
+			// Load survey details
+			const [survey] = await db
+				.select()
+				.from(surveys)
+				.where(eq(surveys.id, surveyId));
+			if (!survey) throw new Error("Survei tidak ditemukan");
 
-		// Fetch all responses and get count
-		const [responseCountResult] = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(responses)
-			.where(
-				and(
-					eq(responses.surveyId, surveyId),
-					eq(responses.status, "completed"),
-				),
-			);
-		const responseCount = responseCountResult?.count || 0;
+			// 1. Get statistics and metadata
+			const {
+				stats,
+				surveyQuestions,
+				surveyOptions,
+				allAnswers,
+				firstSectionId,
+				filterQuestion,
+				filterOptions,
+				subtitle,
+				responseCount,
+			} = await computeSurveyStats(surveyId, user.role, {
+				filterQuestionId,
+				filterOptionIds,
+			});
 
-		// 1. Get statistics and metadata
-		const {
-			stats,
-			surveyQuestions,
-			surveyOptions,
-			allAnswers,
-			firstSectionId,
-		} = await computeSurveyStats(surveyId, user.role);
+			// Compute mean scores for linear_scale, multiple_choice & grid
+			const allMeans: {
+				questionId: number;
+				rowOptionId?: number;
+				type: string;
+				label: string;
+				mean: number;
+				category: string;
+			}[] = [];
+			for (const q of surveyQuestions) {
+				const isPersonal =
+					firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
+				if (isPersonal) continue;
 
-		// Compute mean scores for linear_scale & multiple_choice
-		const allMeans: {
-			questionId: number;
-			type: string;
-			mean: number;
-			category: string;
-		}[] = [];
-		for (const q of surveyQuestions) {
-			const isPersonal =
-				firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
-			if (isPersonal) continue;
+				const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
+				const qAnswers = allAnswers.filter((a) => a.questionId === q.id);
 
-			const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
-			const qAnswers = allAnswers.filter((a) => a.questionId === q.id);
+				if (q.type === "linear_scale" || q.type === "multiple_choice") {
+					const numericOptions = qOptions
+						.map((o) => ({
+							id: o.id,
+							val: getNumericValueForOption(o, qOptions),
+							label: o.label,
+						}))
+						.filter(
+							(o): o is { id: number; val: number; label: string } =>
+								o.val !== null,
+						);
 
-			if (q.type === "linear_scale" || q.type === "multiple_choice") {
-				const numericOptions = qOptions
-					.map((o) => ({
-						id: o.id,
-						val: o.value
-							? Number.parseFloat(o.value)
-							: Number.parseFloat(o.label),
-						label: o.label,
-					}))
-					.filter((o) => !Number.isNaN(o.val));
+					if (numericOptions.length > 0) {
+						let sum = 0;
+						let count = 0;
+						qAnswers.forEach((ans) => {
+							const optIds = ans.valueOptionIds as number[] | null;
+							if (optIds) {
+								optIds.forEach((id) => {
+									const opt = numericOptions.find((o) => o.id === id);
+									if (opt) {
+										sum += opt.val;
+										count++;
+									}
+								});
+							}
+						});
 
-				if (numericOptions.length > 0) {
-					let sum = 0;
-					let count = 0;
-					qAnswers.forEach((ans) => {
-						const optIds = ans.valueOptionIds as number[] | null;
-						if (optIds) {
-							optIds.forEach((id) => {
-								const opt = numericOptions.find((o) => o.id === id);
-								if (opt) {
-									sum += opt.val;
-									count++;
-								}
+						if (count > 0) {
+							const mean = sum / count;
+							const category = getScoreCategory(mean);
+							allMeans.push({
+								questionId: q.id,
+								type: q.type,
+								label: q.title,
+								mean,
+								category,
 							});
 						}
-					});
+					}
+				} else if (q.type === "grid") {
+					const rowOptions = qOptions.filter((o) => o.group === "row");
+					const colOptions = qOptions.filter((o) => o.group === "column");
+					const numericCols = colOptions
+						.map((o) => ({
+							id: o.id,
+							val: getNumericValueForOption(o, colOptions),
+						}))
+						.filter((o): o is { id: number; val: number } => o.val !== null);
 
-					if (count > 0) {
-						const mean = sum / count;
-						const category = getScaleBucket(mean, qOptions);
-						allMeans.push({ questionId: q.id, type: q.type, mean, category });
+					if (numericCols.length > 0) {
+						for (const row of rowOptions) {
+							let sum = 0;
+							let count = 0;
+							for (const ans of qAnswers) {
+								const gridVal = ans.valueGrid as Record<string, number> | null;
+								if (!gridVal) continue;
+								const colId = gridVal[String(row.id)];
+								const col = numericCols.find((c) => c.id === colId);
+								if (col) {
+									sum += col.val;
+									count++;
+								}
+							}
+							if (count > 0) {
+								const mean = sum / count;
+								allMeans.push({
+									questionId: q.id,
+									rowOptionId: row.id,
+									type: "grid_row",
+									label: row.label,
+									mean,
+									category: getScoreCategory(mean),
+								});
+							}
+						}
 					}
 				}
 			}
-		}
 
-		// Calculate overall mean of linear scale questions
-		const linearScaleMeans = allMeans.filter((m) => m.type === "linear_scale");
-		let overallMeanVal = 0;
-		let overallCategoryVal = "-";
-		if (linearScaleMeans.length > 0) {
-			const sum = linearScaleMeans.reduce((acc, m) => acc + m.mean, 0);
-			overallMeanVal = sum / linearScaleMeans.length;
-			const firstScaleQ = surveyQuestions.find(
-				(q) => q.type === "linear_scale",
+			// Calculate overall mean of linear scale and Likert questions
+			const validMeans = allMeans.filter(
+				(m) =>
+					m.type === "linear_scale" ||
+					m.type === "multiple_choice" ||
+					m.type === "grid_row",
 			);
-			if (firstScaleQ) {
-				const firstQOptions = surveyOptions.filter(
-					(o) => o.questionId === firstScaleQ.id,
-				);
-				overallCategoryVal = getScaleBucket(overallMeanVal, firstQOptions);
+			let overallMeanVal = 0;
+			let overallCategoryVal = "-";
+			if (validMeans.length > 0) {
+				const sum = validMeans.reduce((acc, m) => acc + m.mean, 0);
+				overallMeanVal = sum / validMeans.length;
+				overallCategoryVal = getScoreCategory(overallMeanVal);
 			}
-		}
 
-		// 2. Build Groq Prompt
-		let userPrompt = `Berikut adalah data hasil survei:\n\n`;
-		userPrompt += `Judul Survei: ${survey.title}\n`;
-		if (survey.periodValue) {
-			userPrompt += `Periode: ${survey.periodValue} s/d ${survey.periodValueEnd || ""}\n`;
-		}
-		userPrompt += `Jumlah Responden: ${responseCount} orang\n\n`;
+			// 2. Build Groq Prompt
+			let userPrompt = `Berikut adalah data hasil survei:\n\n`;
+			userPrompt += `Judul Survei: ${survey.title}\n`;
+			userPrompt += `Cakupan Data: ${subtitle}\n`;
+			if (survey.periodValue) {
+				userPrompt += `Periode: ${survey.periodValue} s/d ${survey.periodValueEnd || ""}\n`;
+			}
+			userPrompt += `Jumlah Responden: ${responseCount} orang\n\n`;
 
-		for (const q of surveyQuestions) {
-			const isPersonal =
-				firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
-			if (isPersonal) continue;
+			for (const q of surveyQuestions) {
+				const isPersonal =
+					firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
+				if (isPersonal) continue;
 
-			const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
-			const qAnswers = allAnswers.filter((a) => a.questionId === q.id);
-			const stat = stats.find((s) => s.questionId === q.id);
+				const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
+				const qAnswers = allAnswers.filter((a) => a.questionId === q.id);
+				const stat = stats.find((s) => s.questionId === q.id);
 
-			userPrompt += `ID Pertanyaan: ${q.id}\n`;
-			userPrompt += `Pertanyaan: ${q.title}\n`;
-			userPrompt += `Tipe: ${q.type}\n`;
+				userPrompt += `ID Pertanyaan: ${q.id}\n`;
+				userPrompt += `Pertanyaan: ${q.title}\n`;
+				userPrompt += `Tipe: ${q.type}\n`;
 
-			if (q.type === "grid") {
-				userPrompt += `Hasil Aggregasi (Baris x Kolom):\n`;
-				const rows = qOptions.filter((o) => o.group === "row");
-				const cols = qOptions.filter((o) => o.group === "column");
-				rows.forEach((r) => {
-					userPrompt += `- Baris "${r.label}":\n`;
-					cols.forEach((c) => {
-						const count = stat?.data?.counts?.[r.label]?.[c.label] || 0;
-						userPrompt += `  * Kolom "${c.label}": ${count} respon\n`;
+				if (q.type === "grid") {
+					userPrompt += `Hasil Aggregasi (Baris x Kolom):\n`;
+					const rows = qOptions.filter((o) => o.group === "row");
+					const cols = qOptions.filter((o) => o.group === "column");
+					rows.forEach((r) => {
+						userPrompt += `- Baris "${r.label}":\n`;
+						cols.forEach((c) => {
+							const count = stat?.data?.counts?.[r.label]?.[c.label] || 0;
+							userPrompt += `  * Kolom "${c.label}": ${count} respon\n`;
+						});
 					});
-				});
-			} else if (
-				q.type === "multiple_choice" ||
-				q.type === "dropdown" ||
-				q.type === "linear_scale" ||
-				q.type === "checkboxes"
-			) {
-				userPrompt += `Hasil Pilihan Jawaban:\n`;
-				stat?.data?.forEach((item: any) => {
-					userPrompt += `- Opsi "${item.label}": ${item.count} respon (${item.percentage}%)\n`;
-				});
-				const meanItem = allMeans.find((m) => m.questionId === q.id);
-				if (meanItem) {
-					userPrompt += `Skor Rata-Rata: ${meanItem.mean.toFixed(2)} (Kategori: ${meanItem.category})\n`;
+				} else if (
+					q.type === "multiple_choice" ||
+					q.type === "dropdown" ||
+					q.type === "linear_scale" ||
+					q.type === "checkboxes"
+				) {
+					userPrompt += `Hasil Pilihan Jawaban:\n`;
+					stat?.data?.forEach((item: any) => {
+						userPrompt += `- Opsi "${item.label}": ${item.count} respon (${item.percentage}%)\n`;
+					});
+					const meanItem = allMeans.find((m) => m.questionId === q.id);
+					if (meanItem) {
+						userPrompt += `Skor Rata-Rata: ${meanItem.mean.toFixed(2)} (Kategori: ${meanItem.category})\n`;
+					}
+				} else {
+					userPrompt += `Daftar Jawaban Responden (Maksimal 30):\n`;
+					const textList = qAnswers
+						.map((a) => a.valueText)
+						.filter(
+							(v): v is string => typeof v === "string" && v.trim() !== "",
+						)
+						.slice(0, 30);
+					textList.forEach((txt, idx) => {
+						userPrompt += `- [Respon ${idx + 1}]: "${txt}"\n`;
+					});
 				}
-			} else {
-				userPrompt += `Daftar Jawaban Responden (Maksimal 30):\n`;
-				const textList = qAnswers
-					.map((a) => a.valueText)
-					.filter((v): v is string => typeof v === "string" && v.trim() !== "")
-					.slice(0, 30);
-				textList.forEach((txt, idx) => {
-					userPrompt += `- [Respon ${idx + 1}]: "${txt}"\n`;
-				});
+				userPrompt += `\n`;
 			}
-			userPrompt += `\n`;
-		}
 
-		const systemPrompt = `Anda adalah seorang ahli analis data akademik dan Tracer Study perguruan tinggi.
+			const systemPrompt = `Anda adalah seorang ahli analis data akademik dan Tracer Study perguruan tinggi.
 Tugas Anda adalah menganalisis hasil survei tracer study dan menghasilkan narasi laporan formal dalam Bahasa Indonesia.
 
 Format output yang diminta wajib berupa JSON valid dengan struktur berikut:
@@ -1742,159 +1905,210 @@ Ketentuan:
 3. Hindari penggunaan placeholder atau template kosong. Tulis narasi riil.
 4. Gunakan istilah-istilah tracer study yang standar (misal: alumni, masa tunggu, keselarasan kerja, kompetensi).`;
 
-		// Call Groq using fetch
-		if (!process.env.GROQ_API_KEY) {
-			throw new Error("GROQ_API_KEY tidak dikonfigurasi di server.");
-		}
-
-		const groqResponse = await fetch(
-			"https://api.groq.com/openai/v1/chat/completions",
-			{
-				method: "POST",
-				headers: {
-					Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					model: "llama-3.3-70b-versatile",
-					messages: [
-						{ role: "system", content: systemPrompt },
-						{ role: "user", content: userPrompt },
-					],
-					response_format: { type: "json_object" },
-					temperature: 0.3,
-				}),
-			},
-		);
-
-		if (!groqResponse.ok) {
-			const errText = await groqResponse.text();
-			throw new Error(`Gagal menghubungi AI (Groq): ${errText}`);
-		}
-
-		const groqData = await groqResponse.json();
-		const resultText = groqData.choices?.[0]?.message?.content;
-		if (!resultText) {
-			throw new Error("AI tidak mengembalikan respon analisis.");
-		}
-
-		let analysis: {
-			pendahuluan: string;
-			kesimpulan: string;
-			interpretations: Record<string, string>;
-			recommendations: string[];
-		};
-
-		try {
-			analysis = JSON.parse(resultText);
-		} catch (e) {
-			throw new Error(
-				"Gagal mengurai respon analisis dari AI. Silakan coba lagi.",
-			);
-		}
-
-		// 3. Render DOCX using docx-templates
-		const templatePath = path.join(
-			process.cwd(),
-			"templates",
-			"laporan-survei-template.docx",
-		);
-		if (!fs.existsSync(templatePath)) {
-			throw new Error("Berkas template laporan tidak ditemukan.");
-		}
-		const templateBuffer = fs.readFileSync(templatePath);
-
-		const indicatorsData: any[] = [];
-		const chartsData: any[] = [];
-		const interpretationParagraphsData: string[] = [];
-
-		let periodLabel = "-";
-		if (survey.periodValue) {
-			periodLabel = survey.periodValue;
-			if (survey.periodValueEnd) {
-				periodLabel += ` s/d ${survey.periodValueEnd}`;
+			// Call Groq using fetch
+			if (!process.env.GROQ_API_KEY) {
+				throw new Error("GROQ_API_KEY tidak dikonfigurasi di server.");
 			}
-		}
 
-		for (const q of surveyQuestions) {
-			const isPersonal =
-				firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
-			if (isPersonal) continue;
+			const groqResponse = await fetch(
+				"https://api.groq.com/openai/v1/chat/completions",
+				{
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						model: "llama-3.3-70b-versatile",
+						messages: [
+							{ role: "system", content: systemPrompt },
+							{ role: "user", content: userPrompt },
+						],
+						response_format: { type: "json_object" },
+						temperature: 0.3,
+					}),
+				},
+			);
 
-			const meanItem = allMeans.find((m) => m.questionId === q.id);
-			indicatorsData.push({
-				label: q.title,
-				mean: meanItem ? meanItem.mean.toFixed(2) : "-",
-				category: meanItem ? meanItem.category : "-",
+			if (!groqResponse.ok) {
+				const errText = await groqResponse.text();
+				throw new Error(`Gagal menghubungi AI (Groq): ${errText}`);
+			}
+
+			const groqData = await groqResponse.json();
+			const resultText = groqData.choices?.[0]?.message?.content;
+			if (!resultText) {
+				throw new Error("AI tidak mengembalikan respon analisis.");
+			}
+
+			let analysis: {
+				pendahuluan: string;
+				kesimpulan: string;
+				interpretations: Record<string, string>;
+				recommendations: string[];
+			};
+
+			try {
+				analysis = JSON.parse(resultText);
+			} catch (e) {
+				throw new Error(
+					"Gagal mengurai respon analisis dari AI. Silakan coba lagi.",
+				);
+			}
+
+			// 3. Render DOCX using docx-templates
+			const templatePath = path.join(
+				process.cwd(),
+				"templates",
+				"laporan-survei-template.docx",
+			);
+			if (!fs.existsSync(templatePath)) {
+				throw new Error("Berkas template laporan tidak ditemukan.");
+			}
+			const templateBuffer = fs.readFileSync(templatePath);
+
+			const indicatorsData: any[] = [];
+			const chartsData: any[] = [];
+			const interpretationParagraphsData: string[] = [];
+
+			let periodLabel = "-";
+			if (survey.periodValue) {
+				periodLabel = survey.periodValue;
+				if (survey.periodValueEnd) {
+					periodLabel += ` s/d ${survey.periodValueEnd}`;
+				}
+			}
+
+			for (const q of surveyQuestions) {
+				const isPersonal =
+					firstSectionId !== null && isPersonalInfoQuestion(q, firstSectionId);
+				if (isPersonal) continue;
+
+				if (q.type === "grid") {
+					const gridMeans = allMeans.filter(
+						(m) => m.questionId === q.id && m.type === "grid_row",
+					);
+					gridMeans.forEach((m) => {
+						indicatorsData.push({
+							label: m.label,
+							mean: m.mean.toFixed(2),
+							category: m.category,
+						});
+					});
+				} else {
+					const meanItem = allMeans.find((m) => m.questionId === q.id);
+					indicatorsData.push({
+						label: q.title,
+						mean: meanItem ? meanItem.mean.toFixed(2) : "-",
+						category: meanItem ? meanItem.category : "-",
+					});
+				}
+
+				const matchedChart = charts.find((c) => c.questionId === q.id);
+				if (matchedChart && matchedChart.imageBase64) {
+					let imgWidth = 14;
+					let imgHeight = 8;
+					if (matchedChart.pxWidth && matchedChart.pxHeight) {
+						imgWidth = 14;
+						imgHeight = 14 * (matchedChart.pxHeight / matchedChart.pxWidth);
+						if (imgHeight > 12) {
+							imgHeight = 12;
+							imgWidth = 12 * (matchedChart.pxWidth / matchedChart.pxHeight);
+						}
+					}
+					chartsData.push({
+						label: q.title,
+						image: {
+							width: imgWidth,
+							height: imgHeight,
+							data: Buffer.from(matchedChart.imageBase64, "base64"),
+							extension: ".png",
+						},
+					});
+				}
+
+				const narrative =
+					analysis.interpretations[String(q.id)] ||
+					analysis.interpretations[q.id];
+				interpretationParagraphsData.push(
+					narrative ||
+						`Indikator "${q.title}" menunjukkan data dengan distribusi respon yang terkumpul.`,
+				);
+			}
+
+			const data = {
+				survey: {
+					title: survey.title,
+					subtitle,
+					periodLabel,
+				},
+				responseCount,
+				overallMean: overallMeanVal > 0 ? overallMeanVal.toFixed(2) : "-",
+				overallCategory: overallCategoryVal,
+				pendahuluan: analysis.pendahuluan,
+				kesimpulan: analysis.kesimpulan,
+				indicators: indicatorsData,
+				charts: chartsData,
+				interpretationParagraphs: interpretationParagraphsData,
+				recommendations: analysis.recommendations || [],
+			};
+
+			const docBuffer = await createReport({
+				template: templateBuffer,
+				data,
+				cmdDelimiter: ["{", "}"],
 			});
 
-			const matchedChart = charts.find((c) => c.questionId === q.id);
-			if (matchedChart && matchedChart.imageBase64) {
-				chartsData.push({
-					label: q.title,
-					image: {
-						width: 14,
-						height: 8,
-						data: Buffer.from(matchedChart.imageBase64, "base64"),
-						extension: ".png",
-					},
-				});
-			}
+			const base64Data = Buffer.from(docBuffer).toString("base64");
+			const filenameSuffix =
+				filterQuestion && filterOptions.length > 0
+					? `_${slugify(filterQuestion.title)}-${filterOptions.map((o) => slugify(o.label)).join("+")}`
+					: "";
+			const filenameVal = `Laporan_Survei_${survey.slug}${filenameSuffix}.docx`;
 
-			const narrative =
-				analysis.interpretations[String(q.id)] ||
-				analysis.interpretations[q.id];
-			interpretationParagraphsData.push(
-				narrative ||
-					`Indikator "${q.title}" menunjukkan data dengan distribusi respon yang terkumpul.`,
-			);
-		}
+			const filterKey =
+				filterQuestion && filterOptions.length > 0
+					? `${filterQuestion.id}:${filterOptions
+							.map((o) => o.id)
+							.sort((a, b) => a - b)
+							.join(",")}`
+					: "";
 
-		const data = {
-			survey: {
-				title: survey.title,
-				periodLabel,
-			},
-			responseCount,
-			overallMean: overallMeanVal > 0 ? overallMeanVal.toFixed(2) : "-",
-			overallCategory: overallCategoryVal,
-			pendahuluan: analysis.pendahuluan,
-			kesimpulan: analysis.kesimpulan,
-			indicators: indicatorsData,
-			charts: chartsData,
-			interpretationParagraphs: interpretationParagraphsData,
-			recommendations: analysis.recommendations || [],
-		};
+			// 4. Record the generation only after successful generation
+			await db.insert(reportGenerations).values({
+				surveyId,
+				userId,
+				fileBase64: base64Data,
+				fileName: filenameVal,
+				filterKey,
+			});
 
-		const docBuffer = await createReport({
-			template: templateBuffer,
-			data,
-			cmdDelimiter: ["{", "}"],
-		});
-
-		const base64Data = Buffer.from(docBuffer).toString("base64");
-		const filenameVal = `Laporan_Survei_${survey.slug}.docx`;
-
-		// 4. Record the generation only after successful generation
-		await db.insert(reportGenerations).values({
-			surveyId,
-			userId,
-			fileBase64: base64Data,
-			fileName: filenameVal,
-		});
-
-		return {
-			base64: base64Data,
-			filename: filenameVal,
-			cooldownApplied: process.env.ENVIRONMENT !== "DEVELOPMENT",
-		};
-	});
+			return {
+				base64: base64Data,
+				filename: filenameVal,
+				cooldownApplied: process.env.ENVIRONMENT !== "DEVELOPMENT",
+			};
+		},
+	);
 
 // 15. Fetch the latest successfully generated report (if any) for a survey (Admin only)
 export const getLatestSurveyReportFn = createServerFn({ method: "GET" })
-	.validator((surveyId: number) => surveyId)
-	.handler(async ({ data: surveyId }) => {
+	.validator(
+		(data: {
+			surveyId: number;
+			filterQuestionId?: number;
+			filterOptionIds?: number[];
+		}) => data,
+	)
+	.handler(async ({ data }) => {
 		const user = await assertAdmin();
+
+		const filterKey =
+			data.filterQuestionId != null &&
+			data.filterOptionIds &&
+			data.filterOptionIds.length > 0
+				? `${data.filterQuestionId}:${[...data.filterOptionIds].sort((a, b) => a - b).join(",")}`
+				: "";
 
 		const [latest] = await db
 			.select({
@@ -1904,7 +2118,12 @@ export const getLatestSurveyReportFn = createServerFn({ method: "GET" })
 				generatedAt: reportGenerations.generatedAt,
 			})
 			.from(reportGenerations)
-			.where(eq(reportGenerations.surveyId, surveyId))
+			.where(
+				and(
+					eq(reportGenerations.surveyId, data.surveyId),
+					eq(reportGenerations.filterKey, filterKey),
+				),
+			)
 			.orderBy(desc(reportGenerations.generatedAt))
 			.limit(1);
 

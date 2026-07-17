@@ -302,7 +302,7 @@ export async function copyElementChartAsPng(
 
 export async function chartElementToPngBase64(
 	containerEl: HTMLElement,
-): Promise<string> {
+): Promise<{ base64: string; width: number; height: number }> {
 	const blob = await chartElementToPngBlob(containerEl);
 	const buf = await blob.arrayBuffer();
 
@@ -313,5 +313,35 @@ export async function chartElementToPngBase64(
 	for (let i = 0; i < len; i++) {
 		binary += String.fromCharCode(bytes[i]);
 	}
-	return btoa(binary);
+	const base64 = btoa(binary);
+
+	// Get dimensions from the cloned/rendered SVG
+	const svgs = Array.from(containerEl.querySelectorAll("svg"));
+	let mainSvg = svgs[0];
+	let maxArea = 0;
+	for (const s of svgs) {
+		const { width, height } = s.getBoundingClientRect();
+		const area = width * height;
+		if (area > maxArea) {
+			maxArea = area;
+			mainSvg = s;
+		}
+	}
+	const svg = mainSvg;
+	let width = 800;
+	let height = 300;
+	if (svg) {
+		const rect = svg.getBoundingClientRect();
+		width = rect.width;
+		height = rect.height;
+	}
+
+	// Add legend height if legend is detected
+	const shadcnItems = containerEl.querySelectorAll("[data-legend-item]");
+	const rechartsItems = containerEl.querySelectorAll(".recharts-legend-item");
+	if (shadcnItems.length > 0 || rechartsItems.length > 0) {
+		height += 35;
+	}
+
+	return { base64, width, height };
 }

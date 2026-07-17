@@ -1,0 +1,1 @@
+ALTER TABLE `report_generations` ADD `filter_key` varchar(255) DEFAULT '' NOT NULL;
