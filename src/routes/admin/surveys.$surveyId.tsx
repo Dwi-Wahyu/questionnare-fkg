@@ -1786,6 +1786,7 @@ function SurveyDetailComponent() {
 											key={stat.questionId}
 											stat={stat}
 											responseCount={activeStats.responseCount}
+											isExporting={isExporting}
 										/>
 									))}
 							</div>
@@ -1872,6 +1873,7 @@ function SurveyDetailComponent() {
 											<ChartCard
 												stat={selectedStat}
 												responseCount={activeStats.responseCount}
+												isExporting={isExporting}
 											/>
 
 											{/* Breakdown table for Choice types */}
@@ -2879,9 +2881,11 @@ const pickChartKind = (stat: any) => {
 function ChartCard({
 	stat,
 	responseCount,
+	isExporting = false,
 }: {
 	stat: any;
 	responseCount: number;
+	isExporting?: boolean;
 }) {
 	const chartRef = useRef<HTMLDivElement>(null);
 	const [copyState, setCopyState] = useState<"idle" | "copied" | "downloaded">(
