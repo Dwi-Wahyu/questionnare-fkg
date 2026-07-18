@@ -21,6 +21,7 @@ import {
 	updateAdminSurveyQuestionsFn,
 	updateAdminSurveySettingsFn,
 } from "../../server/adminSurveyFunctions";
+import { ChevronRight, Calendar, RefreshCw, FileText, Download, CloudCheck, ArrowUp, ArrowDown, Trash2, Circle, X, Plus, PanelsTopLeft, CirclePlus, SquarePlus, Save, ChevronUp, ChevronDown, Table, Users, Wifi, Search, Printer, Clock, ChevronLeft, Lock, Check, Copy, Upload, CircleCheck } from "lucide-react";
 
 export const Route = createFileRoute("/admin/surveys/$surveyId")({
 	validateSearch: (search: Record<string, unknown>) => ({
@@ -894,9 +895,7 @@ function SurveyDetailComponent() {
 						<Link to="/admin/surveys" className="hover:text-[#002972]">
 							Kelola Survey
 						</Link>
-						<span className="material-symbols-outlined text-xs">
-							chevron_right
-						</span>
+						<ChevronRight className="h-3.5 w-3.5" />
 						<span className="text-slate-400">Detail Survey</span>
 					</nav>
 					<h2 className="text-3xl font-bold text-[#1a1b21] flex items-center gap-3 w-full text-left">
@@ -904,9 +903,7 @@ function SurveyDetailComponent() {
 						{getStatusBadge(detail.survey.status)}
 						{(detail.survey as any).periodValue && (
 							<span className="inline-flex items-center gap-1 text-xs font-semibold text-[#434652] bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
-								<span className="material-symbols-outlined text-sm text-[#747683] block">
-									calendar_month
-								</span>
+								<Calendar className="h-4 w-4 text-[#747683] block" />
 								{(() => {
 									const val = (detail.survey as any).periodValue;
 									const valEnd = (detail.survey as any).periodValueEnd;
@@ -947,11 +944,7 @@ function SurveyDetailComponent() {
 								disabled={isGeneratingReport || reportCooldown > 0}
 								className={`bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer ${isGeneratingReport || reportCooldown > 0 ? "opacity-75 cursor-not-allowed" : ""}`}
 							>
-								<span
-									className={`material-symbols-outlined text-sm ${isGeneratingReport ? "animate-spin" : ""}`}
-								>
-									{isGeneratingReport ? "sync" : "description"}
-								</span>
+								{isGeneratingReport ? <RefreshCw className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
 								<span>
 									{isGeneratingReport
 										? "Mengekspor..."
@@ -970,9 +963,7 @@ function SurveyDetailComponent() {
 									title={`Unduh laporan terakhir yang digenerate pada ${new Date(latestReport.generatedAt).toLocaleString("id-ID")}`}
 									className="bg-sky-600 text-white hover:bg-sky-700 text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform cursor-pointer"
 								>
-									<span className="material-symbols-outlined text-sm">
-										file_download
-									</span>
+									<Download className="h-4 w-4" />
 									<span>Unduh Laporan Terakhir</span>
 								</button>
 							)}
@@ -1037,9 +1028,7 @@ function SurveyDetailComponent() {
 							</p>
 							<div className="pt-3 border-t border-slate-100 flex justify-between items-center text-xs text-[#747683]">
 								<span className="flex items-center gap-1">
-									<span className="material-symbols-outlined text-sm">
-										cloud_done
-									</span>
+									<CloudCheck className="h-4 w-4" />
 									Tersimpan di Database
 								</span>
 							</div>
@@ -1072,9 +1061,7 @@ function SurveyDetailComponent() {
 														className="p-0.5 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
 														title="Pindahkan Bagian Ke Atas"
 													>
-														<span className="material-symbols-outlined text-sm block">
-															arrow_upward
-														</span>
+														<ArrowUp className="h-4 w-4 block" />
 													</button>
 													<button
 														type="button"
@@ -1083,9 +1070,7 @@ function SurveyDetailComponent() {
 														className="p-0.5 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
 														title="Pindahkan Bagian Ke Bawah"
 													>
-														<span className="material-symbols-outlined text-sm block">
-															arrow_downward
-														</span>
+														<ArrowDown className="h-4 w-4 block" />
 													</button>
 												</div>
 											)}
@@ -1096,9 +1081,7 @@ function SurveyDetailComponent() {
 													className="text-[#ba1a1a] hover:underline flex items-center gap-1 font-semibold"
 													title="Hapus Bagian"
 												>
-													<span className="material-symbols-outlined text-sm">
-														delete
-													</span>
+													<Trash2 className="h-4 w-4" />
 													Hapus Bagian
 												</button>
 											)}
@@ -1153,9 +1136,7 @@ function SurveyDetailComponent() {
 															className="p-1 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
 															title="Pindah Ke Atas"
 														>
-															<span className="material-symbols-outlined text-sm block">
-																arrow_upward
-															</span>
+															<ArrowUp className="h-4 w-4 block" />
 														</button>
 														<button
 															onClick={() =>
@@ -1167,9 +1148,7 @@ function SurveyDetailComponent() {
 															className="p-1 text-[#434652] hover:text-[#002972] disabled:opacity-30 disabled:pointer-events-none"
 															title="Pindah Ke Bawah"
 														>
-															<span className="material-symbols-outlined text-sm block">
-																arrow_downward
-															</span>
+															<ArrowDown className="h-4 w-4 block" />
 														</button>
 													</div>
 												)}
@@ -1268,9 +1247,7 @@ function SurveyDetailComponent() {
 																	key={opt.id}
 																	className="flex items-center gap-2"
 																>
-																	<span className="material-symbols-outlined text-xs text-slate-300">
-																		radio_button_unchecked
-																	</span>
+																	<Circle className="h-3.5 w-3.5 text-slate-300" />
 																	<input
 																		type="text"
 																		value={opt.label}
@@ -1293,9 +1270,7 @@ function SurveyDetailComponent() {
 																			className="p-1 hover:text-[#ba1a1a]"
 																			title="Hapus Opsi"
 																		>
-																			<span className="material-symbols-outlined text-sm">
-																				close
-																			</span>
+																			<X className="h-4 w-4" />
 																		</button>
 																	)}
 																</div>
@@ -1306,9 +1281,7 @@ function SurveyDetailComponent() {
 																	onClick={() => handleAddOption(q.id)}
 																	className="text-xs font-bold text-[#0b3e9c] hover:underline flex items-center gap-1 mt-1"
 																>
-																	<span className="material-symbols-outlined text-xs">
-																		add
-																	</span>
+																	<Plus className="h-3.5 w-3.5" />
 																	<span>Tambah Opsi Pilihan</span>
 																</button>
 															)}
@@ -1353,9 +1326,7 @@ function SurveyDetailComponent() {
 																					}
 																					className="p-1 hover:text-[#ba1a1a]"
 																				>
-																					<span className="material-symbols-outlined text-sm">
-																						close
-																					</span>
+																					<X className="h-4 w-4" />
 																				</button>
 																			)}
 																		</div>
@@ -1366,9 +1337,7 @@ function SurveyDetailComponent() {
 																		onClick={() => handleAddOption(q.id, "row")}
 																		className="text-xxs font-bold text-[#0b3e9c] hover:underline flex items-center gap-1"
 																	>
-																		<span className="material-symbols-outlined text-xs">
-																			add
-																		</span>
+																		<Plus className="h-3.5 w-3.5" />
 																		<span>Tambah Baris</span>
 																	</button>
 																)}
@@ -1409,9 +1378,7 @@ function SurveyDetailComponent() {
 																					}
 																					className="p-1 hover:text-[#ba1a1a]"
 																				>
-																					<span className="material-symbols-outlined text-sm">
-																						close
-																					</span>
+																					<X className="h-4 w-4" />
 																				</button>
 																			)}
 																		</div>
@@ -1424,9 +1391,7 @@ function SurveyDetailComponent() {
 																		}
 																		className="text-xxs font-bold text-[#0b3e9c] hover:underline flex items-center gap-1"
 																	>
-																		<span className="material-symbols-outlined text-xs">
-																			add
-																		</span>
+																		<Plus className="h-3.5 w-3.5" />
 																		<span>Tambah Kolom</span>
 																	</button>
 																)}
@@ -1445,9 +1410,7 @@ function SurveyDetailComponent() {
 																className="hover:text-[#ba1a1a] flex items-center gap-1 text-xs font-semibold"
 																title="Hapus Pertanyaan"
 															>
-																<span className="material-symbols-outlined text-sm">
-																	delete
-																</span>
+																<Trash2 className="h-4 w-4" />
 																Hapus
 															</button>
 															<div className="w-px h-5 bg-slate-200"></div>
@@ -1468,9 +1431,7 @@ function SurveyDetailComponent() {
 																		className="hover:text-[#002972] flex items-center gap-1 text-xs font-semibold disabled:opacity-30 disabled:pointer-events-none"
 																		title="Pindahkan pertanyaan ini & semua di bawahnya ke bagian baru"
 																	>
-																		<span className="material-symbols-outlined text-sm">
-																			splitscreen
-																		</span>
+																		<PanelsTopLeft className="h-4 w-4" />
 																		Pisahkan ke Bagian Baru
 																	</button>
 																);
@@ -1507,9 +1468,7 @@ function SurveyDetailComponent() {
 												onClick={() => handleAddQuestion(sec.id)}
 												className="border border-[#747683] text-[#1a1b21] hover:bg-slate-50 text-xs font-bold py-2 px-6 rounded-lg flex items-center gap-1.5 transition-all shadow-sm"
 											>
-												<span className="material-symbols-outlined text-base">
-													add_circle
-												</span>
+												<CirclePlus className="h-5 w-5" />
 												<span>Tambah Pertanyaan di Bagian Ini</span>
 											</button>
 										</div>
@@ -1527,9 +1486,7 @@ function SurveyDetailComponent() {
 								onClick={handleAddSection}
 								className="border-2 border-dashed border-[#c4c6d4] text-[#434652] hover:border-[#002972] hover:text-[#002972] text-xs font-bold py-3 px-8 rounded-lg flex items-center gap-1.5 transition-all w-full justify-center"
 							>
-								<span className="material-symbols-outlined text-base">
-									add_box
-								</span>
+								<SquarePlus className="h-5 w-5" />
 								<span>Tambah Bagian Baru</span>
 							</button>
 						</div>
@@ -1546,7 +1503,7 @@ function SurveyDetailComponent() {
 								{isSavingQuestions
 									? "Menyimpan Tata Letak..."
 									: "Simpan Semua Pertanyaan"}
-								<span className="material-symbols-outlined text-sm">save</span>
+								<Save className="h-4 w-4" />
 							</button>
 						</div>
 					)}
@@ -1666,9 +1623,7 @@ function SurveyDetailComponent() {
 									}}
 									className="text-xs font-bold text-[#ba1a1a] hover:underline flex items-center gap-0.5 whitespace-nowrap cursor-pointer"
 								>
-									<span className="material-symbols-outlined text-sm">
-										close
-									</span>
+									<X className="h-4 w-4" />
 									<span>Reset</span>
 								</button>
 							)}
@@ -1688,13 +1643,9 @@ function SurveyDetailComponent() {
 									}
 									className="bg-[#0b3e9c] text-white hover:bg-[#002972] disabled:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm active:scale-95 transition-transform cursor-pointer whitespace-nowrap"
 								>
-									<span className="material-symbols-outlined text-sm">
-										download
-									</span>
+									<Download className="h-4 w-4" />
 									<span>Ekspor</span>
-									<span className="material-symbols-outlined text-sm">
-										{isExportMenuOpen ? "expand_less" : "expand_more"}
-									</span>
+									{isExportMenuOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
 								</button>
 
 								{isExportMenuOpen && (
@@ -1707,9 +1658,7 @@ function SurveyDetailComponent() {
 											}}
 											className="w-full text-left px-3 py-2 text-xs font-semibold text-[#1a1b21] hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
 										>
-											<span className="material-symbols-outlined text-sm">
-												table_view
-											</span>
+											<Table className="h-4 w-4" />
 											<span>Ekspor sebagai Excel (.xlsx)</span>
 										</button>
 										<button
@@ -1720,9 +1669,7 @@ function SurveyDetailComponent() {
 											}}
 											className="w-full text-left px-3 py-2 text-xs font-semibold text-[#1a1b21] hover:bg-slate-50 flex items-center gap-2 cursor-pointer border-t border-slate-100"
 										>
-											<span className="material-symbols-outlined text-sm">
-												description
-											</span>
+											<FileText className="h-4 w-4" />
 											<span>Ekspor sebagai CSV (.csv)</span>
 										</button>
 									</div>
@@ -1748,9 +1695,7 @@ function SurveyDetailComponent() {
 										</p>
 									</div>
 									<div className="w-12 h-12 rounded-full bg-[#dbe1ff] flex items-center justify-center text-[#0f409e]">
-										<span className="material-symbols-outlined text-2xl block">
-											groups
-										</span>
+										<Users className="h-8 w-8 block" />
 									</div>
 								</div>
 
@@ -1770,9 +1715,7 @@ function SurveyDetailComponent() {
 										</div>
 									</div>
 									<div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-										<span className="material-symbols-outlined text-2xl block">
-											wifi_tethering
-										</span>
+										<Wifi className="h-8 w-8 block" />
 									</div>
 								</div>
 							</div>
@@ -1925,9 +1868,7 @@ function SurveyDetailComponent() {
 												selectedQuestion.type === "date") && (
 												<div className="space-y-4">
 													<div className="relative">
-														<span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#747683] text-sm">
-															search
-														</span>
+														<Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#747683]" />
 														<input
 															type="text"
 															placeholder="Cari jawaban teks..."
@@ -2010,9 +1951,7 @@ function SurveyDetailComponent() {
 												className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[#434652] hover:text-[#002972] transition-colors cursor-pointer"
 												title="Cetak respon ini"
 											>
-												<span className="material-symbols-outlined text-sm block">
-													print
-												</span>
+												<Printer className="h-4 w-4 block" />
 											</button>
 
 											{user?.role !== "visitor" && (
@@ -2022,9 +1961,7 @@ function SurveyDetailComponent() {
 													className="p-1.5 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-[#ba1a1a] transition-colors cursor-pointer"
 													title="Hapus respon ini"
 												>
-													<span className="material-symbols-outlined text-sm block">
-														delete
-													</span>
+													<Trash2 className="h-4 w-4 block" />
 												</button>
 											)}
 										</div>
@@ -2032,9 +1969,7 @@ function SurveyDetailComponent() {
 										{/* submitted time */}
 										{responseDetail.submittedAt && (
 											<span className="text-xs text-[#434652] font-semibold flex items-center gap-1">
-												<span className="material-symbols-outlined text-sm">
-													schedule
-												</span>
+												<Clock className="h-4 w-4" />
 												Dikirim:{" "}
 												{new Date(responseDetail.submittedAt).toLocaleString(
 													"id-ID",
@@ -2058,9 +1993,7 @@ function SurveyDetailComponent() {
 												}}
 												className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
 											>
-												<span className="material-symbols-outlined text-sm block">
-													chevron_left
-												</span>
+												<ChevronLeft className="h-4 w-4 block" />
 											</button>
 
 											<div className="flex items-center gap-1.5">
@@ -2094,9 +2027,7 @@ function SurveyDetailComponent() {
 												}}
 												className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
 											>
-												<span className="material-symbols-outlined text-sm block">
-													chevron_right
-												</span>
+												<ChevronRight className="h-4 w-4 block" />
 											</button>
 										</div>
 									</div>
@@ -2127,9 +2058,7 @@ function SurveyDetailComponent() {
 														{/* Rendering input control */}
 														{item.hidden ? (
 															<div className="flex items-center gap-2.5 p-3.5 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-slate-500">
-																<span className="material-symbols-outlined text-base text-slate-400 block">
-																	lock
-																</span>
+																<Lock className="h-5 w-5 text-slate-400 block" />
 																<span className="text-xs font-semibold">
 																	Informasi pribadi disembunyikan untuk peninjau
 																</span>
@@ -2405,9 +2334,7 @@ function SurveyDetailComponent() {
 														<div className="pl-4 pt-1">
 															{item.hidden ? (
 																<div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-dashed border-slate-200 rounded text-[#ba1a1a] text-xs font-semibold">
-																	<span className="material-symbols-outlined text-xs block">
-																		lock
-																	</span>
+																	<Lock className="h-3.5 w-3.5 block" />
 																	<span>
 																		Informasi pribadi disembunyikan untuk
 																		peninjau
@@ -2522,11 +2449,7 @@ function SurveyDetailComponent() {
 									className="flex-shrink-0 bg-white border border-slate-200 hover:bg-slate-50 text-[#434652] hover:text-[#0b3e9c] rounded-lg p-2.5 transition-colors flex items-center justify-center shadow-sm"
 									title="Salin Link Survey"
 								>
-									<span
-										className={`material-symbols-outlined text-base ${isCopied ? "text-emerald-600" : ""}`}
-									>
-										{isCopied ? "check" : "content_copy"}
-									</span>
+									{isCopied ? <Check className="h-5 w-5 text-emerald-600" /> : <Copy className="h-5 w-5" />}
 								</button>
 							</div>
 						</div>
@@ -2551,9 +2474,7 @@ function SurveyDetailComponent() {
 										Survei Kepuasan &amp; Layanan
 									</option>
 								</select>
-								<span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-									arrow_drop_down
-								</span>
+								<ChevronDown className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
 							</div>
 						</div>
 
@@ -2638,9 +2559,7 @@ function SurveyDetailComponent() {
 									</option>
 									<option value="archived">Diarsipkan (Koleksi ditutup)</option>
 								</select>
-								<span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-									arrow_drop_down
-								</span>
+								<ChevronDown className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
 							</div>
 						</div>
 
@@ -2663,16 +2582,12 @@ function SurveyDetailComponent() {
 									disabled={isSavingSettings || user?.role === "visitor"}
 									className="px-4 py-2 bg-[#dbe1ff] text-[#0b3e9c] hover:bg-[#002972] hover:text-white font-semibold rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 								>
-									<span className="material-symbols-outlined text-sm">
-										upload
-									</span>
+									<Upload className="h-4 w-4" />
 									Pilih Gambar Banner
 								</button>
 								{settingsBannerUrl && (
 									<span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-										<span className="material-symbols-outlined text-sm">
-											check_circle
-										</span>
+										<CircleCheck className="h-4 w-4" />
 										Gambar terpilih
 									</span>
 								)}
@@ -2694,9 +2609,7 @@ function SurveyDetailComponent() {
 											}}
 											className="absolute top-3 right-3 bg-white text-[#ba1a1a] p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
 										>
-											<span className="material-symbols-outlined text-sm block">
-												delete
-											</span>
+											<Trash2 className="h-4 w-4 block" />
 										</button>
 									)}
 								</div>
@@ -2729,9 +2642,7 @@ function SurveyDetailComponent() {
 									disabled={isSavingSettings || isDuplicating}
 									className="bg-white border border-slate-200 text-[#434652] hover:bg-slate-50 hover:text-[#0b3e9c] font-semibold px-6 py-2.5 rounded-lg text-sm shadow-sm transition-colors flex items-center gap-2"
 								>
-									<span className="material-symbols-outlined text-sm">
-										content_copy
-									</span>
+									<Copy className="h-4 w-4" />
 									Duplikat Survei
 								</button>
 								<button
@@ -2975,13 +2886,13 @@ function ChartCard({
 						title="Salin grafik sebagai gambar"
 						className="p-1.5 rounded-lg border border-slate-200 text-[#434652] hover:bg-slate-50 hover:text-[#0b3e9c] transition-colors cursor-pointer"
 					>
-						<span className="material-symbols-outlined text-sm block">
-							{copyState === "copied"
-								? "check"
-								: copyState === "downloaded"
-									? "download"
-									: "content_copy"}
-						</span>
+						{copyState === "copied" ? (
+							<Check className="h-4 w-4 block" />
+						) : copyState === "downloaded" ? (
+							<Download className="h-4 w-4 block" />
+						) : (
+							<Copy className="h-4 w-4 block" />
+						)}
 					</button>
 				)}
 			</div>
@@ -2989,9 +2900,7 @@ function ChartCard({
 			<div className="p-6">
 				{stat.redacted ? (
 					<div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-dashed border-slate-200 rounded-lg text-slate-500">
-						<span className="material-symbols-outlined text-3xl mb-2 text-slate-400">
-							lock
-						</span>
+						<Lock className="h-9 w-9 mb-2 text-slate-400" />
 						<p className="text-sm font-semibold">
 							Informasi pribadi disembunyikan untuk peninjau
 						</p>

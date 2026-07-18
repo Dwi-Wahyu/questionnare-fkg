@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { getPublishedSurveysFn } from "../server/surveyFunctions";
+import { Search, CircleHelp, ChartBar, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
 	loader: async () => {
@@ -40,9 +41,7 @@ function HomeComponent() {
 				{/* Search & Filter Bar */}
 				<div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-[#eeedf6] rounded-xl shadow-sm w-full">
 					<div className="relative w-full grow">
-						<span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#747683]">
-							search
-						</span>
+						<Search className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-[#747683]" />
 						<input
 							className="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg text-sm bg-white"
 							placeholder="Cari judul survey..."
@@ -56,9 +55,7 @@ function HomeComponent() {
 				{/* Survey Grid */}
 				{filteredSurveys.length === 0 ? (
 					<div className="text-center bg-white p-12 rounded-xl border border-surface-variant shadow-sm max-w-[600px] mx-auto w-full">
-						<span className="material-symbols-outlined text-4xl text-[#747683]">
-							help_outline
-						</span>
+						<CircleHelp className="h-10 w-10 text-[#747683] block mx-auto" />
 						<p className="mt-4 text-[#434652] font-semibold">
 							Tidak ada kuesioner aktif yang ditemukan.
 						</p>
@@ -80,16 +77,12 @@ function HomeComponent() {
 										/>
 									) : (
 										<div className="w-full h-full bg-gradient-to-br from-[#0b3e9c]/20 to-[#fe8674]/15 flex items-center justify-center">
-											<span className="material-symbols-outlined text-4xl text-[#0b3e9c]/45">
-												poll
-											</span>
+											<ChartBar className="h-10 w-10 text-[#0b3e9c]/45" />
 										</div>
 									)}
 									<div className="absolute top-3 left-3">
 										<span className="inline-flex gap-2 items-center bg-[#0b3e9c] text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-sm">
-											<span className="material-symbols-outlined text-xs">
-												help
-											</span>
+											<CircleHelp className="h-3.5 w-3.5" />
 											{survey.questionCount} pertanyaan
 										</span>
 									</div>
@@ -114,9 +107,7 @@ function HomeComponent() {
 											className="w-full bg-[#0b3e9c] text-white hover:bg-[#002972] text-xs font-semibold py-2.5 rounded-lg hover:scale-[0.98] transition-transform flex items-center justify-center gap-2"
 										>
 											<span>Mulai Survey</span>
-											<span className="material-symbols-outlined text-sm">
-												arrow_forward
-											</span>
+											<ArrowRight className="h-4 w-4" />
 										</Link>
 									</div>
 								</div>

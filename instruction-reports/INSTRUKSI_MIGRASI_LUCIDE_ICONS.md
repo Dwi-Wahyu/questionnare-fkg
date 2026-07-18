@@ -1,0 +1,21 @@
+# Laporan Migrasi Lucide Icons
+
+- **Modified Files:**
+  - `src/routes/__root.tsx`
+  - `src/routes/admin/analytics.tsx`
+  - `src/routes/admin/surveys.index.tsx`
+  - `src/routes/admin/surveys.$surveyId.tsx`
+  - `src/routes/admin/surveys.new.tsx`
+  - `src/routes/admin/route.tsx`
+  - `src/routes/admin/index.tsx`
+  - `src/routes/admin/users.tsx`
+  - `src/routes/index.tsx`
+  - `src/routes/login.tsx`
+  - `src/routes/survey.$surveySlug.tsx`
+  - `src/routes/survey.$surveySlug.thank-you.tsx`
+- **Logic Changes:** 
+  - Melakukan instalasi package `lucide-react`
+  - Menghapus import stylesheet font `material-symbols-outlined` dari `<head>` dokumen di `__root.tsx`.
+  - Mengganti seluruh penggunaan `<span className="material-symbols-outlined">icon_name</span>` menjadi komponen icon dari `lucide-react` dengan parameter ukuran `h-4 w-4`, `h-5 w-5`, dst., beserta class bawaannya, sesuai pedoman pada dokumen instruksi.
+  - Melakukan cleanup pada kode-kode yang dikomentari agar icon yang digunakan beralih dari `material-symbols-outlined` ke `lucide-react`.
+- **Impact on Graph:** Tidak ada relasi komponen baru yang terbentuk antar file (selain dependensi eksternal terhadap `lucide-react`), hanya perubahan penggunaan dependensi internal ke komponen icon eksternal.

@@ -14,56 +14,67 @@ A high-performance Server-Side Rendered (SSR) web application built from scratch
 ## Architectural Decisions & Files Created
 
 ### 1. TypeScript Configuration (`tsconfig.json`)
+
 We initialized a custom `tsconfig.json` conforming to TanStack Start's guidelines:
+
 - Set `"moduleResolution": "Bundler"`, `"module": "ESNext"`, and `"target": "ES2022"`.
 - Set `"verbatimModuleSyntax": false` (disabled as recommended in the TanStack guides to prevent server-only modules from leaking into client-side bundles).
 
 ### 2. Rsbuild Configuration (`rsbuild.config.ts`)
+
 Conforms to TanStack Start's integration with Rsbuild:
+
 ```ts
-import { defineConfig } from '@rsbuild/core'
-import { pluginReact } from '@rsbuild/plugin-react'
-import { tanstackStart } from '@tanstack/react-start/plugin/rsbuild'
+import { defineConfig } from "@rsbuild/core";
+import { pluginReact } from "@rsbuild/plugin-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/rsbuild";
 
 export default defineConfig({
   server: {
     port: 3000,
   },
   plugins: [pluginReact(), tanstackStart()],
-})
+});
 ```
 
 ### 3. Router Setup (`src/router.tsx`)
+
 Initializes the TanStack Router with standard scroll restoration and registers the router types:
+
 ```tsx
-import { createRouter } from '@tanstack/react-router'
-import { routeTree } from './routeTree.gen'
+import { createRouter } from "@tanstack/react-router";
+import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
   const router = createRouter({
     routeTree,
     scrollRestoration: true,
-  })
-  return router
+  });
+  return router;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
-    router: ReturnType<typeof getRouter>
+    router: ReturnType<typeof getRouter>;
   }
 }
 ```
 
 ### 4. Root Page Component (`src/routes/__root.tsx`)
+
 Serves as the main HTML shell wrapper. Implements `<HeadContent />` and `<Scripts />` required by TanStack Start, and imports the global stylesheet `src/styles.css`.
 
 ### 5. Index Page Component (`src/routes/index.tsx`)
+
 Implements an interactive demonstration using TanStack Start's Server Functions:
+
 - Reads and updates a local server-side text file (`count.txt`) using `createServerFn`.
 - Automatically refetches/invalidates route loader state on the client after clicking the button.
 
 ### 6. Stylesheet (`src/styles.css`)
+
 Custom Vanilla CSS implementation featuring:
+
 - Premium typography using the Google Font 'Outfit'.
 - Vibrant glassmorphic card layout, dark theme, and dual glowing backdrop blobs.
 - Smooth CSS transition states, hover scales, and float animations on the counter text.
@@ -99,3 +110,21 @@ Custom Vanilla CSS implementation featuring:
 
 - **Server Bundles Leaking**: Ensure `"verbatimModuleSyntax": false` stays configured in `tsconfig.json`.
 - **Router Tree Generation**: The file `src/routeTree.gen.ts` is automatically generated and updated by TanStack Start on running `dev` or `build` commands. Do not edit it manually.
+
+## Post-Implementation Protocol
+
+Every time you finish implementing or modifying code, you MUST execute the following steps sequentially:
+
+1. **Run Terminal Commands:**
+   Execute the following commands in the terminal to update the code structure map:
+   `graphify update .`
+   Then run:
+   `graphify cluster-only /home/dwiwahyuilahi/Personal/Projects/FKG/tracert-study/source-code`
+
+2. **Create a Summary of Changes:**
+   _Create a new markdown report file inside the `/instruction-reports/` directory. The filename MUST exactly match the instruction filename..._
+   Write the summary using the following format:
+
+- **Modified Files:** (List of files)
+- **Logic Changes:** (Briefly explain what was changed or added)
+- **Impact on Graph:** (State whether there are new relationships between components)

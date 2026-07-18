@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { getAdminDashboardStatsFn } from "../../server/adminSurveyFunctions";
 import { getSessionFn } from "../../server/authFunctions";
+import { Filter, Briefcase } from "lucide-react";
 
 export const Route = createFileRoute("/admin/analytics")({
 	loader: async () => {
@@ -130,7 +131,7 @@ function AnalyticsOverviewComponent() {
 					type="submit"
 					className="bg-[#0b3e9c] text-white hover:bg-[#002972] text-xs font-bold py-2.5 px-6 rounded-lg flex items-center gap-1.5 shadow-sm transition-transform active:scale-95 w-full md:w-auto justify-center"
 				>
-					<span className="material-symbols-outlined text-sm">filter_alt</span>
+					<Filter className="h-4 w-4" />
 					<span>Terapkan Filter</span>
 				</button>
 			</form>
@@ -424,12 +425,7 @@ function AnalyticsOverviewComponent() {
 									</span>
 								</div>
 							</div>
-							<span
-								className="material-symbols-outlined text-3xl text-[#0B3E9C]"
-								style={{ fontVariationSettings: "'FILL' 1" }}
-							>
-								work
-							</span>
+							<Briefcase className="h-9 w-9 text-[#0B3E9C]" fill="currentColor" />
 						</div>
 
 						<div className="bg-white rounded-lg p-4 flex flex-col shadow-sm">

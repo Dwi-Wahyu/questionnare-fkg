@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.tanstack
+.agents
+data-asli
+instruction
+.git/
+graphify-out/
+*.lock
+*_snapshot.json
+*.json

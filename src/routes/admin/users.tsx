@@ -8,6 +8,7 @@ import {
 	toggleUserStatusFn,
 	updateUserFn,
 } from "../../server/adminUserFunctions";
+import { UserPlus, Search, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/admin/users")({
 	loader: async () => {
@@ -161,7 +162,7 @@ function UserManagementComponent() {
 					onClick={handleOpenAddModal}
 					className="bg-[#002972] text-white md:h-fit md:w-fit hover:bg-[#0b3e9c] text-sm font-semibold px-5 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-transform active:scale-95"
 				>
-					<span className="material-symbols-outlined text-sm">person_add</span>
+					<UserPlus className="h-4 w-4" />
 					<span>Tambah Pengguna Baru</span>
 				</button>
 			</div>
@@ -170,9 +171,7 @@ function UserManagementComponent() {
 			<div className="bg-white rounded-xl p-4 shadow-sm border border-[#c4c6d4] flex flex-col md:flex-row justify-between items-center gap-4">
 				<div className="flex flex-col md:flex-row gap-3 w-full md:w-auto items-center">
 					<div className="relative w-full md:w-64">
-						<span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-							search
-						</span>
+						<Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
 						<input
 							className="pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-xs w-full focus:border-[#002972] focus:ring-1 focus:outline-none"
 							placeholder="Cari berdasarkan nama, email, username..."
@@ -255,9 +254,7 @@ function UserManagementComponent() {
 											className="inline-flex p-1.5 rounded-lg border border-slate-200 text-[#002972] hover:bg-[#dbe1ff] transition-all"
 											title="Edit User"
 										>
-											<span className="material-symbols-outlined text-sm block">
-												edit
-											</span>
+											<Pencil className="h-4 w-4 block" />
 										</button>
 									</td>
 								</tr>

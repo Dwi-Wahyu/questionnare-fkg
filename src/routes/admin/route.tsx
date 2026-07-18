@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { toast } from "../../components/ui/useToast";
 import { getSessionFn, logoutFn } from "../../server/authFunctions";
+import { ChartBar, LayoutDashboard, Users, LogOut } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
 	beforeLoad: async () => {
@@ -67,7 +68,7 @@ function AdminLayoutComponent() {
 								className: "bg-[#dbe1ff] text-[#0f409e] font-bold",
 							}}
 						>
-							<span className="material-symbols-outlined text-lg">poll</span>
+							<ChartBar className="h-[18px] w-[18px]" />
 							<span>
 								{user?.role === "visitor" ? "Daftar Survey" : "Kelola Survey"}
 							</span>
@@ -82,9 +83,7 @@ function AdminLayoutComponent() {
 									className: "bg-[#dbe1ff] text-[#0f409e] font-bold",
 								}}
 							>
-								<span className="material-symbols-outlined text-lg">
-									dashboard
-								</span>
+								<LayoutDashboard className="h-[18px] w-[18px]" />
 								<span>Dashboard</span>
 							</Link>
 						)}
@@ -96,9 +95,7 @@ function AdminLayoutComponent() {
                 className: "bg-[#dbe1ff] text-[#0f409e] font-bold",
               }}
             >
-              <span className="material-symbols-outlined text-lg">
-                analytics
-              </span>
+              <ChartColumn className="h-[18px] w-[18px]" />
               <span>Analytics</span>
             </Link> */}
 
@@ -110,7 +107,7 @@ function AdminLayoutComponent() {
 									className: "bg-[#dbe1ff] text-[#0f409e] font-bold",
 								}}
 							>
-								<span className="material-symbols-outlined text-lg">group</span>
+								<Users className="h-[18px] w-[18px]" />
 								<span>Kelola Pengguna</span>
 							</Link>
 						)}
@@ -123,7 +120,7 @@ function AdminLayoutComponent() {
 						className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[#ba1a1a] hover:bg-[#ffdad6]/20 font-bold transition-all text-xs border border-transparent hover:border-[#ffdad6]"
 						onClick={handleLogout}
 					>
-						<span className="material-symbols-outlined text-lg">logout</span>
+						<LogOut className="h-[18px] w-[18px]" />
 						<span className="hidden sm:inline">Logout</span>
 					</button>
 				</div>

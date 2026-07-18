@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { CircleCheck, Home } from "lucide-react";
 
 export const Route = createFileRoute("/survey/$surveySlug/thank-you")({
 	component: ThankYouComponent,
@@ -13,9 +14,7 @@ function ThankYouComponent() {
 					{/* Gradient backdrop */}
 					<div className="absolute inset-0 bg-gradient-to-br from-[#dbe1ff] to-white opacity-60"></div>
 					<div className="relative z-10 bg-[#002972] rounded-full pb-2 p-4 shadow-lg animate-bounce">
-						<span className="material-symbols-outlined text-white text-5xl md:text-6xl block">
-							check_circle
-						</span>
+						<CircleCheck className="text-white h-12 w-12 md:h-[60px] md:w-[60px] block" />
 					</div>
 				</div>
 				{/* Content Section */}
@@ -31,9 +30,7 @@ function ThankYouComponent() {
 						</p>
 					</div>
 					{/* <div className="inline-flex items-center gap-1.5 bg-[#eeedf6] px-4 py-2 rounded-full border border-slate-200">
-            <span className="material-symbols-outlined text-[#a03f32] text-sm">
-              verified
-            </span>
+            <BadgeCheck className="text-[#a03f32] h-4 w-4" />
             <span className="text-xs md:text-sm font-semibold text-[#1a1b21]">
               Respons Anda telah berhasil terekam dengan aman.
             </span>
@@ -43,7 +40,7 @@ function ThankYouComponent() {
 							to="/"
 							className="sm:w-auto inline-flex items-center justify-center gap-2 bg-[#002972] text-white hover:bg-[#0b3e9c] px-6 py-3 rounded-lg text-sm font-semibold shadow-sm transition-all scale-98 active:scale-95"
 						>
-							<span className="material-symbols-outlined text-lg">home</span>
+							<Home className="h-[18px] w-[18px]" />
 							<span>Kembali ke Beranda</span>
 						</Link>
 					</div>

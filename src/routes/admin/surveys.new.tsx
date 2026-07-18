@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 import { toast } from "../../components/ui/useToast";
 import { createAdminSurveyFn } from "../../server/adminSurveyFunctions";
 import { getSessionFn } from "../../server/authFunctions";
+import { ChevronRight, ChevronDown, Upload, CircleCheck, Trash2, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/admin/surveys/new")({
 	beforeLoad: async () => {
@@ -108,7 +109,7 @@ function CreateSurveyComponent() {
 				<Link to="/admin/surveys" className="hover:text-[#002972]">
 					Kelola Survey
 				</Link>
-				<span className="material-symbols-outlined text-xs">chevron_right</span>
+				<ChevronRight className="h-3.5 w-3.5" />
 				<span className="text-slate-400">Tambah Survey Baru</span>
 			</nav>
 
@@ -189,9 +190,7 @@ function CreateSurveyComponent() {
 								<option value="tracer">Tracer Study Alumni</option>
 								<option value="kepuasan">Survei Kepuasan &amp; Layanan</option>
 							</select>
-							<span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-								arrow_drop_down
-							</span>
+							<ChevronDown className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
 						</div>
 					</div>
 
@@ -274,16 +273,12 @@ function CreateSurveyComponent() {
 								disabled={loading}
 								className="px-4 py-2 bg-[#dbe1ff] text-[#0b3e9c] hover:bg-[#002972] hover:text-white font-semibold rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 							>
-								<span className="material-symbols-outlined text-sm">
-									upload
-								</span>
+								<Upload className="h-4 w-4" />
 								Pilih Gambar Banner
 							</button>
 							{bannerUrl && (
 								<span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-									<span className="material-symbols-outlined text-sm">
-										check_circle
-									</span>
+									<CircleCheck className="h-4 w-4" />
 									Gambar terpilih
 								</span>
 							)}
@@ -304,9 +299,7 @@ function CreateSurveyComponent() {
 									}}
 									className="absolute top-3 right-3 bg-white text-[#ba1a1a] p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
 								>
-									<span className="material-symbols-outlined text-sm block">
-										delete
-									</span>
+									<Trash2 className="h-4 w-4 block" />
 								</button>
 							</div>
 						)}
@@ -346,9 +339,7 @@ function CreateSurveyComponent() {
 							className="bg-[#002972] text-white hover:bg-[#0b3e9c] font-semibold px-6 py-2 rounded-lg text-sm shadow-sm transition-colors flex items-center gap-1"
 						>
 							{loading ? "Menyimpan..." : "Lanjutkan ke Editor"}
-							<span className="material-symbols-outlined text-sm">
-								arrow_forward
-							</span>
+							<ArrowRight className="h-4 w-4" />
 						</button>
 					</div>
 				</form>

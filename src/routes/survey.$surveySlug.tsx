@@ -12,6 +12,7 @@ import {
 	startResponseFn,
 	submitResponseFn,
 } from "../server/surveyFunctions";
+import { SearchX, Clock, ChartBar, Lock, AlertCircle, ChevronDown, CircleCheck } from "lucide-react";
 
 export const Route = createFileRoute("/survey/$surveySlug")({
 	loader: async ({ params }) => {
@@ -91,9 +92,7 @@ function SurveyTakingComponent() {
 				<div className="relative z-10 w-fulltext-center flex justify-center">
 					<div className="bg-white w-fit md:w-120 rounded-xl shadow-lg border border-slate-200 p-8 flex flex-col items-center gap-4">
 						<div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
-							<span className="material-symbols-outlined text-4xl block">
-								search_off
-							</span>
+							<SearchX className="h-10 w-10 block" />
 						</div>
 						<h2 className="text-2xl font-bold text-center text-[#1a1b21] mt-2">
 							Survei Tidak Ditemukan
@@ -126,9 +125,7 @@ function SurveyTakingComponent() {
 				<div className="relative z-10 w-fulltext-center flex justify-center">
 					<div className="bg-white w-fit md:w-120 rounded-xl shadow-lg border border-slate-200 p-8 flex flex-col items-center gap-4">
 						<div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600">
-							<span className="material-symbols-outlined text-4xl block">
-								lock_clock
-							</span>
+							<Clock className="h-10 w-10 block" />
 						</div>
 						<h2 className="text-2xl font-bold text-[#1a1b21] mt-2">
 							Survei Telah Berakhir
@@ -138,9 +135,7 @@ function SurveyTakingComponent() {
 							tidak dapat diisi lagi karena sudah melewati periode pengisian.
 						</p>
 						<div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 w-full text-xs font-semibold text-slate-600 flex items-center justify-center gap-1.5">
-							<span className="material-symbols-outlined text-sm block">
-								schedule
-							</span>
+							<Clock className="h-4 w-4 block" />
 							Batas Waktu:{" "}
 							{getFormattedPeriod(
 								(survey as any).periodValueEnd,
@@ -495,9 +490,7 @@ function SurveyTakingComponent() {
 								/>
 							) : (
 								<div className="w-full h-full bg-gradient-to-br from-[#0b3e9c]/20 to-[#fe8674]/15 flex items-center justify-center">
-									<span className="material-symbols-outlined text-6xl text-[#0b3e9c]/35">
-										poll
-									</span>
+									<ChartBar className="h-16 w-16 text-[#0b3e9c]/35" />
 								</div>
 							)}
 						</div>
@@ -514,17 +507,13 @@ function SurveyTakingComponent() {
 
 							<div className="flex gap-3 w-full justify-center flex-col md:flex-row mt-6">
 								<div className="flex items-center gap-2 bg-slate-50 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200  text-left justify-start sm:justify-center">
-									<span className="material-symbols-outlined text-[#002972] text-xl shrink-0">
-										schedule
-									</span>
+									<Clock className="text-[#002972] h-6 w-6 shrink-0" />
 									<span className="text-xs md:text-sm font-medium text-[#1a1b21] break-words">
 										Estimasi waktu: 10-15 menit
 									</span>
 								</div>
 								<div className="flex items-center gap-2 bg-slate-50 px-3 sm:px-4 py-2.5 rounded-lg border border-slate-200  text-left justify-start sm:justify-center">
-									<span className="material-symbols-outlined text-[#a03f32] text-xl shrink-0">
-										lock
-									</span>
+									<Lock className="text-[#a03f32] h-6 w-6 shrink-0" />
 									<span className="text-xs md:text-sm font-medium text-[#1a1b21] break-words">
 										Data Anda dijamin kerahasiaannya.
 									</span>
@@ -572,9 +561,7 @@ function SurveyTakingComponent() {
 						/>
 					) : (
 						<div className="w-full h-full bg-gradient-to-br from-[#0b3e9c]/20 to-[#fe8674]/15 flex items-center justify-center">
-							<span className="material-symbols-outlined text-5xl text-[#0b3e9c]/35">
-								poll
-							</span>
+							<ChartBar className="h-[48px] w-[48px] text-[#0b3e9c]/35" />
 						</div>
 					)}
 				</div>
@@ -641,9 +628,7 @@ function SurveyTakingComponent() {
 									{/* Error message */}
 									{isError && (
 										<span className="text-xs text-[#ba1a1a] font-semibold flex items-center gap-1 mt-1">
-											<span className="material-symbols-outlined text-sm">
-												error
-											</span>
+											<AlertCircle className="h-4 w-4" />
 											{errors[q.id]}
 										</span>
 									)}
@@ -694,9 +679,7 @@ function SurveyTakingComponent() {
 														</option>
 													))}
 												</select>
-												<span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-													arrow_drop_down
-												</span>
+												<ChevronDown className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
 											</div>
 										)}
 
@@ -892,9 +875,7 @@ function SurveyTakingComponent() {
 								className="bg-[#a03f32] text-white hover:bg-[#741e15] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm"
 							>
 								{loading ? "Mengirim..." : "Kirim Jawaban"}
-								<span className="material-symbols-outlined text-sm">
-									check_circle
-								</span>
+								<CircleCheck className="h-4 w-4" />
 							</button>
 						) : (
 							<button

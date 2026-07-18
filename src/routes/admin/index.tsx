@@ -5,6 +5,7 @@ import {
 	getAdminSurveysListFn,
 } from "../../server/adminSurveyFunctions";
 import { getSessionFn } from "../../server/authFunctions";
+import { ChartBar, ClipboardCheck, Calendar, TrendingUp, X, Inbox } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
 	beforeLoad: async () => {
@@ -78,9 +79,7 @@ function DashboardComponent() {
 						</p>
 					</div>
 					<div className="p-3 pb-1 bg-[#dbe1ff] text-[#0f409e] rounded-full">
-						<span className="material-symbols-outlined text-2xl block">
-							poll
-						</span>
+						<ChartBar className="h-8 w-8 block" />
 					</div>
 				</div>
 
@@ -95,9 +94,7 @@ function DashboardComponent() {
 						</p>
 					</div>
 					<div className="p-3 pb-1 bg-[#ffdad4] text-[#a03f32] rounded-full">
-						<span className="material-symbols-outlined text-2xl block">
-							assignment_turned_in
-						</span>
+						<ClipboardCheck className="h-8 w-8 block" />
 					</div>
 				</div>
 
@@ -112,9 +109,7 @@ function DashboardComponent() {
 						</p>
 					</div>
 					<div className="p-3 pb-1 bg-emerald-100 text-emerald-800 rounded-full">
-						<span className="material-symbols-outlined text-2xl block">
-							calendar_today
-						</span>
+						<Calendar className="h-8 w-8 block" />
 					</div>
 				</div>
 
@@ -129,9 +124,7 @@ function DashboardComponent() {
 						</p>
 					</div>
 					<div className="p-3 pb-1 bg-amber-100 text-amber-800 rounded-full">
-						<span className="material-symbols-outlined text-2xl block">
-							query_stats
-						</span>
+						<TrendingUp className="h-8 w-8 block" />
 					</div>
 				</div>
 			</div>
@@ -185,9 +178,7 @@ function DashboardComponent() {
 									onClick={() => setPeriodFilterValue("")}
 									className="absolute right-2 text-slate-400 hover:text-slate-600 cursor-pointer"
 								>
-									<span className="material-symbols-outlined text-sm block">
-										close
-									</span>
+									<X className="h-4 w-4 block" />
 								</button>
 							)}
 						</div>
@@ -196,9 +187,7 @@ function DashboardComponent() {
 
 				{filteredSurveys.length === 0 ? (
 					<div className="p-12 text-center">
-						<span className="material-symbols-outlined text-4xl text-[#747683] block">
-							inbox
-						</span>
+						<Inbox className="h-10 w-10 text-[#747683] block mx-auto" />
 						<p className="mt-2 text-[#434652] text-sm">
 							Tidak ada survey yang cocok dengan filter periode.
 						</p>
@@ -227,9 +216,7 @@ function DashboardComponent() {
 										<td className="py-4 px-6 text-[#747683]">
 											{survey.periodValue ? (
 												<span className="inline-flex items-center gap-1.5 font-medium">
-													<span className="material-symbols-outlined text-xs text-[#747683]">
-														calendar_month
-													</span>
+													<Calendar className="h-3.5 w-3.5 text-[#747683]" />
 													{(() => {
 														const formatVal = (v: string) => {
 															if (!v) return "";

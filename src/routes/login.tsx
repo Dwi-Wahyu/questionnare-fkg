@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { toast } from "../components/ui/useToast";
 import { getSessionFn, loginFn } from "../server/authFunctions";
+import { CircleUser } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
 	beforeLoad: async () => {
@@ -190,9 +191,7 @@ function LoginComponent() {
 						disabled={loading}
 						onClick={handleGuestLogin}
 					>
-						<span className="material-symbols-outlined text-lg">
-							account_circle
-						</span>
+						<CircleUser className="h-5 w-5" />
 						Masuk Sebagai Tamu
 					</Button>
 				</div>
