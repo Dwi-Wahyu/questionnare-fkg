@@ -32,6 +32,7 @@ function CreateSurveyComponent() {
 	const [periodValueEnd, setPeriodValueEnd] = useState("");
 	const [description, setDescription] = useState("");
 	const [bannerUrl, setBannerUrl] = useState("");
+	const [targetRespondentCount, setTargetRespondentCount] = useState<number | null>(null);
 	const [loading, setLoading] = useState(false);
 
 	const handleTitleChange = (val: string) => {
@@ -84,6 +85,7 @@ function CreateSurveyComponent() {
 					periodType,
 					periodValue,
 					periodValueEnd,
+					targetRespondentCount,
 				},
 			});
 
@@ -106,7 +108,7 @@ function CreateSurveyComponent() {
 		<div className="space-y-6 w-full max-w-4xl">
 			{/* Breadcrumbs */}
 			<nav className="text-xs font-semibold text-[#434652] flex items-center gap-1.5">
-				<Link to="/admin/surveys" className="hover:text-[#002972]">
+				<Link to="/admin/surveys" className="hover:text-[#4A0000]">
 					Kelola Survey
 				</Link>
 				<ChevronRight className="h-3.5 w-3.5" />
@@ -139,7 +141,7 @@ function CreateSurveyComponent() {
 							id="title"
 							value={title}
 							onChange={(e) => handleTitleChange(e.target.value)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors"
 							placeholder="Masukkan judul kuesioner (contoh: Tracer Study Alumni 2026)"
 							required
 							disabled={loading}
@@ -160,7 +162,7 @@ function CreateSurveyComponent() {
 								id="slug"
 								value={slug}
 								onChange={(e) => setSlug(e.target.value)}
-								className="w-full bg-slate-50 border border-slate-200 rounded-r-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
+								className="w-full bg-slate-50 border border-slate-200 rounded-r-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors"
 								placeholder="tracer-study-alumni-2026"
 								required
 								disabled={loading}
@@ -184,11 +186,13 @@ function CreateSurveyComponent() {
 								id="category"
 								value={category}
 								onChange={(e) => setCategory(e.target.value)}
-								className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 pr-10 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors appearance-none cursor-pointer"
+								className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 pr-10 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors appearance-none cursor-pointer"
 								disabled={loading}
 							>
 								<option value="tracer">Tracer Study Alumni</option>
-								<option value="kepuasan">Survei Kepuasan &amp; Layanan</option>
+								<option value="kepuasan">Survei Kepuasan Mahasiswa (Internal)</option>
+								<option value="pengguna">Survei Pengguna Layanan</option>
+								<option value="lainnya">Lainnya</option>
 							</select>
 							<ChevronDown className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
 						</div>
@@ -207,7 +211,7 @@ function CreateSurveyComponent() {
 									setPeriodValue("");
 									setPeriodValueEnd("");
 								}}
-								className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${periodType === "month" ? "bg-white shadow-sm text-[#002972]" : "text-[#747683]"}`}
+								className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${periodType === "month" ? "bg-white shadow-sm text-[#4A0000]" : "text-[#747683]"}`}
 							>
 								Bulan
 							</button>
@@ -218,7 +222,7 @@ function CreateSurveyComponent() {
 									setPeriodValue("");
 									setPeriodValueEnd("");
 								}}
-								className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${periodType === "date" ? "bg-white shadow-sm text-[#002972]" : "text-[#747683]"}`}
+								className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${periodType === "date" ? "bg-white shadow-sm text-[#4A0000]" : "text-[#747683]"}`}
 							>
 								Tanggal Spesifik
 							</button>
@@ -232,7 +236,7 @@ function CreateSurveyComponent() {
 									type={periodType === "month" ? "month" : "date"}
 									value={periodValue}
 									onChange={(e) => setPeriodValue(e.target.value)}
-									className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
+									className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors"
 									required
 									disabled={loading}
 								/>
@@ -245,12 +249,32 @@ function CreateSurveyComponent() {
 									type={periodType === "month" ? "month" : "date"}
 									value={periodValueEnd}
 									onChange={(e) => setPeriodValueEnd(e.target.value)}
-									className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
+									className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors"
 									required
 									disabled={loading}
 								/>
 							</div>
 						</div>
+					</div>
+
+					{/* Target Responden */}
+					<div className="flex flex-col gap-1.5">
+						<label htmlFor="targetRespondentCount" className="text-sm font-bold text-[#1a1b21]">
+							Target Jumlah Responden (Opsional)
+						</label>
+						<input
+							type="number"
+							min={0}
+							id="targetRespondentCount"
+							value={targetRespondentCount ?? ""}
+							onChange={(e) => setTargetRespondentCount(e.target.value === "" ? null : Number(e.target.value))}
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors"
+							placeholder="contoh: 150"
+							disabled={loading}
+						/>
+						<p className="text-xxs text-[#747683] italic">
+							Dipakai untuk menghitung progress pengisian kuesioner. Kosongkan jika tidak ingin melacak target.
+						</p>
 					</div>
 
 					{/* Banner URL input */}
@@ -271,7 +295,7 @@ function CreateSurveyComponent() {
 								type="button"
 								onClick={() => bannerFileInputRef.current?.click()}
 								disabled={loading}
-								className="px-4 py-2 bg-[#dbe1ff] text-[#0b3e9c] hover:bg-[#002972] hover:text-white font-semibold rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+								className="px-4 py-2 bg-[#dbe1ff] text-[#B00000] hover:bg-[#4A0000] hover:text-white font-semibold rounded-lg text-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								<Upload className="h-4 w-4" />
 								Pilih Gambar Banner
@@ -318,7 +342,7 @@ function CreateSurveyComponent() {
 							rows={4}
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#002972] focus:ring-1 focus:ring-[#002972] focus:bg-white outline-none transition-colors"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors"
 							placeholder="Masukkan kalimat sambutan, instruksi singkat, atau kebijakan privasi data bagi pengisi kuesioner..."
 							disabled={loading}
 						/>
@@ -336,7 +360,7 @@ function CreateSurveyComponent() {
 						<button
 							type="submit"
 							disabled={loading}
-							className="bg-[#002972] text-white hover:bg-[#0b3e9c] font-semibold px-6 py-2 rounded-lg text-sm shadow-sm transition-colors flex items-center gap-1"
+							className="bg-[#4A0000] text-white hover:bg-[#B00000] font-semibold px-6 py-2 rounded-lg text-sm shadow-sm transition-colors flex items-center gap-1"
 						>
 							{loading ? "Menyimpan..." : "Lanjutkan ke Editor"}
 							<ArrowRight className="h-4 w-4" />

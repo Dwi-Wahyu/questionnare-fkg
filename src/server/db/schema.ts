@@ -41,6 +41,7 @@ export const surveys = mysqlTable("surveys", {
 		.default("month"),
 	periodValue: varchar("period_value", { length: 10 }),
 	periodValueEnd: varchar("period_value_end", { length: 10 }),
+	targetRespondentCount: int("target_respondent_count"),
 	status: mysqlEnum("status", ["draft", "published", "archived"])
 		.notNull()
 		.default("draft"),

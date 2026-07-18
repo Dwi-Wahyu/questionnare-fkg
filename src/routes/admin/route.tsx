@@ -49,7 +49,7 @@ function AdminLayoutComponent() {
 							src={"/logo.webp"}
 						/>
 						<div>
-							<h1 className="font-bold text-sm md:text-base text-[#002972] leading-tight">
+							<h1 className="font-bold text-sm md:text-base text-[#4A0000] leading-tight">
 								UNHAS Survey
 							</h1>
 							<p className="text-[9px] md:text-[10px] text-[#434652] font-semibold">

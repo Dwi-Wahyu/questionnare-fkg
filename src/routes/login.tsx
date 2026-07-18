@@ -121,7 +121,7 @@ function LoginComponent() {
 				}}
 			>
 				<div className="flex flex-col items-center">
-					<span className="inline-flex items-center px-4 py-1.5 rounded-full bg-[#fe8674]/25 text-[#a03f32] text-xs font-bold mb-4">
+					<span className="inline-flex items-center px-4 py-1.5 rounded-full bg-[#3D6FC2]/25 text-[#0B3E9C] text-xs font-bold mb-4">
 						Portal Masuk
 					</span>
 					<h1 className="text-3xl md:text-4xl font-extrabold text-[#1a1b21] tracking-tight text-center mb-2">

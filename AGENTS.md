@@ -1,4 +1,6 @@
-# TanStack Start Scratch Project
+# TracerStudy
+
+Aware of `graphify-out/GRAPH_REPORT.md` for summary of codebase
 
 A high-performance Server-Side Rendered (SSR) web application built from scratch using **TanStack Start**, **Rsbuild**, and **Bun**.
 

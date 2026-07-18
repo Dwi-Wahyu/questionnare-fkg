@@ -1,0 +1,1 @@
+ALTER TABLE `surveys` ADD `target_respondent_count` int;

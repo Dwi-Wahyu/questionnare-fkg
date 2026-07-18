@@ -148,7 +148,7 @@ function RootComponent() {
 								suppressHydrationWarning
 							/>
 							<div className="flex flex-col">
-								<span className="font-bold text-sm md:text-base text-[#002972] leading-tight">
+								<span className="font-bold text-sm md:text-base text-[#4A0000] leading-tight">
 									Fakultas Kedokteran Gigi
 								</span>
 								<span className="text-[9px] md:text-[10px] text-[#434652] font-semibold uppercase tracking-wider leading-none mt-0.5">
@@ -159,7 +159,7 @@ function RootComponent() {
 						<nav className="flex items-center gap-6 text-sm font-medium">
 							<Link
 								to="/"
-								className="text-[#002972] font-bold border-b-2 border-[#002972] py-1"
+								className="text-[#4A0000] font-bold border-b-2 border-[#4A0000] py-1"
 								activeProps={{ className: "active" }}
 								activeOptions={{ exact: true }}
 							>
@@ -171,7 +171,7 @@ function RootComponent() {
 									{(user.role === "admin" || user.role === "visitor") && (
 										<Link
 											to="/admin"
-											className="bg-[#eeedf6] text-[#002972] hover:bg-[#e2e2ea] px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+											className="bg-[#eeedf6] text-[#4A0000] hover:bg-[#e2e2ea] px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
 										>
 											<LayoutDashboard size={16} />
 											<span>Admin Panel</span>
@@ -192,7 +192,7 @@ function RootComponent() {
 							) : (
 								<Link
 									to="/login"
-									className="bg-[#002972] text-white hover:bg-[#0b3e9c] px-5 py-2 rounded-lg font-medium transition-colors"
+									className="bg-[#4A0000] text-white hover:bg-[#B00000] px-5 py-2 rounded-lg font-medium transition-colors"
 								>
 									Masuk
 								</Link>

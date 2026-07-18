@@ -72,7 +72,10 @@ function AnalyticsOverviewComponent() {
 	// Show/hide chart series based on applied category
 	const showTracer = appliedCategory === "all" || appliedCategory === "tracer";
 	const showKepuasan =
-		appliedCategory === "all" || appliedCategory === "kepuasan";
+		appliedCategory === "all" ||
+		appliedCategory === "kepuasan" ||
+		appliedCategory === "pengguna" ||
+		appliedCategory === "lainnya";
 
 	const totalResponses = stats?.totalResponses || 452;
 	const activeSurveys = stats?.recentActivities || [];
@@ -81,7 +84,7 @@ function AnalyticsOverviewComponent() {
 		<div className="space-y-6">
 			{/* Page Header */}
 			<div>
-				<h2 className="text-3xl font-bold text-[#002972]">
+				<h2 className="text-3xl font-bold text-[#4A0000]">
 					Ringkasan Analisis
 				</h2>
 				<p className="text-sm text-[#434652] mt-1">
@@ -103,7 +106,7 @@ function AnalyticsOverviewComponent() {
 						<select
 							value={academicPeriod}
 							onChange={(e) => setAcademicPeriod(e.target.value)}
-							className="border border-[#c4c6d4] rounded-lg px-3 py-2 text-xs font-semibold text-[#1a1b21] bg-white outline-none cursor-pointer focus:border-[#002972]"
+							className="border border-[#c4c6d4] rounded-lg px-3 py-2 text-xs font-semibold text-[#1a1b21] bg-white outline-none cursor-pointer focus:border-[#4A0000]"
 						>
 							<option value="ganjil_23_24">Semester Ganjil 2023/2024</option>
 							<option value="genap_22_23">Semester Genap 2022/2023</option>
@@ -118,18 +121,20 @@ function AnalyticsOverviewComponent() {
 						<select
 							value={surveyCategory}
 							onChange={(e) => setSurveyCategory(e.target.value)}
-							className="border border-[#c4c6d4] rounded-lg px-3 py-2 text-xs font-semibold text-[#1a1b21] bg-white outline-none cursor-pointer focus:border-[#002972]"
+							className="border border-[#c4c6d4] rounded-lg px-3 py-2 text-xs font-semibold text-[#1a1b21] bg-white outline-none cursor-pointer focus:border-[#4A0000]"
 						>
 							<option value="all">Semua Kategori</option>
 							<option value="tracer">Tracer Study Alumni</option>
-							<option value="kepuasan">Survei Kepuasan</option>
+							<option value="kepuasan">Survei Kepuasan Mahasiswa (Internal)</option>
+							<option value="pengguna">Survei Pengguna Layanan</option>
+							<option value="lainnya">Lainnya</option>
 						</select>
 					</div>
 				</div>
 
 				<button
 					type="submit"
-					className="bg-[#0b3e9c] text-white hover:bg-[#002972] text-xs font-bold py-2.5 px-6 rounded-lg flex items-center gap-1.5 shadow-sm transition-transform active:scale-95 w-full md:w-auto justify-center"
+					className="bg-[#B00000] text-white hover:bg-[#4A0000] text-xs font-bold py-2.5 px-6 rounded-lg flex items-center gap-1.5 shadow-sm transition-transform active:scale-95 w-full md:w-auto justify-center"
 				>
 					<Filter className="h-4 w-4" />
 					<span>Terapkan Filter</span>
@@ -140,7 +145,7 @@ function AnalyticsOverviewComponent() {
 			<div className="grid grid-cols-1 md:grid-cols-12 gap-6">
 				{/* Satisfaction Index Card */}
 				<div className="bg-white rounded-xl p-6 border border-[#c4c6d4] col-span-1 md:col-span-4 flex flex-col justify-center items-center relative overflow-hidden shadow-sm">
-					<div className="absolute top-0 left-0 w-full h-1 bg-[#a03f32]"></div>
+					<div className="absolute top-0 left-0 w-full h-1 bg-[#0B3E9C]"></div>
 					<h3 className="font-bold text-base text-[#1a1b21] w-full text-left">
 						Indeks Kepuasan Global
 					</h3>
@@ -167,7 +172,7 @@ function AnalyticsOverviewComponent() {
 								cy="50"
 								fill="none"
 								r="42"
-								stroke="#0B3E9C"
+								stroke="#B00000"
 								strokeWidth="8"
 								strokeDasharray="263.8"
 								strokeDashoffset="37" // 4.3 out of 5.0
@@ -175,7 +180,7 @@ function AnalyticsOverviewComponent() {
 							></circle>
 						</svg>
 						<div className="absolute flex flex-col items-center">
-							<span className="text-4xl font-bold text-[#002972]">4.3</span>
+							<span className="text-4xl font-bold text-[#4A0000]">4.3</span>
 							<span className="text-xs font-semibold text-[#434652]">
 								/ 5.0
 							</span>
@@ -184,7 +189,7 @@ function AnalyticsOverviewComponent() {
 
 					<div className="w-full mt-6 flex justify-between text-xs font-bold">
 						<span className="text-[#434652]">Target: 4.0</span>
-						<span className="text-[#a03f32] font-bold">+0.3 dari thn lalu</span>
+						<span className="text-[#0B3E9C] font-bold">+0.3 dari thn lalu</span>
 					</div>
 				</div>
 
@@ -202,7 +207,7 @@ function AnalyticsOverviewComponent() {
 						<div className="flex gap-4 text-xs font-bold text-[#434652]">
 							{showTracer && (
 								<div className="flex items-center gap-1.5">
-									<div className="w-2.5 h-2.5 rounded-full bg-[#0B3E9C]"></div>
+									<div className="w-2.5 h-2.5 rounded-full bg-[#B00000]"></div>
 									<span>Tracer Study</span>
 								</div>
 							)}
@@ -234,7 +239,7 @@ function AnalyticsOverviewComponent() {
 							)}
 							{showTracer && (
 								<div
-									className="w-4 bg-[#0B3E9C] h-[20%] rounded-t"
+									className="w-4 bg-[#B00000] h-[20%] rounded-t"
 									title="Tracer: 200"
 								></div>
 							)}
@@ -250,7 +255,7 @@ function AnalyticsOverviewComponent() {
 							)}
 							{showTracer && (
 								<div
-									className="w-4 bg-[#0B3E9C] h-[30%] rounded-t"
+									className="w-4 bg-[#B00000] h-[30%] rounded-t"
 									title="Tracer: 300"
 								></div>
 							)}
@@ -266,7 +271,7 @@ function AnalyticsOverviewComponent() {
 							)}
 							{showTracer && (
 								<div
-									className="w-4 bg-[#0B3E9C] h-[60%] rounded-t"
+									className="w-4 bg-[#B00000] h-[60%] rounded-t"
 									title="Tracer: 600"
 								></div>
 							)}
@@ -282,7 +287,7 @@ function AnalyticsOverviewComponent() {
 							)}
 							{showTracer && (
 								<div
-									className="w-4 bg-[#0B3E9C] h-[40%] rounded-t"
+									className="w-4 bg-[#B00000] h-[40%] rounded-t"
 									title="Tracer: 400"
 								></div>
 							)}
@@ -298,7 +303,7 @@ function AnalyticsOverviewComponent() {
 							)}
 							{showTracer && (
 								<div
-									className="w-4 bg-[#0B3E9C] h-[90%] rounded-t"
+									className="w-4 bg-[#B00000] h-[90%] rounded-t"
 									title="Tracer: 900"
 								></div>
 							)}
@@ -314,7 +319,7 @@ function AnalyticsOverviewComponent() {
 							)}
 							{showTracer && (
 								<div
-									className="w-4 bg-[#0B3E9C] h-[75%] rounded-t"
+									className="w-4 bg-[#B00000] h-[75%] rounded-t"
 									title="Tracer: 750"
 								></div>
 							)}
@@ -342,7 +347,7 @@ function AnalyticsOverviewComponent() {
 						</h3>
 						<Link
 							to="/admin/surveys"
-							className="text-[#002972] text-xs font-bold hover:underline"
+							className="text-[#4A0000] text-xs font-bold hover:underline"
 						>
 							Lihat Semua
 						</Link>
@@ -420,12 +425,12 @@ function AnalyticsOverviewComponent() {
 								</span>
 								<div className="flex items-end gap-1.5 mt-1">
 									<span className="text-3xl font-bold text-[#1a1b21]">4.5</span>
-									<span className="text-xs font-bold text-[#a03f32] mb-1">
+									<span className="text-xs font-bold text-[#0B3E9C] mb-1">
 										Sangat Baik
 									</span>
 								</div>
 							</div>
-							<Briefcase className="h-9 w-9 text-[#0B3E9C]" fill="currentColor" />
+							<Briefcase className="h-9 w-9 text-[#B00000]" fill="currentColor" />
 						</div>
 
 						<div className="bg-white rounded-lg p-4 flex flex-col shadow-sm">
@@ -438,7 +443,7 @@ function AnalyticsOverviewComponent() {
 										&lt; 3 Bln
 									</span>
 									<div className="grow bg-slate-100 h-2 rounded-full overflow-hidden">
-										<div className="bg-[#0b3e9c] h-full w-[65%] rounded-full"></div>
+										<div className="bg-[#B00000] h-full w-[65%] rounded-full"></div>
 									</div>
 									<span className="text-xs font-bold w-8 text-right">65%</span>
 								</div>

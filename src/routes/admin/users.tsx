@@ -153,14 +153,14 @@ function UserManagementComponent() {
 			{/* Header */}
 			<div className="flex justify-between items-center gap-4">
 				<div>
-					<h2 className="text-3xl font-bold text-[#002972]">Kelola Pengguna</h2>
+					<h2 className="text-3xl font-bold text-[#4A0000]">Kelola Pengguna</h2>
 					<p className="text-sm text-[#434652] mt-1">
 						Kelola akun admin dan visitor serta kontrol akses ke modul survei.
 					</p>
 				</div>
 				<button
 					onClick={handleOpenAddModal}
-					className="bg-[#002972] text-white md:h-fit md:w-fit hover:bg-[#0b3e9c] text-sm font-semibold px-5 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-transform active:scale-95"
+					className="bg-[#4A0000] text-white md:h-fit md:w-fit hover:bg-[#B00000] text-sm font-semibold px-5 py-2.5 rounded-lg flex items-center gap-1.5 shadow-sm transition-transform active:scale-95"
 				>
 					<UserPlus className="h-4 w-4" />
 					<span>Tambah Pengguna Baru</span>
@@ -173,7 +173,7 @@ function UserManagementComponent() {
 					<div className="relative w-full md:w-64">
 						<Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
 						<input
-							className="pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-xs w-full focus:border-[#002972] focus:ring-1 focus:outline-none"
+							className="pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-xs w-full focus:border-[#4A0000] focus:ring-1 focus:outline-none"
 							placeholder="Cari berdasarkan nama, email, username..."
 							type="text"
 							value={searchQuery}
@@ -183,7 +183,7 @@ function UserManagementComponent() {
 					<select
 						value={roleFilter}
 						onChange={(e) => setRoleFilter(e.target.value)}
-						className="border border-slate-200 rounded-lg text-xs px-3 py-1.5 focus:border-[#002972] focus:ring-1 outline-none text-[#434652] bg-white cursor-pointer w-full md:w-auto"
+						className="border border-slate-200 rounded-lg text-xs px-3 py-1.5 focus:border-[#4A0000] focus:ring-1 outline-none text-[#434652] bg-white cursor-pointer w-full md:w-auto"
 					>
 						<option value="all">Semua Peran</option>
 						<option value="admin">Administrator</option>
@@ -251,7 +251,7 @@ function UserManagementComponent() {
 									<td className="py-4 px-6 text-right">
 										<button
 											onClick={() => handleOpenEditModal(u)}
-											className="inline-flex p-1.5 rounded-lg border border-slate-200 text-[#002972] hover:bg-[#dbe1ff] transition-all"
+											className="inline-flex p-1.5 rounded-lg border border-slate-200 text-[#4A0000] hover:bg-[#dbe1ff] transition-all"
 											title="Edit User"
 										>
 											<Pencil className="h-4 w-4 block" />
@@ -283,7 +283,7 @@ function UserManagementComponent() {
 							id="add_username"
 							value={username}
 							onChange={(e) => setUsername(e.target.value)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none"
 							placeholder="Masukkan username unik..."
 							required
 						/>
@@ -301,7 +301,7 @@ function UserManagementComponent() {
 							id="add_name"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none"
 							placeholder="Nama lengkap beserta gelar..."
 							required
 						/>
@@ -319,7 +319,7 @@ function UserManagementComponent() {
 							id="add_email"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none"
 							placeholder="contoh@domain.com"
 						/>
 					</div>
@@ -335,7 +335,7 @@ function UserManagementComponent() {
 							id="add_role"
 							value={role}
 							onChange={(e) => setRole(e.target.value as any)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none cursor-pointer"
 						>
 							<option value="visitor">Visitor (Lihat &amp; Ekspor saja)</option>
 							<option value="admin">Administrator (Akses Penuh)</option>
@@ -354,7 +354,7 @@ function UserManagementComponent() {
 							id="add_pw"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none"
 							placeholder="Masukkan kata sandi..."
 							required
 						/>
@@ -371,7 +371,7 @@ function UserManagementComponent() {
 						<button
 							type="submit"
 							disabled={loading}
-							className="bg-[#002972] text-white hover:bg-[#0b3e9c] px-4 py-2 rounded-lg text-xs font-semibold"
+							className="bg-[#4A0000] text-white hover:bg-[#B00000] px-4 py-2 rounded-lg text-xs font-semibold"
 						>
 							{loading ? "Menyimpan..." : "Simpan Pengguna"}
 						</button>
@@ -410,7 +410,7 @@ function UserManagementComponent() {
 							id="edit_name"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none"
 							placeholder="Nama lengkap..."
 							required
 						/>
@@ -428,7 +428,7 @@ function UserManagementComponent() {
 							id="edit_email"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none"
 							placeholder="contoh@domain.com"
 						/>
 					</div>
@@ -444,7 +444,7 @@ function UserManagementComponent() {
 							id="edit_role"
 							value={role}
 							onChange={(e) => setRole(e.target.value as any)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none cursor-pointer"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none cursor-pointer"
 						>
 							<option value="visitor">Visitor (Lihat &amp; Ekspor saja)</option>
 							<option value="admin">Administrator (Akses Penuh)</option>
@@ -463,7 +463,7 @@ function UserManagementComponent() {
 							id="edit_pw"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
-							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#002972] outline-none"
+							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none"
 							placeholder="Masukkan kata sandi baru..."
 						/>
 					</div>
@@ -479,7 +479,7 @@ function UserManagementComponent() {
 						<button
 							type="submit"
 							disabled={loading}
-							className="bg-[#002972] text-white hover:bg-[#0b3e9c] px-4 py-2 rounded-lg text-xs font-semibold"
+							className="bg-[#4A0000] text-white hover:bg-[#B00000] px-4 py-2 rounded-lg text-xs font-semibold"
 						>
 							{loading ? "Menyimpan..." : "Simpan Perubahan"}
 						</button>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { Select } from "../../components/ui/Select";
 import { toast } from "../../components/ui/useToast";
@@ -16,10 +16,42 @@ export const Route = createFileRoute("/admin/surveys/")({
 	component: SurveysIndexComponent,
 });
 
+function LiveFillingBadge({ count }: { count: number }) {
+	if (count <= 0) return null;
+	return (
+		<span className="inline-flex items-center gap-1.5 bg-[#B00000]/10 text-[#4A0000] text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-[#B00000]/10 shadow-sm">
+			<span className="relative flex h-1.5 w-1.5">
+				<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#B00000] opacity-75" />
+				<span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#B00000]" />
+			</span>
+			{count} mengisi
+		</span>
+	);
+}
+
 function SurveysIndexComponent() {
 	const surveys = Route.useLoaderData();
 	const router = useRouter();
 	const { user } = Route.useRouteContext();
+
+	const [liveCounts, setLiveCounts] = useState<Record<number, number>>({});
+
+	useEffect(() => {
+		const es = new EventSource("/api/surveys/live");
+		es.addEventListener("presence", (e) => {
+			try {
+				const data = JSON.parse(e.data);
+				if (data && typeof data === "object") {
+					setLiveCounts(data);
+				}
+			} catch (err) {
+				console.error("Error parsing aggregate presence SSE:", err);
+			}
+		});
+		return () => {
+			es.close();
+		};
+	}, []);
 
 	const [searchQuery, setSearchQuery] = useState("");
 	const [statusFilter, setStatusFilter] = useState("all");
@@ -145,11 +177,12 @@ function SurveysIndexComponent() {
 										/>
 									) : (
 										<div className="h-full w-full bg-gradient-to-br from-[#eeedf6] to-slate-200 flex items-center justify-center">
-											<ChartBar className="h-10 w-10 text-[#002972]/30" />
+											<ChartBar className="h-10 w-10 text-[#4A0000]/30" />
 										</div>
 									)}
-									<div className="absolute top-3 right-3">
+									<div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
 										{getStatusBadge(s.status)}
+										<LiveFillingBadge count={liveCounts[s.id] || 0} />
 									</div>
 								</div>
 
@@ -158,7 +191,7 @@ function SurveysIndexComponent() {
 									<Link
 										to="/admin/surveys/$surveyId"
 										params={{ surveyId: s.id.toString() }}
-										className="font-semibold text-[#1a1b21] hover:text-[#002972] transition-colors line-clamp-2"
+										className="font-semibold text-[#1a1b21] hover:text-[#4A0000] transition-colors line-clamp-2"
 									>
 										{s.title}
 									</Link>
@@ -214,7 +247,7 @@ function SurveysIndexComponent() {
 									<Link
 										to="/admin/surveys/$surveyId"
 										params={{ surveyId: s.id.toString() }}
-										className="inline-flex p-1.5 rounded-lg border border-slate-200 text-[#002972] hover:bg-[#dbe1ff] transition-all"
+										className="inline-flex p-1.5 rounded-lg border border-slate-200 text-[#4A0000] hover:bg-[#dbe1ff] transition-all"
 										title={
 											user?.role === "visitor"
 												? "Lihat Detail"
@@ -250,7 +283,7 @@ function SurveysIndexComponent() {
 			{/* Page Header */}
 			<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 				<div className="w-full">
-					<h1 className="text-3xl font-bold text-[#002972] text-left w-full">
+					<h1 className="text-3xl font-bold text-[#4A0000] text-left w-full">
 						Kelola Survey
 					</h1>
 					<p className="text-sm text-[#434652] mt-1 text-left">
@@ -261,7 +294,7 @@ function SurveysIndexComponent() {
 				{user?.role !== "visitor" && (
 					<Link
 						to="/admin/surveys/new"
-						className="bg-[#002972] text-white hover:bg-[#0b3e9c] rounded-lg px-5 py-2.5 flex items-center justify-center gap-2 text-sm font-semibold transition-transform active:scale-95 shadow-sm w-full md:w-auto shrink-0"
+						className="bg-[#4A0000] text-white hover:bg-[#B00000] rounded-lg px-5 py-2.5 flex items-center justify-center gap-2 text-sm font-semibold transition-transform active:scale-95 shadow-sm w-full md:w-auto shrink-0"
 					>
 						<Plus className="h-4 w-4" />
 						<span>Tambah Survey Baru</span>
@@ -274,7 +307,7 @@ function SurveysIndexComponent() {
 				<div className="relative flex-1 w-full">
 					<Search className="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-[#747683]" />
 					<input
-						className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:border-[#002972] focus:ring-1 focus:ring-[#002972] outline-none transition-colors"
+						className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] outline-none transition-colors"
 						placeholder="Cari survei berdasarkan judul..."
 						type="text"
 						value={searchQuery}
@@ -304,7 +337,7 @@ function SurveysIndexComponent() {
 									setPeriodFilterMode("month");
 									setPeriodFilterValue("");
 								}}
-								className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${periodFilterMode === "month" ? "bg-white shadow-sm text-[#002972]" : "text-[#747683]"}`}
+								className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${periodFilterMode === "month" ? "bg-white shadow-sm text-[#4A0000]" : "text-[#747683]"}`}
 							>
 								Bulan
 							</button>
@@ -314,7 +347,7 @@ function SurveysIndexComponent() {
 									setPeriodFilterMode("date");
 									setPeriodFilterValue("");
 								}}
-								className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${periodFilterMode === "date" ? "bg-white shadow-sm text-[#002972]" : "text-[#747683]"}`}
+								className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${periodFilterMode === "date" ? "bg-white shadow-sm text-[#4A0000]" : "text-[#747683]"}`}
 							>
 								Tanggal
 							</button>
@@ -324,7 +357,7 @@ function SurveysIndexComponent() {
 								type={periodFilterMode === "month" ? "month" : "date"}
 								value={periodFilterValue}
 								onChange={(e) => setPeriodFilterValue(e.target.value)}
-								className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 pr-8 text-sm text-[#1a1b21] focus:border-[#002972] outline-none transition-colors"
+								className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 pr-8 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none transition-colors"
 							/>
 							{periodFilterValue && (
 								<button

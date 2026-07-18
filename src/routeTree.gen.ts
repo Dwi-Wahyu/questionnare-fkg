@@ -18,8 +18,10 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminSurveysIndexRouteImport } from './routes/admin/surveys.index'
 import { Route as SurveySurveySlugThankYouRouteImport } from './routes/survey.$surveySlug.thank-you'
+import { Route as ApiSurveysLiveRouteImport } from './routes/api/surveys.live'
 import { Route as AdminSurveysNewRouteImport } from './routes/admin/surveys.new'
 import { Route as AdminSurveysSurveyIdRouteImport } from './routes/admin/surveys.$surveyId'
+import { Route as ApiSurveysSurveyIdLiveRouteImport } from './routes/api/surveys.$surveyId.live'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -67,6 +69,11 @@ const SurveySurveySlugThankYouRoute =
     path: '/thank-you',
     getParentRoute: () => SurveySurveySlugRoute,
   } as any)
+const ApiSurveysLiveRoute = ApiSurveysLiveRouteImport.update({
+  id: '/api/surveys/live',
+  path: '/api/surveys/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminSurveysNewRoute = AdminSurveysNewRouteImport.update({
   id: '/surveys/new',
   path: '/surveys/new',
@@ -76,6 +83,11 @@ const AdminSurveysSurveyIdRoute = AdminSurveysSurveyIdRouteImport.update({
   id: '/surveys/$surveyId',
   path: '/surveys/$surveyId',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const ApiSurveysSurveyIdLiveRoute = ApiSurveysSurveyIdLiveRouteImport.update({
+  id: '/api/surveys/$surveyId/live',
+  path: '/api/surveys/$surveyId/live',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -88,8 +100,10 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/admin/surveys/$surveyId': typeof AdminSurveysSurveyIdRoute
   '/admin/surveys/new': typeof AdminSurveysNewRoute
+  '/api/surveys/live': typeof ApiSurveysLiveRoute
   '/survey/$surveySlug/thank-you': typeof SurveySurveySlugThankYouRoute
   '/admin/surveys/': typeof AdminSurveysIndexRoute
+  '/api/surveys/$surveyId/live': typeof ApiSurveysSurveyIdLiveRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,8 +114,10 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/admin/surveys/$surveyId': typeof AdminSurveysSurveyIdRoute
   '/admin/surveys/new': typeof AdminSurveysNewRoute
+  '/api/surveys/live': typeof ApiSurveysLiveRoute
   '/survey/$surveySlug/thank-you': typeof SurveySurveySlugThankYouRoute
   '/admin/surveys': typeof AdminSurveysIndexRoute
+  '/api/surveys/$surveyId/live': typeof ApiSurveysSurveyIdLiveRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,8 +130,10 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/admin/surveys/$surveyId': typeof AdminSurveysSurveyIdRoute
   '/admin/surveys/new': typeof AdminSurveysNewRoute
+  '/api/surveys/live': typeof ApiSurveysLiveRoute
   '/survey/$surveySlug/thank-you': typeof SurveySurveySlugThankYouRoute
   '/admin/surveys/': typeof AdminSurveysIndexRoute
+  '/api/surveys/$surveyId/live': typeof ApiSurveysSurveyIdLiveRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -129,8 +147,10 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/surveys/$surveyId'
     | '/admin/surveys/new'
+    | '/api/surveys/live'
     | '/survey/$surveySlug/thank-you'
     | '/admin/surveys/'
+    | '/api/surveys/$surveyId/live'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -141,8 +161,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/surveys/$surveyId'
     | '/admin/surveys/new'
+    | '/api/surveys/live'
     | '/survey/$surveySlug/thank-you'
     | '/admin/surveys'
+    | '/api/surveys/$surveyId/live'
   id:
     | '__root__'
     | '/'
@@ -154,8 +176,10 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/surveys/$surveyId'
     | '/admin/surveys/new'
+    | '/api/surveys/live'
     | '/survey/$surveySlug/thank-you'
     | '/admin/surveys/'
+    | '/api/surveys/$surveyId/live'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -163,6 +187,8 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   SurveySurveySlugRoute: typeof SurveySurveySlugRouteWithChildren
+  ApiSurveysLiveRoute: typeof ApiSurveysLiveRoute
+  ApiSurveysSurveyIdLiveRoute: typeof ApiSurveysSurveyIdLiveRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -230,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SurveySurveySlugThankYouRouteImport
       parentRoute: typeof SurveySurveySlugRoute
     }
+    '/api/surveys/live': {
+      id: '/api/surveys/live'
+      path: '/api/surveys/live'
+      fullPath: '/api/surveys/live'
+      preLoaderRoute: typeof ApiSurveysLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/surveys/new': {
       id: '/admin/surveys/new'
       path: '/surveys/new'
@@ -243,6 +276,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/surveys/$surveyId'
       preLoaderRoute: typeof AdminSurveysSurveyIdRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/api/surveys/$surveyId/live': {
+      id: '/api/surveys/$surveyId/live'
+      path: '/api/surveys/$surveyId/live'
+      fullPath: '/api/surveys/$surveyId/live'
+      preLoaderRoute: typeof ApiSurveysSurveyIdLiveRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -285,6 +325,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   SurveySurveySlugRoute: SurveySurveySlugRouteWithChildren,
+  ApiSurveysLiveRoute: ApiSurveysLiveRoute,
+  ApiSurveysSurveyIdLiveRoute: ApiSurveysSurveyIdLiveRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

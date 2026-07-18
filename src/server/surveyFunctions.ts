@@ -9,6 +9,7 @@ import {
 	sections,
 	surveys,
 } from "./db/schema";
+import { broadcast } from "./liveRegistry";
 
 // 1. Fetch published surveys for landing page
 export const getPublishedSurveysFn = createServerFn({ method: "GET" }).handler(
@@ -206,6 +207,21 @@ export const submitResponseFn = createServerFn({ method: "POST" })
 			}
 		}
 
+		const uniqueQuestions = await db
+			.select({
+				id: questions.id,
+				title: questions.title,
+				config: questions.config,
+			})
+			.from(questions)
+			.where(eq(questions.surveyId, data.surveyId));
+
+		const uniqueQuestionIds = new Set(
+			uniqueQuestions
+				.filter((q) => (q.config as any)?.uniqueAnswer === true)
+				.map((q) => q.id),
+		);
+
 		return await db.transaction(async (tx) => {
 			// Find if response already exists via clientDraftId, or create new
 			let responseId: number;
@@ -243,6 +259,38 @@ export const submitResponseFn = createServerFn({ method: "POST" })
 				responseId = (inserted as any).insertId;
 			}
 
+			// Validate unique answers, ignoring current responseId
+			for (const a of data.answers) {
+				if (!uniqueQuestionIds.has(a.questionId)) continue;
+				const value = (a.valueText || "").trim();
+				if (!value) continue;
+
+				const [dup] = await tx
+					.select({ id: answers.id })
+					.from(answers)
+					.innerJoin(responses, eq(answers.responseId, responses.id))
+					.where(
+						and(
+							eq(answers.questionId, a.questionId),
+							eq(responses.surveyId, data.surveyId),
+							eq(responses.status, "completed"),
+							sql`${answers.valueText} = ${value}`,
+						),
+					);
+
+				if (dup && dup.id !== undefined) {
+					const [dupResponse] = await tx
+						.select({ responseId: answers.responseId })
+						.from(answers)
+						.where(eq(answers.id, dup.id));
+					if (!dupResponse || dupResponse.responseId !== responseId) {
+						throw new Error(
+							"NIM ini sudah pernah mengirimkan jawaban untuk survei ini. Setiap NIM hanya dapat mengisi satu kali.",
+						);
+					}
+				}
+			}
+
 			// Insert answers
 			const answerRows = data.answers.map((a) => ({
 				responseId,
@@ -261,4 +309,66 @@ export const submitResponseFn = createServerFn({ method: "POST" })
 				responseId,
 			};
 		});
+
+		// Notify live SSE viewers that a response was submitted
+		try {
+			broadcast(data.surveyId, "answer", { at: Date.now() });
+		} catch (err) {
+			console.error("Failed to broadcast response notification:", err);
+		}
+
+		return result;
 	});
+
+// Cache for public landing stats to prevent heavy DB load
+const statsCache = ((globalThis as any).__statsCache || ((globalThis as any).__statsCache = {
+	data: null,
+	timestamp: 0,
+})) as {
+	data: { activeSurveys: number; totalParticipants: number; avgTimeMinutes: number } | null;
+	timestamp: number;
+};
+
+export const getPublicLandingStatsFn = createServerFn({ method: "GET" }).handler(
+	async () => {
+		const now = Date.now();
+		if (statsCache.data && now - statsCache.timestamp < 60000) {
+			return statsCache.data;
+		}
+
+		// 1. Active surveys count
+		const [activeCount] = await db
+			.select({ count: sql<number>`count(*)` })
+			.from(surveys)
+			.where(eq(surveys.status, "published"));
+
+		// 2. Total completed responses
+		const [completedCount] = await db
+			.select({ count: sql<number>`count(*)` })
+			.from(responses)
+			.where(eq(responses.status, "completed"));
+
+		// 3. Average completion time in seconds
+		const [avgDuration] = await db
+			.select({
+				avgSeconds: sql<number>`coalesce(avg(timestampdiff(SECOND, ${responses.startedAt}, ${responses.submittedAt})), 0)`
+			})
+			.from(responses)
+			.where(and(eq(responses.status, "completed"), sql`${responses.submittedAt} is not null`));
+
+		// Convert to minutes, default to 5 if 0
+		const avgTimeMinutes = Math.max(1, Math.round((avgDuration?.avgSeconds || 0) / 60)) || 5;
+
+		const data = {
+			activeSurveys: activeCount?.count || 0,
+			totalParticipants: completedCount?.count || 0,
+			avgTimeMinutes,
+		};
+
+		statsCache.data = data;
+		statsCache.timestamp = now;
+
+		return data;
+	}
+);
+

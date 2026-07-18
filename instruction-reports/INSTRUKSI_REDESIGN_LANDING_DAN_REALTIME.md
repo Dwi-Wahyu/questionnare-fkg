@@ -1,0 +1,27 @@
+- **Modified Files:**
+  - `src/styles.css`
+  - `src/routes/index.tsx`
+  - `src/server/surveyFunctions.ts`
+  - `src/routes/survey.$surveySlug.tsx`
+  - `src/routes/admin/surveys.$surveyId.tsx`
+  - `src/routes/admin/surveys.index.tsx`
+  - `src/routes/admin/index.tsx`
+  - `src/server/liveRegistry.ts` (New)
+  - `src/hooks/useSurveyLive.ts` (New)
+  - `src/routes/api/surveys.$surveyId.live.ts` (New)
+  - `src/routes/api/surveys.live.ts` (New)
+
+- **Logic Changes:**
+  - **Color Palette & Theme Redesign:** Updated standard CSS variables and Tailwind theme definitions in `src/styles.css` to use maroon (`#4A0000`) as primary, dark red (`#B00000`) as primary-container, dark slate blue (`#0B3E9C`) as secondary, and brightened error to `#D3410F` to prevent color collisions. We performed a recursive file replacement across all components and page views to substitute hardcoded Hex colors with these new values. We also updated shadows, focus rings, and decorative background blobs to match the red design accents.
+  - **Landing Page Redesign:** Cleaned up the landing page (`src/routes/index.tsx`) into a professional portal directory. Added a responsive stat strip tracking active surveys, total respondents, and average filling time calculated dynamically from the server. Added category chips, sorting select (by newest or question count), and debounced skeleton transitions to prevent page flickers.
+  - **Central SSE State Registry (`liveRegistry.ts`):** Designed a process-level, bundler-compatible cache registry on `globalThis` to store client SSE subscriptions and active filler count metrics. This avoids direct route-file imports inside standard server functions (`surveyFunctions.ts`), eliminating bundler warnings/route tree collision issues.
+  - **SSE Live Presence and Submissions:** Built custom SSE endpoints (`/api/surveys/$surveyId/live` and `/api/surveys/live`) that subscribe viewer and filler clients to the central registry. When a respondent opens a survey, they register themselves as active (with auto-disconnect cleanup on socket abort/close). The detail view in admin details and listing pages subscribes to updates, displaying a pulsing green live counter badge.
+  - **Realtime Statistic Refreshing:** Hooked up the `submitResponseFn` server mutation to trigger a memory broadcast on SSE. The admin detail page catches the submission signal, applies a debounced invalidation to TanStack Router to refetch stats, displays a skeleton overlay during refresh, and pulses the total response counter for a polished "live" feeling.
+  - **Auto-Refresh Fix:** Added a local state `refreshTick` dependency to the stats-fetching `useEffect` inside `surveys.$surveyId.tsx` and triggered it inside the `useSurveyLive` callback. This resolves the issue where the answers tab required a manual page reload to show new stats when a respondent submitted a survey.
+  - **Smooth Count-Up and Entrance Animations:** Added `AnimatedCounter` using `requestAnimationFrame` to count up from `0` to stats targets smoothly at 60fps. Added `fade-slide-up` animation rules in `src/styles.css` and applied them to hero titles, description paragraphs, filter widgets, and survey cards (with staggered delays based on index: `(idx + 4) * 80ms`).
+  - **Admin Layout Table Header Fix:** Adjusted the flex wrap layout in `src/routes/admin/index.tsx` for the "Surveys Table Card" header. Swapped the breakpoint class from `md:` to `sm:` (`flex-col sm:flex-row sm:items-center`), which resolves the layout bug where the header elements wrap into multiple lines on smaller desktop screens due to sidebar offsets.
+
+- **Impact on Graph:**
+  - Added new client-to-server SSE endpoint dependencies from `src/routes/index.tsx`, `src/routes/admin/surveys.index.tsx`, `src/routes/admin/surveys.$surveyId.tsx`, and `src/routes/survey.$surveySlug.tsx` to the API routes under `src/routes/api/`.
+  - Linked `src/server/surveyFunctions.ts` and `src/routes/api/` endpoints to the central state management utility `src/server/liveRegistry.ts`.
+  - Integrated the new hook `src/hooks/useSurveyLive.ts` across multiple core routing pages, connecting them under a shared live utility hub.

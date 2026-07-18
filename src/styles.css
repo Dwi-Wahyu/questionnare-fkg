@@ -3,11 +3,11 @@
 
 @theme {
 	/* Academic Pulse brand color palette matching reference design */
-	--color-primary: #002972;
-	--color-primary-container: #0b3e9c;
+	--color-primary: #4A0000;
+	--color-primary-container: #B00000;
 	--color-on-primary: #ffffff;
-	--color-secondary: #a03f32;
-	--color-secondary-container: #fe8674;
+	--color-secondary: #0B3E9C;
+	--color-secondary-container: #3D6FC2;
 	--color-on-secondary: #ffffff;
 	--color-background: #faf8ff;
 	--color-on-background: #1a1b21;
@@ -21,7 +21,7 @@
 	--color-surface-container: #eeedf6;
 	--color-surface-container-high: #e8e7f0;
 	--color-surface-container-highest: #e2e2ea;
-	--color-error: #ba1a1a;
+	--color-error: #D3410F;
 	--color-success: #137333;
 	--color-warning: #b06000;
 
@@ -96,11 +96,11 @@
 
 :root {
 	/* CSS variables for non-tailwind elements */
-	--primary: #002972;
-	--primary-container: #0b3e9c;
+	--primary: #4A0000;
+	--primary-container: #B00000;
 	--on-primary: #ffffff;
-	--secondary: #a03f32;
-	--secondary-container: #fe8674;
+	--secondary: #0B3E9C;
+	--secondary-container: #3D6FC2;
 	--on-secondary: #ffffff;
 	--background: #faf8ff;
 	--on-background: #1a1b21;
@@ -114,7 +114,7 @@
 	--surface-container: #eeedf6;
 	--surface-container-high: #e8e7f0;
 	--surface-container-highest: #e2e2ea;
-	--error: #ba1a1a;
+	--error: #D3410F;
 	--success: #137333;
 	--warning: #b06000;
 
@@ -124,11 +124,11 @@
 	--radius-xl: 0.75rem;
 
 	--shadow-1:
-		0 4px 6px -1px rgba(11, 62, 156, 0.06),
-		0 2px 4px -1px rgba(11, 62, 156, 0.03);
+		0 4px 6px -1px rgba(74, 0, 0, 0.06),
+		0 2px 4px -1px rgba(74, 0, 0, 0.03);
 	--shadow-2:
-		0 10px 15px -3px rgba(11, 62, 156, 0.08),
-		0 4px 6px -2px rgba(11, 62, 156, 0.04);
+		0 10px 15px -3px rgba(74, 0, 0, 0.08),
+		0 4px 6px -2px rgba(74, 0, 0, 0.04);
 }
 
 @layer base {
@@ -168,8 +168,8 @@
 		border-radius: 50%;
 		background: radial-gradient(
 			circle,
-			rgba(11, 62, 156, 0.22) 0%,
-			rgba(11, 62, 156, 0) 70%
+			rgba(176, 0, 0, 0.22) 0%,
+			rgba(176, 0, 0, 0) 70%
 		);
 		filter: blur(60px);
 		z-index: 0;
@@ -185,8 +185,8 @@
 		border-radius: 50%;
 		background: radial-gradient(
 			circle,
-			rgba(254, 134, 116, 0.28) 0%,
-			rgba(160, 63, 50, 0) 70%
+			rgba(61, 111, 194, 0.28) 0%,
+			rgba(11, 62, 156, 0) 70%
 		);
 		filter: blur(55px);
 		z-index: 0;
@@ -313,7 +313,7 @@
 	.form-input:focus {
 		border-color: var(--primary);
 		box-shadow:
-			0 0 0 3px rgba(11, 62, 156, 0.15),
+			0 0 0 3px rgba(176, 0, 0, 0.15),
 			var(--shadow-1);
 		background-color: white;
 	}
@@ -562,12 +562,12 @@
 		background:
 			radial-gradient(
 				circle at 15% 20%,
-				rgba(11, 62, 156, 0.1) 0%,
+				rgba(176, 0, 0, 0.1) 0%,
 				transparent 45%
 			),
 			radial-gradient(
 				circle at 85% 80%,
-				rgba(254, 134, 116, 0.14) 0%,
+				rgba(61, 111, 194, 0.14) 0%,
 				transparent 45%
 			),
 			var(--background);
@@ -585,8 +585,8 @@
 		pointer-events: none;
 		opacity: 0.35;
 		background-image:
-			linear-gradient(rgba(11, 41, 114, 0.06) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(11, 41, 114, 0.06) 1px, transparent 1px);
+			linear-gradient(rgba(74, 0, 0, 0.06) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(74, 0, 0, 0.06) 1px, transparent 1px);
 		background-size: 48px 48px;
 		/* efek perspektif ringan meniru garis grid pada referensi */
 		mask-image: radial-gradient(circle at center, black 0%, transparent 75%);
@@ -685,4 +685,42 @@
 		page-break-inside: avoid !important;
 		break-inside: avoid !important;
 	}
+}
+
+@keyframes live-pulse {
+	0% { opacity: 1; }
+	50% { opacity: 0.4; }
+	100% { opacity: 1; }
+}
+
+.live-updating {
+	animation: live-pulse 900ms ease-in-out 1;
+}
+
+@keyframes fade-slide-up {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-fade-slide-up {
+	opacity: 0;
+	animation: fade-slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animation-delay-100 {
+	animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+	animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+	animation-delay: 300ms;
 }
