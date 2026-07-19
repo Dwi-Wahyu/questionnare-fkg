@@ -10,6 +10,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed-users": "bun run src/server/db/seed-users.ts",
+    "db:seed-categories": "bun run src/server/db/seed-categories.ts",
     "db:seed": "bun run src/server/db/seed.ts",
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
