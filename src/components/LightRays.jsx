@@ -208,6 +208,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   }
 
   fragColor.rgb *= raysColor;
+  fragColor.a = max(fragColor.r, max(fragColor.g, fragColor.b));
 }
 
 void main() {

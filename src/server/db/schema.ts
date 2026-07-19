@@ -26,6 +26,20 @@ export const users = mysqlTable("users", {
 });
 
 // ─────────────────────────────────────────────────────────────
+// SURVEY CATEGORIES (fixed reference list, managed via seeder)
+// ─────────────────────────────────────────────────────────────
+export const surveyCategories = mysqlTable("survey_categories", {
+	id: int("id").autoincrement().primaryKey(),
+	// Machine-readable identifier, used as the value stored on surveys.category.
+	// Kebab-case, e.g. "survey-kepuasan", "tracer-study".
+	slug: varchar("slug", { length: 100 }).notNull().unique(),
+	// Human-readable label shown in dropdowns/filters, e.g. "Survey Kepuasan".
+	name: varchar("name", { length: 150 }).notNull(),
+	order: int("order").notNull().default(0),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ─────────────────────────────────────────────────────────────
 // SURVEYS
 // ─────────────────────────────────────────────────────────────
 export const surveys = mysqlTable("surveys", {

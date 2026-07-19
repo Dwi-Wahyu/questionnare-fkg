@@ -160,8 +160,8 @@
     "semantic_hash": "e1b1e8cbbbf48ec041510b2fb878c472"
   },
   "src/routes/__root.tsx": {
-    "mtime": 1784420587.4829106,
-    "ast_hash": "cef34f324fb7b5acf620c3ba1672ca46",
+    "mtime": 1784432204.4112413,
+    "ast_hash": "98503a4314b316ec64730596f34887cf",
     "semantic_hash": ""
   },
   "src/routes/admin/analytics.tsx": {
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "src/routes/admin/surveys.$surveyId.tsx": {
-    "mtime": 1784431715.0014582,
-    "ast_hash": "3b5e887a9c07281de6c07dd29dc52192",
+    "mtime": 1784433687.8109052,
+    "ast_hash": "f6b509162ef718712976bbf4ed860bfc",
     "semantic_hash": ""
   },
   "src/routes/admin/surveys.index.tsx": {
@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "src/routes/admin/surveys.new.tsx": {
-    "mtime": 1784420394.661072,
-    "ast_hash": "df7b69e13f3b52e6f04ccf76ed2fa4ba",
+    "mtime": 1784433661.339643,
+    "ast_hash": "cbdfe014b4b22e14263c9436339761f1",
     "semantic_hash": ""
   },
   "src/routes/admin/users.tsx": {
@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "src/routes/index.tsx": {
-    "mtime": 1784431390.6773944,
-    "ast_hash": "125f4e33a3fc8adafe3869cb0916583a",
+    "mtime": 1784434520.0179098,
+    "ast_hash": "171a807b287b373470ce6b7ae5fc3b99",
     "semantic_hash": ""
   },
   "src/routes/login.tsx": {
@@ -215,13 +215,13 @@
     "semantic_hash": ""
   },
   "src/routes/survey.$surveySlug.tsx": {
-    "mtime": 1784420394.7240722,
-    "ast_hash": "dce0baecc865ccc9e8b82f81a7ec3d14",
+    "mtime": 1784433515.0701933,
+    "ast_hash": "7c4cafee6cc3f8cfcdf9cb2b63fcdbeb",
     "semantic_hash": ""
   },
   "src/server/adminSurveyFunctions.ts": {
-    "mtime": 1784420394.7930727,
-    "ast_hash": "d9080185aa0a66941b46a3db180e8e01",
+    "mtime": 1784433649.9305298,
+    "ast_hash": "3c197d424cd731564ddcef80a43da5c2",
     "semantic_hash": ""
   },
   "src/server/adminUserFunctions.ts": {
@@ -245,8 +245,8 @@
     "semantic_hash": "d2edaf183caa621bdfc0ae714a651ef7"
   },
   "src/server/db/schema.ts": {
-    "mtime": 1784374577.246635,
-    "ast_hash": "0e4f5b999f2a91bd78de27f611a54472",
+    "mtime": 1784433525.1712935,
+    "ast_hash": "897069a1480cb79ca5f17f71e26b89fd",
     "semantic_hash": ""
   },
   "src/server/db/seed-users.ts": {
@@ -255,8 +255,8 @@
     "semantic_hash": "6805190932289a22f2059b0c431fe302"
   },
   "src/server/db/seed.ts": {
-    "mtime": 1784420394.7270722,
-    "ast_hash": "1df50446d892dbf833bd54c7f5c09dcf",
+    "mtime": 1784433637.9114108,
+    "ast_hash": "7dc8b9d89894cda44bc22db180112176",
     "semantic_hash": ""
   },
   "src/server/surveyFunctions.ts": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "src/components/LightRays.jsx": {
-    "mtime": 1784420394.6170719,
-    "ast_hash": "358e5f8e81c7154271d079bc0214615a",
+    "mtime": 1784434611.4757535,
+    "ast_hash": "89523302f7d77288943b0dcd7457c27f",
     "semantic_hash": ""
   },
   "src/components/ui/MultiSelect.tsx": {
@@ -402,6 +402,26 @@
   "src/components/ui/tabs.tsx": {
     "mtime": 1784431718.2514887,
     "ast_hash": "cdb34ac71e18c5b2aee54836f09081b4",
+    "semantic_hash": ""
+  },
+  "drizzle/0009_flat_zarda.sql": {
+    "mtime": 1784433529.8303397,
+    "ast_hash": "39c9246693e7445fa001e51921e0a844",
+    "semantic_hash": ""
+  },
+  "src/server/db/seedCategories.ts": {
+    "mtime": 1784433612.8001618,
+    "ast_hash": "a8e05e48e8bb7ff2b28f6b40437e9a1f",
+    "semantic_hash": ""
+  },
+  "instruction-reports/03-FIX_SURVEY_TAKING_HOOKS_ERROR.md": {
+    "mtime": 1784433835.5983698,
+    "ast_hash": "03e2d34288be55789ff5949c35837e0c",
+    "semantic_hash": ""
+  },
+  "instruction-reports/04-IMPLEMENT_SURVEY_CATEGORY_TABLE.md": {
+    "mtime": 1784433837.9123929,
+    "ast_hash": "c0daab348738f543bf78c3997a0acea2",
     "semantic_hash": ""
   }
 }

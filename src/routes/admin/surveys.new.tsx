@@ -14,7 +14,10 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "../../components/ui/useToast";
-import { createAdminSurveyFn } from "../../server/adminSurveyFunctions";
+import {
+	createAdminSurveyFn,
+	getSurveyCategoriesFn,
+} from "../../server/adminSurveyFunctions";
 import { getSessionFn } from "../../server/authFunctions";
 
 export const Route = createFileRoute("/admin/surveys/new")({
@@ -25,15 +28,20 @@ export const Route = createFileRoute("/admin/surveys/new")({
 			throw redirect({ to: "/admin/surveys" });
 		}
 	},
+	loader: async () => {
+		const categories = await getSurveyCategoriesFn();
+		return { categories };
+	},
 	component: CreateSurveyComponent,
 });
 
 function CreateSurveyComponent() {
 	const router = useRouter();
+	const { categories } = Route.useLoaderData();
 	const bannerFileInputRef = useRef<HTMLInputElement>(null);
 	const [title, setTitle] = useState("");
 	const [slug, setSlug] = useState("");
-	const [category, setCategory] = useState("tracer");
+	const [category, setCategory] = useState(categories[0]?.slug ?? "");
 	const [periodType, setPeriodType] = useState<"month" | "date">("month");
 	const [periodValue, setPeriodValue] = useState("");
 	const [periodValueEnd, setPeriodValueEnd] = useState("");
@@ -198,12 +206,11 @@ function CreateSurveyComponent() {
 								className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 pr-10 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors appearance-none cursor-pointer"
 								disabled={loading}
 							>
-								<option value="tracer">Tracer Study Alumni</option>
-								<option value="kepuasan">
-									Survei Kepuasan Mahasiswa (Internal)
-								</option>
-								<option value="pengguna">Survei Pengguna Layanan</option>
-								<option value="lainnya">Lainnya</option>
+								{categories.map((cat) => (
+									<option key={cat.slug} value={cat.slug}>
+										{cat.name}
+									</option>
+								))}
 							</select>
 							<ChevronDown className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
 						</div>

@@ -9,6 +9,7 @@ import {
 	reportGenerations,
 	responses,
 	sections,
+	surveyCategories,
 	surveys,
 	users,
 } from "./db/schema";
@@ -145,6 +146,19 @@ export const getAdminRecentResponsesFn = createServerFn({
 
 	return listWithNames;
 });
+
+// 2b. Fetch fixed list of survey categories (used by create/settings forms + public landing filter)
+export const getSurveyCategoriesFn = createServerFn({ method: "GET" }).handler(
+	async () => {
+		return db
+			.select({
+				slug: surveyCategories.slug,
+				name: surveyCategories.name,
+			})
+			.from(surveyCategories)
+			.orderBy(surveyCategories.order);
+	},
+);
 
 // 3. Fetch list of surveys grouped by category (or categories separately)
 export const getAdminSurveysListFn = createServerFn({ method: "GET" }).handler(

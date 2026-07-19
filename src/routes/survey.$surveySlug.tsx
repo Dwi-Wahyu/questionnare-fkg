@@ -90,12 +90,65 @@ function SurveyTakingComponent() {
 	const router = useRouter();
 	const location = useLocation();
 
-	// If the active route is the nested thank-you page, render the child Outlet
-	if (location.pathname.endsWith("/thank-you")) {
+	const isThankYouPath = location.pathname.endsWith("/thank-you");
+	const hasError = !!loaderData.error;
+	const survey = loaderData.data?.survey;
+	const sections = loaderData.data?.sections ?? [];
+	const questions = loaderData.data?.questions ?? [];
+	const isExpired = survey
+		? isSurveyExpired(
+				(survey as any).periodValueEnd,
+				(survey as any).periodType || "month",
+			)
+		: false;
+
+	// Register presence as filler (respondent)
+	useSurveyLive(survey?.id || 0, "filler");
+
+	const [clientDraftId, setClientDraftId] = useState("");
+	const [currentSectionIndex, setCurrentSectionIndex] = useState(-1); // -1 = Welcome Screen
+	const [answersState, setAnswersState] = useState<
+		Record<
+			number,
+			{
+				valueText?: string;
+				valueOptionIds?: number[];
+				valueGrid?: Record<string, number>;
+			}
+		>
+	>({});
+	const [errors, setErrors] = useState<Record<number, string>>({});
+	const [loading, setLoading] = useState(false);
+
+	const formRef = useRef<HTMLFormElement>(null);
+
+	// Load or initialize local draft
+	useEffect(() => {
+		if (!survey) return;
+		const draftKey = `fkg_survey_draft_${survey.id}`;
+		const savedDraftStr = localStorage.getItem(draftKey);
+
+		if (savedDraftStr) {
+			try {
+				const savedDraft = JSON.parse(savedDraftStr);
+				setClientDraftId(savedDraft.clientDraftId);
+				setAnswersState(savedDraft.answers || {});
+				setCurrentSectionIndex(savedDraft.currentSectionIndex ?? -1);
+			} catch (e) {
+				initializeNewDraft();
+			}
+		} else {
+			initializeNewDraft();
+		}
+	}, [survey?.id]);
+
+	// ── All hooks have now been called unconditionally. Safe to branch. ──
+
+	if (isThankYouPath) {
 		return <Outlet />;
 	}
 
-	if (loaderData.error) {
+	if (hasError || !survey) {
 		return (
 			<main className="grow flex  items-center w-full justify-center px-3 py-6 sm:p-8 relative overflow-hidden bg-slate-50">
 				<div className="relative z-10 w-fulltext-center flex justify-center">
@@ -122,15 +175,6 @@ function SurveyTakingComponent() {
 		);
 	}
 
-	const { survey, sections, questions } = loaderData.data!;
-
-	// Register presence as filler (respondent)
-	useSurveyLive(survey?.id || 0, "filler");
-
-	const isExpired = isSurveyExpired(
-		(survey as any).periodValueEnd,
-		(survey as any).periodType || "month",
-	);
 	if (isExpired) {
 		return (
 			<main className="grow flex  items-center w-full justify-center px-3 py-6 sm:p-8 relative overflow-hidden bg-slate-50">
@@ -165,42 +209,6 @@ function SurveyTakingComponent() {
 			</main>
 		);
 	}
-
-	const [clientDraftId, setClientDraftId] = useState("");
-	const [currentSectionIndex, setCurrentSectionIndex] = useState(-1); // -1 = Welcome Screen
-	const [answersState, setAnswersState] = useState<
-		Record<
-			number,
-			{
-				valueText?: string;
-				valueOptionIds?: number[];
-				valueGrid?: Record<string, number>;
-			}
-		>
-	>({});
-	const [errors, setErrors] = useState<Record<number, string>>({});
-	const [loading, setLoading] = useState(false);
-
-	const formRef = useRef<HTMLFormElement>(null);
-
-	// Load or initialize local draft
-	useEffect(() => {
-		const draftKey = `fkg_survey_draft_${survey.id}`;
-		const savedDraftStr = localStorage.getItem(draftKey);
-
-		if (savedDraftStr) {
-			try {
-				const savedDraft = JSON.parse(savedDraftStr);
-				setClientDraftId(savedDraft.clientDraftId);
-				setAnswersState(savedDraft.answers || {});
-				setCurrentSectionIndex(savedDraft.currentSectionIndex ?? -1);
-			} catch (e) {
-				initializeNewDraft();
-			}
-		} else {
-			initializeNewDraft();
-		}
-	}, [survey.id]);
 
 	const initializeNewDraft = async () => {
 		const newDraftId =

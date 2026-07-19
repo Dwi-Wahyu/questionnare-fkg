@@ -10,9 +10,11 @@ import {
 	questions,
 	responses,
 	sections,
+	surveyCategories,
 	surveys,
 	users,
 } from "./schema";
+import { seedSurveyCategories } from "./seedCategories";
 
 // Full CSV parser that operates on the ENTIRE file content (not per-line).
 //
@@ -196,13 +198,13 @@ const surveysToSeed: SurveyConfig[] = [
 		asliFile: "Kuesioner Tracer Study (Responses) (9) - Form Responses 1.csv",
 		slug: "tracer-study",
 		title: "Kuesioner Tracer Study",
-		category: "tracer_study",
+		category: "tracer-study",
 	},
 	{
 		asliFile: "Survey Kepuasan Mahasiswa (Responses) - Form responses 1.csv",
 		slug: "kepuasan-mahasiswa",
 		title: "Survey Kepuasan Mahasiswa",
-		category: "kepuasan_mahasiswa",
+		category: "survey-kepuasan",
 	},
 ];
 
@@ -219,6 +221,7 @@ async function main() {
 	await db.delete(sections);
 	await db.delete(surveys);
 	await db.delete(users);
+	await db.delete(surveyCategories);
 	await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
 	console.log("✅ Existing tables cleared.");
 
@@ -251,6 +254,9 @@ async function main() {
 
 	const adminId = admin.id;
 	console.log(`✅ Users seeded. Admin ID = ${adminId}`);
+
+	// 2b. Seed fixed survey category options
+	await seedSurveyCategories();
 
 	// Paths
 	const rootDir = process.cwd();

@@ -59,6 +59,7 @@ import {
   generateSurveyReportFn,
   getAdminSurveyAnswersStatsFn,
   getAdminSurveyDetailFn,
+  getSurveyCategoriesFn,
   getAdminSurveyResponseDetailFn,
   getAdminSurveyResponsesListFn,
   getLatestSurveyReportFn,
@@ -82,7 +83,10 @@ export const Route = createFileRoute("/admin/surveys/$surveyId")({
   }),
   loader: async ({ params, deps }) => {
     const surveyId = parseInt(params.surveyId, 10);
-    const detail = await getAdminSurveyDetailFn({ data: surveyId });
+    const [detail, categories] = await Promise.all([
+      getAdminSurveyDetailFn({ data: surveyId }),
+      getSurveyCategoriesFn(),
+    ]);
     let stats = null;
     let responseDetail = null;
     let responsesIndex = null;
@@ -105,7 +109,7 @@ export const Route = createFileRoute("/admin/surveys/$surveyId")({
       }
     }
 
-    return { detail, stats, responseDetail, responsesIndex, surveyId };
+    return { detail, stats, responseDetail, responsesIndex, surveyId, categories };
   },
   component: SurveyDetailComponent,
 });
@@ -124,7 +128,7 @@ function LiveFillingBadge({ count }: { count: number }) {
 }
 
 function SurveyDetailComponent() {
-  const { detail, stats, responseDetail, responsesIndex, surveyId } =
+  const { detail, stats, responseDetail, responsesIndex, surveyId, categories } =
     Route.useLoaderData();
   const { tab, subtab, qid, page } = Route.useSearch();
   const router = useRouter();
@@ -2943,12 +2947,11 @@ function SurveyDetailComponent() {
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 pr-10 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors appearance-none cursor-pointer"
                   disabled={isSavingSettings || user?.role === "visitor"}
                 >
-                  <option value="tracer">Tracer Study Alumni</option>
-                  <option value="kepuasan">
-                    Survei Kepuasan Mahasiswa (Internal)
-                  </option>
-                  <option value="pengguna">Survei Pengguna Layanan</option>
-                  <option value="lainnya">Lainnya</option>
+                  {categories.map((cat) => (
+                    <option key={cat.slug} value={cat.slug}>
+                      {cat.name}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="h-5 w-5 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
               </div>
