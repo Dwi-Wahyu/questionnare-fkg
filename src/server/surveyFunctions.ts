@@ -321,54 +321,64 @@ export const submitResponseFn = createServerFn({ method: "POST" })
 	});
 
 // Cache for public landing stats to prevent heavy DB load
-const statsCache = ((globalThis as any).__statsCache || ((globalThis as any).__statsCache = {
-	data: null,
-	timestamp: 0,
-})) as {
-	data: { activeSurveys: number; totalParticipants: number; avgTimeMinutes: number } | null;
+const statsCache = ((globalThis as any).__statsCache ||
+	((globalThis as any).__statsCache = {
+		data: null,
+		timestamp: 0,
+	})) as {
+	data: {
+		activeSurveys: number;
+		totalParticipants: number;
+		avgTimeMinutes: number;
+	} | null;
 	timestamp: number;
 };
 
-export const getPublicLandingStatsFn = createServerFn({ method: "GET" }).handler(
-	async () => {
-		const now = Date.now();
-		if (statsCache.data && now - statsCache.timestamp < 60000) {
-			return statsCache.data;
-		}
-
-		// 1. Active surveys count
-		const [activeCount] = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(surveys)
-			.where(eq(surveys.status, "published"));
-
-		// 2. Total completed responses
-		const [completedCount] = await db
-			.select({ count: sql<number>`count(*)` })
-			.from(responses)
-			.where(eq(responses.status, "completed"));
-
-		// 3. Average completion time in seconds
-		const [avgDuration] = await db
-			.select({
-				avgSeconds: sql<number>`coalesce(avg(timestampdiff(SECOND, ${responses.startedAt}, ${responses.submittedAt})), 0)`
-			})
-			.from(responses)
-			.where(and(eq(responses.status, "completed"), sql`${responses.submittedAt} is not null`));
-
-		// Convert to minutes, default to 5 if 0
-		const avgTimeMinutes = Math.max(1, Math.round((avgDuration?.avgSeconds || 0) / 60)) || 5;
-
-		const data = {
-			activeSurveys: activeCount?.count || 0,
-			totalParticipants: completedCount?.count || 0,
-			avgTimeMinutes,
-		};
-
-		statsCache.data = data;
-		statsCache.timestamp = now;
-
-		return data;
+export const getPublicLandingStatsFn = createServerFn({
+	method: "GET",
+}).handler(async () => {
+	const now = Date.now();
+	if (statsCache.data && now - statsCache.timestamp < 60000) {
+		return statsCache.data;
 	}
-);
 
+	// 1. Active surveys count
+	const [activeCount] = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(surveys)
+		.where(eq(surveys.status, "published"));
+
+	// 2. Total completed responses
+	const [completedCount] = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(responses)
+		.where(eq(responses.status, "completed"));
+
+	// 3. Average completion time in seconds
+	const [avgDuration] = await db
+		.select({
+			avgSeconds: sql<number>`coalesce(avg(timestampdiff(SECOND, ${responses.startedAt}, ${responses.submittedAt})), 0)`,
+		})
+		.from(responses)
+		.where(
+			and(
+				eq(responses.status, "completed"),
+				sql`${responses.submittedAt} is not null`,
+			),
+		);
+
+	// Convert to minutes, default to 5 if 0
+	const avgTimeMinutes =
+		Math.max(1, Math.round((avgDuration?.avgSeconds || 0) / 60)) || 5;
+
+	const data = {
+		activeSurveys: activeCount?.count || 0,
+		totalParticipants: completedCount?.count || 0,
+		avgTimeMinutes,
+	};
+
+	statsCache.data = data;
+	statsCache.timestamp = now;
+
+	return data;
+});

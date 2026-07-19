@@ -5,7 +5,9 @@ export const Route = createFileRoute("/api/surveys/live")({
 	server: {
 		handlers: {
 			GET: async ({ request }) => {
-				console.log(`[SSE Server] Aggregate presence connection requested. Active aggregate listeners=${liveRegistry.aggregateListeners.size}`);
+				console.log(
+					`[SSE Server] Aggregate presence connection requested. Active aggregate listeners=${liveRegistry.aggregateListeners.size}`,
+				);
 				let controller: ReadableStreamDefaultController;
 				const stream = new ReadableStream({
 					start(c) {

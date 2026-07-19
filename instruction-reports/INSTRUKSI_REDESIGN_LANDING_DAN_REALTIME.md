@@ -1,6 +1,7 @@
 - **Modified Files:**
   - `src/styles.css`
   - `src/routes/index.tsx`
+  - `src/routes/__root.tsx`
   - `src/server/surveyFunctions.ts`
   - `src/routes/survey.$surveySlug.tsx`
   - `src/routes/admin/surveys.$surveyId.tsx`
@@ -20,8 +21,12 @@
   - **Auto-Refresh Fix:** Added a local state `refreshTick` dependency to the stats-fetching `useEffect` inside `surveys.$surveyId.tsx` and triggered it inside the `useSurveyLive` callback. This resolves the issue where the answers tab required a manual page reload to show new stats when a respondent submitted a survey.
   - **Smooth Count-Up and Entrance Animations:** Added `AnimatedCounter` using `requestAnimationFrame` to count up from `0` to stats targets smoothly at 60fps. Added `fade-slide-up` animation rules in `src/styles.css` and applied them to hero titles, description paragraphs, filter widgets, and survey cards (with staggered delays based on index: `(idx + 4) * 80ms`).
   - **Admin Layout Table Header Fix:** Adjusted the flex wrap layout in `src/routes/admin/index.tsx` for the "Surveys Table Card" header. Swapped the breakpoint class from `md:` to `sm:` (`flex-col sm:flex-row sm:items-center`), which resolves the layout bug where the header elements wrap into multiple lines on smaller desktop screens due to sidebar offsets.
+  - **Primary Color Topbar & LightRays Hero Background:** Updated the global navigation topbar in `src/routes/__root.tsx` to use the primary theme color (`bg-primary` / `#4A0000`) and styled nested text, links, buttons, and user status indicators to stand out in high contrast against the dark burgundy background. Additionally, embedded the custom WebGL `LightRays` component as an absolute full-size background container in the landing page's hero banner section, colored in primary red (`#B00000`) and configured with mouse influence coordinates.
+  - **Full-Height Background Rays & Survey Page Cleanups:** Refactored the landing page (`src/routes/index.tsx`) layout by wrapping both the Hero banner section and the survey list/main content area in a relative container with full-height `LightRays` canvas background to maintain continuity down the page. Implemented routing checks on `src/routes/__root.tsx` to hide the global topbar/header whenever a user navigates to a survey taking page (paths matching `/survey/*`), resetting the main container height context to `100vh`.
+  - **Footer Background Continuity & Custom Scrollbars:** Relocated the landing page footer inside the main relative container with a glassmorphic styling block (`bg-white/40 backdrop-blur-md`), allowing the WebGL light rays to continue cleanly behind the footer contents. Registered a custom thinner scrollbar style in `src/styles.css` matching the primary theme color. Incorporated the `custom-scrollbar` class into the landing page's root element and the four main scrollable text, chart, and table sections in the admin surveys detail page (`src/routes/admin/surveys.$surveyId.tsx`).
 
 - **Impact on Graph:**
   - Added new client-to-server SSE endpoint dependencies from `src/routes/index.tsx`, `src/routes/admin/surveys.index.tsx`, `src/routes/admin/surveys.$surveyId.tsx`, and `src/routes/survey.$surveySlug.tsx` to the API routes under `src/routes/api/`.
   - Linked `src/server/surveyFunctions.ts` and `src/routes/api/` endpoints to the central state management utility `src/server/liveRegistry.ts`.
   - Integrated the new hook `src/hooks/useSurveyLive.ts` across multiple core routing pages, connecting them under a shared live utility hub.
+  - The landing page component (`src/routes/index.tsx`) now imports and has a structural edge to the WebGL component `src/components/LightRays.jsx`.

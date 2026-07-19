@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Pencil, Search, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Dialog } from "../../components/ui/Dialog";
 import { toast } from "../../components/ui/useToast";
@@ -8,7 +9,6 @@ import {
 	toggleUserStatusFn,
 	updateUserFn,
 } from "../../server/adminUserFunctions";
-import { UserPlus, Search, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/admin/users")({
 	loader: async () => {

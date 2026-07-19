@@ -1,11 +1,11 @@
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { CircleUser } from "lucide-react";
 import { useState } from "react";
 import * as yup from "yup";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { toast } from "../components/ui/useToast";
 import { getSessionFn, loginFn } from "../server/authFunctions";
-import { CircleUser } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
 	beforeLoad: async () => {

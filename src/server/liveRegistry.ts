@@ -6,15 +6,19 @@ export interface LiveRegistry {
 	aggregateListeners: Set<ReadableStreamDefaultController>;
 }
 
-export const liveRegistry: LiveRegistry = g.__liveRegistry || (g.__liveRegistry = {
-	channels: new Map(),
-	fillerCounts: new Map(),
-	aggregateListeners: new Set(),
-});
+export const liveRegistry: LiveRegistry =
+	g.__liveRegistry ||
+	(g.__liveRegistry = {
+		channels: new Map(),
+		fillerCounts: new Map(),
+		aggregateListeners: new Set(),
+	});
 
 export function broadcast(surveyId: number, event: string, data: unknown) {
 	const subs = liveRegistry.channels.get(surveyId);
-	console.log(`[SSE Server] Broadcasting event="${event}" to surveyId=${surveyId}, activeSubs=${subs?.size || 0}`);
+	console.log(
+		`[SSE Server] Broadcasting event="${event}" to surveyId=${surveyId}, activeSubs=${subs?.size || 0}`,
+	);
 	if (subs) {
 		const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 		for (const c of subs) {
@@ -35,7 +39,9 @@ export function broadcastAggregate() {
 		}
 	}
 	const payload = `event: presence\ndata: ${JSON.stringify(data)}\n\n`;
-	console.log(`[SSE Server] Broadcasting aggregate presence, activeListenersCount=${liveRegistry.aggregateListeners.size}`);
+	console.log(
+		`[SSE Server] Broadcasting aggregate presence, activeListenersCount=${liveRegistry.aggregateListeners.size}`,
+	);
 	for (const c of liveRegistry.aggregateListeners) {
 		try {
 			c.enqueue(new TextEncoder().encode(payload));

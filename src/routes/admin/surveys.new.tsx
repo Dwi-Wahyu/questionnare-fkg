@@ -4,11 +4,18 @@ import {
 	redirect,
 	useRouter,
 } from "@tanstack/react-router";
+import {
+	ArrowRight,
+	ChevronDown,
+	ChevronRight,
+	CircleCheck,
+	Trash2,
+	Upload,
+} from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "../../components/ui/useToast";
 import { createAdminSurveyFn } from "../../server/adminSurveyFunctions";
 import { getSessionFn } from "../../server/authFunctions";
-import { ChevronRight, ChevronDown, Upload, CircleCheck, Trash2, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/admin/surveys/new")({
 	beforeLoad: async () => {
@@ -32,7 +39,9 @@ function CreateSurveyComponent() {
 	const [periodValueEnd, setPeriodValueEnd] = useState("");
 	const [description, setDescription] = useState("");
 	const [bannerUrl, setBannerUrl] = useState("");
-	const [targetRespondentCount, setTargetRespondentCount] = useState<number | null>(null);
+	const [targetRespondentCount, setTargetRespondentCount] = useState<
+		number | null
+	>(null);
 	const [loading, setLoading] = useState(false);
 
 	const handleTitleChange = (val: string) => {
@@ -190,7 +199,9 @@ function CreateSurveyComponent() {
 								disabled={loading}
 							>
 								<option value="tracer">Tracer Study Alumni</option>
-								<option value="kepuasan">Survei Kepuasan Mahasiswa (Internal)</option>
+								<option value="kepuasan">
+									Survei Kepuasan Mahasiswa (Internal)
+								</option>
 								<option value="pengguna">Survei Pengguna Layanan</option>
 								<option value="lainnya">Lainnya</option>
 							</select>
@@ -259,7 +270,10 @@ function CreateSurveyComponent() {
 
 					{/* Target Responden */}
 					<div className="flex flex-col gap-1.5">
-						<label htmlFor="targetRespondentCount" className="text-sm font-bold text-[#1a1b21]">
+						<label
+							htmlFor="targetRespondentCount"
+							className="text-sm font-bold text-[#1a1b21]"
+						>
 							Target Jumlah Responden (Opsional)
 						</label>
 						<input
@@ -267,13 +281,18 @@ function CreateSurveyComponent() {
 							min={0}
 							id="targetRespondentCount"
 							value={targetRespondentCount ?? ""}
-							onChange={(e) => setTargetRespondentCount(e.target.value === "" ? null : Number(e.target.value))}
+							onChange={(e) =>
+								setTargetRespondentCount(
+									e.target.value === "" ? null : Number(e.target.value),
+								)
+							}
 							className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors"
 							placeholder="contoh: 150"
 							disabled={loading}
 						/>
 						<p className="text-xxs text-[#747683] italic">
-							Dipakai untuk menghitung progress pengisian kuesioner. Kosongkan jika tidak ingin melacak target.
+							Dipakai untuk menghitung progress pengisian kuesioner. Kosongkan
+							jika tidak ingin melacak target.
 						</p>
 					</div>
 

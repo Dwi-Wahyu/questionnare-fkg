@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Briefcase, Filter } from "lucide-react";
 import { useState } from "react";
 import { getAdminDashboardStatsFn } from "../../server/adminSurveyFunctions";
 import { getSessionFn } from "../../server/authFunctions";
-import { Filter, Briefcase } from "lucide-react";
 
 export const Route = createFileRoute("/admin/analytics")({
 	loader: async () => {
@@ -125,7 +125,9 @@ function AnalyticsOverviewComponent() {
 						>
 							<option value="all">Semua Kategori</option>
 							<option value="tracer">Tracer Study Alumni</option>
-							<option value="kepuasan">Survei Kepuasan Mahasiswa (Internal)</option>
+							<option value="kepuasan">
+								Survei Kepuasan Mahasiswa (Internal)
+							</option>
 							<option value="pengguna">Survei Pengguna Layanan</option>
 							<option value="lainnya">Lainnya</option>
 						</select>
@@ -430,7 +432,10 @@ function AnalyticsOverviewComponent() {
 									</span>
 								</div>
 							</div>
-							<Briefcase className="h-9 w-9 text-[#B00000]" fill="currentColor" />
+							<Briefcase
+								className="h-9 w-9 text-[#B00000]"
+								fill="currentColor"
+							/>
 						</div>
 
 						<div className="bg-white rounded-lg p-4 flex flex-col shadow-sm">

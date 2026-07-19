@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { liveRegistry, broadcast, broadcastAggregate } from "../../server/liveRegistry";
+import {
+	broadcast,
+	broadcastAggregate,
+	liveRegistry,
+} from "../../server/liveRegistry";
 
 export const Route = createFileRoute("/api/surveys/$surveyId/live")({
 	server: {
@@ -7,7 +11,9 @@ export const Route = createFileRoute("/api/surveys/$surveyId/live")({
 			GET: async ({ params, request }) => {
 				const surveyId = Number(params.surveyId);
 				const role = new URL(request.url).searchParams.get("role"); // "filler" | "viewer"
-				console.log(`[SSE Server] Connection requested for surveyId=${surveyId}, role=${role}`);
+				console.log(
+					`[SSE Server] Connection requested for surveyId=${surveyId}, role=${role}`,
+				);
 
 				let controller: ReadableStreamDefaultController;
 				const stream = new ReadableStream({
@@ -17,11 +23,18 @@ export const Route = createFileRoute("/api/surveys/$surveyId/live")({
 							liveRegistry.channels.set(surveyId, new Set());
 						}
 						liveRegistry.channels.get(surveyId)!.add(c);
-						console.log(`[SSE Server] Added subscriber for surveyId=${surveyId}, role=${role}. Total subs=${liveRegistry.channels.get(surveyId)?.size}`);
+						console.log(
+							`[SSE Server] Added subscriber for surveyId=${surveyId}, role=${role}. Total subs=${liveRegistry.channels.get(surveyId)?.size}`,
+						);
 
 						if (role === "filler") {
-							liveRegistry.fillerCounts.set(surveyId, (liveRegistry.fillerCounts.get(surveyId) ?? 0) + 1);
-							broadcast(surveyId, "presence", { count: liveRegistry.fillerCounts.get(surveyId) });
+							liveRegistry.fillerCounts.set(
+								surveyId,
+								(liveRegistry.fillerCounts.get(surveyId) ?? 0) + 1,
+							);
+							broadcast(surveyId, "presence", {
+								count: liveRegistry.fillerCounts.get(surveyId),
+							});
 							broadcastAggregate();
 						}
 
@@ -33,12 +46,22 @@ export const Route = createFileRoute("/api/surveys/$surveyId/live")({
 						}, 25000);
 
 						request.signal.addEventListener("abort", () => {
-							console.log(`[SSE Server] Client aborted connection for surveyId=${surveyId}, role=${role}`);
+							console.log(
+								`[SSE Server] Client aborted connection for surveyId=${surveyId}, role=${role}`,
+							);
 							clearInterval(ping);
 							liveRegistry.channels.get(surveyId)?.delete(c);
 							if (role === "filler") {
-								liveRegistry.fillerCounts.set(surveyId, Math.max(0, (liveRegistry.fillerCounts.get(surveyId) ?? 1) - 1));
-								broadcast(surveyId, "presence", { count: liveRegistry.fillerCounts.get(surveyId) });
+								liveRegistry.fillerCounts.set(
+									surveyId,
+									Math.max(
+										0,
+										(liveRegistry.fillerCounts.get(surveyId) ?? 1) - 1,
+									),
+								);
+								broadcast(surveyId, "presence", {
+									count: liveRegistry.fillerCounts.get(surveyId),
+								});
 								broadcastAggregate();
 							}
 							try {
@@ -62,6 +85,8 @@ export const Route = createFileRoute("/api/surveys/$surveyId/live")({
 
 // dipanggil dari submitResponseFn setelah insert sukses
 export function notifySurveyAnswered(surveyId: number) {
-	console.log(`[SSE Server] notifySurveyAnswered called for surveyId=${surveyId}`);
+	console.log(
+		`[SSE Server] notifySurveyAnswered called for surveyId=${surveyId}`,
+	);
 	broadcast(surveyId, "answer", { at: Date.now() });
 }

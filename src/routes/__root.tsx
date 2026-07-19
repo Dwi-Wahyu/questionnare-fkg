@@ -127,6 +127,7 @@ function RootComponent() {
 
 	const isAdminRoute = location.pathname.startsWith("/admin");
 	const isAuthRoute = location.pathname === "/login";
+	const isSurveyRoute = location.pathname.startsWith("/survey");
 
 	const handleLogout = async () => {
 		await logoutFn();
@@ -137,8 +138,8 @@ function RootComponent() {
 
 	return (
 		<RootDocument>
-			{!isAdminRoute && !isAuthRoute && (
-				<header className="hidden md:block bg-surface top-0 bg-surface-container-low shadow-sm sticky z-50">
+			{!isAdminRoute && !isAuthRoute && !isSurveyRoute && (
+				<header className="hidden md:block bg-primary top-0 shadow-sm sticky z-50 border-b border-white/10">
 					<div className="flex justify-between items-center px-6 py-4 max-w-[1280px] mx-auto w-full">
 						<Link to="/" className="flex items-center gap-3">
 							<img
@@ -148,10 +149,10 @@ function RootComponent() {
 								suppressHydrationWarning
 							/>
 							<div className="flex flex-col">
-								<span className="font-bold text-sm md:text-base text-[#4A0000] leading-tight">
+								<span className="font-bold text-sm md:text-base text-white leading-tight">
 									Fakultas Kedokteran Gigi
 								</span>
-								<span className="text-[9px] md:text-[10px] text-[#434652] font-semibold uppercase tracking-wider leading-none mt-0.5">
+								<span className="text-[9px] md:text-[10px] text-white/70 font-semibold uppercase tracking-wider leading-none mt-0.5">
 									Universitas Hasanuddin
 								</span>
 							</div>
@@ -159,8 +160,8 @@ function RootComponent() {
 						<nav className="flex items-center gap-6 text-sm font-medium">
 							<Link
 								to="/"
-								className="text-[#4A0000] font-bold border-b-2 border-[#4A0000] py-1"
-								activeProps={{ className: "active" }}
+								className="text-white/80 hover:text-white font-bold border-b-2 border-transparent py-1 transition-colors"
+								activeProps={{ className: "!text-white !border-white" }}
 								activeOptions={{ exact: true }}
 							>
 								Beranda
@@ -171,18 +172,19 @@ function RootComponent() {
 									{(user.role === "admin" || user.role === "visitor") && (
 										<Link
 											to="/admin"
-											className="bg-[#eeedf6] text-[#4A0000] hover:bg-[#e2e2ea] px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+											className="bg-white/10 text-white hover:bg-white/20 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
 										>
 											<LayoutDashboard size={16} />
 											<span>Admin Panel</span>
 										</Link>
 									)}
-									<span className="text-[#434652]">
-										Halo, <strong>{user.username}</strong>
+									<span className="text-white/80">
+										Halo,{" "}
+										<strong className="text-white">{user.username}</strong>
 									</span>
 									<button
 										type="button"
-										className="border border-[#747683] text-[#1a1b21] hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+										className="border border-white/20 text-white hover:bg-white/10 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
 										onClick={handleLogout}
 									>
 										<LogOut size={16} />
@@ -192,7 +194,7 @@ function RootComponent() {
 							) : (
 								<Link
 									to="/login"
-									className="bg-[#4A0000] text-white hover:bg-[#B00000] px-5 py-2 rounded-lg font-medium transition-colors"
+									className="bg-white text-primary hover:bg-white/90 px-5 py-2 rounded-lg font-medium transition-colors"
 								>
 									Masuk
 								</Link>
@@ -204,7 +206,13 @@ function RootComponent() {
 
 			<main
 				className={isAdminRoute ? "" : "grow flex flex-col"}
-				style={isAdminRoute ? {} : { minHeight: "calc(100vh - 80px)" }}
+				style={
+					isAdminRoute
+						? {}
+						: isSurveyRoute
+							? { minHeight: "100vh" }
+							: { minHeight: "calc(100vh - 80px)" }
+				}
 			>
 				<Outlet />
 			</main>
@@ -223,7 +231,6 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
 					href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
 					rel="stylesheet"
 				/>
-
 			</head>
 			<body className="min-h-screen flex flex-col font-sans text-on-surface bg-background">
 				{children}

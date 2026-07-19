@@ -5,9 +5,9 @@ import {
 	redirect,
 	useRouter,
 } from "@tanstack/react-router";
+import { ChartBar, LayoutDashboard, LogOut, Users } from "lucide-react";
 import { toast } from "../../components/ui/useToast";
 import { getSessionFn, logoutFn } from "../../server/authFunctions";
-import { ChartBar, LayoutDashboard, Users, LogOut } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
 	beforeLoad: async () => {

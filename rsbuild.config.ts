@@ -1,6 +1,6 @@
-import { defineConfig } from '@rsbuild/core'
-import { pluginReact } from '@rsbuild/plugin-react'
-import { tanstackStart } from '@tanstack/react-start/plugin/rsbuild'
+import { defineConfig } from "@rsbuild/core";
+import { pluginReact } from "@rsbuild/plugin-react";
+import { tanstackStart } from "@tanstack/react-start/plugin/rsbuild";
 
 export default defineConfig({
   server: {
@@ -8,12 +8,16 @@ export default defineConfig({
     port: Number(process.env.PORT) || 3438,
     // Bind to all interfaces so Docker (and PM2) can expose the port externally.
     // Without this, rsbuild preview only listens on 127.0.0.1 inside the container.
-    host: '0.0.0.0',
+    host: "0.0.0.0",
   },
   plugins: [pluginReact(), tanstackStart()],
+  output: {
+    // Pastikan ini TIDAK bernilai true di production
+    injectStyles: false,
+  },
   tools: {
     rspack: {
-      externals: ['bun:sqlite', 'better-sqlite3'],
+      externals: ["bun:sqlite", "better-sqlite3"],
     },
   },
-})
+});
