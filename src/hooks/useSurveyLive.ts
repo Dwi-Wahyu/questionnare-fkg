@@ -26,11 +26,13 @@ export function useSurveyLive(
 			);
 		};
 
-		es.onerror = (err) => {
-			console.error(
-				`[useSurveyLive Client] Connection error for surveyId=${surveyId}:`,
-				err,
-			);
+		es.onerror = () => {
+			// EventSource auto-reconnects; only log if it stays closed.
+			if (es.readyState === EventSource.CLOSED) {
+				console.warn(
+					`[useSurveyLive Client] SSE closed for surveyId=${surveyId}, role=${role}`,
+				);
+			}
 		};
 
 		es.addEventListener("presence", (e) => {

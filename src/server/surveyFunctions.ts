@@ -222,7 +222,7 @@ export const submitResponseFn = createServerFn({ method: "POST" })
 				.map((q) => q.id),
 		);
 
-		return await db.transaction(async (tx) => {
+		const result = await db.transaction(async (tx) => {
 			// Find if response already exists via clientDraftId, or create new
 			let responseId: number;
 

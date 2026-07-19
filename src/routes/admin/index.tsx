@@ -138,7 +138,7 @@ function DashboardComponent() {
 
 			{/* Surveys Table Card */}
 			<div className="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-				<div className="border-b w-full border-outline-variant py-4 px-6 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+				<div className="border-b w-full border-outline-variant py-4 px-6 bg-slate-50 flex justify-between gap-4">
 					<div className="flex items-center gap-3">
 						<h3 className="font-bold text-base text-[#1a1b21]">
 							Daftar Survey
