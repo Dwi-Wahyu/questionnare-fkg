@@ -2545,8 +2545,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_admin_surveys_new",
-      "community": 43,
-      "community_name": "surveys.new.tsx",
+      "community": 4,
+      "community_name": "adminSurveyFunctions.ts",
       "norm_label": "surveys.new.tsx"
     },
     {
@@ -2556,8 +2556,8 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_routes_admin_surveys_new_route",
-      "community": 43,
-      "community_name": "surveys.new.tsx",
+      "community": 40,
+      "community_name": "FileRoutesByPath",
       "norm_label": "route"
     },
     {
@@ -2567,8 +2567,8 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_routes_admin_surveys_new_createsurveycomponent",
-      "community": 43,
-      "community_name": "surveys.new.tsx",
+      "community": 4,
+      "community_name": "adminSurveyFunctions.ts",
       "norm_label": "createsurveycomponent()"
     },
     {
@@ -2721,8 +2721,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_routes_login",
-      "community": 42,
-      "community_name": "login.tsx",
+      "community": 29,
+      "community_name": "useToast.ts",
       "norm_label": "login.tsx"
     },
     {
@@ -2732,8 +2732,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_routes_login_route",
-      "community": 42,
-      "community_name": "login.tsx",
+      "community": 29,
+      "community_name": "useToast.ts",
       "norm_label": "route"
     },
     {
@@ -2743,8 +2743,8 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_routes_login_loginschema",
-      "community": 42,
-      "community_name": "login.tsx",
+      "community": 29,
+      "community_name": "useToast.ts",
       "norm_label": "loginschema"
     },
     {
@@ -2754,8 +2754,8 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_routes_login_logincomponent",
-      "community": 42,
-      "community_name": "login.tsx",
+      "community": 29,
+      "community_name": "useToast.ts",
       "norm_label": "logincomponent()"
     },
     {
@@ -2952,8 +2952,8 @@
       "source_location": "L207",
       "_origin": "ast",
       "id": "src_server_adminsurveyfunctions_createadminsurveyfn",
-      "community": 43,
-      "community_name": "surveys.new.tsx",
+      "community": 4,
+      "community_name": "adminSurveyFunctions.ts",
       "norm_label": "createadminsurveyfn"
     },
     {
@@ -3337,8 +3337,8 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_server_authfunctions_loginfn",
-      "community": 42,
-      "community_name": "login.tsx",
+      "community": 29,
+      "community_name": "useToast.ts",
       "norm_label": "loginfn"
     },
     {
@@ -3359,8 +3359,8 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_server_authfunctions_getsessionfn",
-      "community": 3,
-      "community_name": "analytics.tsx",
+      "community": 29,
+      "community_name": "useToast.ts",
       "norm_label": "getsessionfn"
     },
     {
@@ -3524,9 +3524,31 @@
       "source_location": "L204",
       "_origin": "ast",
       "id": "src_server_db_schema_reportgenerations",
+      "community": 4,
+      "community_name": "adminSurveyFunctions.ts",
+      "norm_label": "reportgenerations"
+    },
+    {
+      "label": "seed-categories.ts",
+      "file_type": "code",
+      "source_file": "src/server/db/seed-categories.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_server_db_seed_categories",
       "community": 0,
       "community_name": "seed.ts",
-      "norm_label": "reportgenerations"
+      "norm_label": "seed-categories.ts"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "src/server/db/seed-categories.ts",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "src_server_db_seed_categories_main",
+      "community": 0,
+      "community_name": "seed.ts",
+      "norm_label": "main()"
     },
     {
       "label": "seed-users.ts",
@@ -12155,6 +12177,53 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "src/server/db/seed-categories.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_server_db_seed_categories",
+      "target": "src_server_db_seed_categories_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/server/db/seed-categories.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_server_db_seed_categories",
+      "target": "src_server_db_seedcategories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/server/db/seed-categories.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_server_db_seed_categories",
+      "target": "src_server_db_seedcategories_seedsurveycategories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/server/db/seed-categories.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "src_server_db_seed_categories_main",
+      "target": "src_server_db_seedcategories_seedsurveycategories",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "src/server/db/seed-users.ts",
       "source_location": "L6",
       "weight": 1.0,
@@ -12689,5 +12758,5 @@
       "source_file": "AGENTS.md"
     }
   ],
-  "built_at_commit": "7c321e98989577d35516692099cc9623e69dbbf0"
+  "built_at_commit": "1301265671c36359ff615cbeaabb249e98e3ca5e"
 }

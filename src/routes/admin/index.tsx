@@ -5,6 +5,7 @@ import {
 	ClipboardCheck,
 	Inbox,
 	TrendingUp,
+	Users,
 	X,
 } from "lucide-react";
 import { useState } from "react";
@@ -13,6 +14,7 @@ import {
 	getAdminSurveysListFn,
 } from "../../server/adminSurveyFunctions";
 import { getSessionFn } from "../../server/authFunctions";
+import { getVisitorStatsFn } from "../../server/visitorFunctions";
 
 export const Route = createFileRoute("/admin/")({
 	beforeLoad: async () => {
@@ -22,17 +24,18 @@ export const Route = createFileRoute("/admin/")({
 		}
 	},
 	loader: async () => {
-		const [stats, surveysList] = await Promise.all([
+		const [stats, surveysList, visitorStats] = await Promise.all([
 			getAdminDashboardStatsFn(),
 			getAdminSurveysListFn(),
+			getVisitorStatsFn(),
 		]);
-		return { stats, surveysList };
+		return { stats, surveysList, visitorStats };
 	},
 	component: DashboardComponent,
 });
 
 function DashboardComponent() {
-	const { stats, surveysList } = Route.useLoaderData();
+	const { stats, surveysList, visitorStats } = Route.useLoaderData();
 	const [periodFilterMode, setPeriodFilterMode] = useState<"month" | "date">(
 		"month",
 	);
@@ -132,6 +135,56 @@ function DashboardComponent() {
 					</div>
 					<div className="p-3  bg-amber-100 text-amber-800 rounded-full">
 						<TrendingUp className="h-8 w-8 block" />
+					</div>
+				</div>
+			</div>
+
+			{/* Visitor Stats */}
+			<div>
+				<h3 className="text-lg font-bold text-[#4A0000] text-left mb-3">
+					Statistik Pengunjung
+				</h3>
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+					<div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm flex items-center justify-between">
+						<div className="space-y-1 text-left">
+							<span className="text-xs font-bold text-[#434652] uppercase tracking-wider">
+								Hari Ini
+							</span>
+							<p className="text-3xl font-bold text-[#4A0000]">
+								{visitorStats.today}
+							</p>
+						</div>
+						<div className="p-3 bg-sky-100 text-sky-800 rounded-full">
+							<Users className="h-8 w-8 block" />
+						</div>
+					</div>
+
+					<div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm flex items-center justify-between">
+						<div className="space-y-1 text-left">
+							<span className="text-xs font-bold text-[#434652] uppercase tracking-wider">
+								Bulan Ini
+							</span>
+							<p className="text-3xl font-bold text-[#4A0000]">
+								{visitorStats.thisMonth}
+							</p>
+						</div>
+						<div className="p-3 bg-violet-100 text-violet-800 rounded-full">
+							<Users className="h-8 w-8 block" />
+						</div>
+					</div>
+
+					<div className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm flex items-center justify-between">
+						<div className="space-y-1 text-left">
+							<span className="text-xs font-bold text-[#434652] uppercase tracking-wider">
+								Total
+							</span>
+							<p className="text-3xl font-bold text-[#4A0000]">
+								{visitorStats.total}
+							</p>
+						</div>
+						<div className="p-3 bg-rose-100 text-rose-800 rounded-full">
+							<Users className="h-8 w-8 block" />
+						</div>
 					</div>
 				</div>
 			</div>

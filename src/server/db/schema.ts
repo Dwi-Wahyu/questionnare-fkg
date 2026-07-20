@@ -214,3 +214,22 @@ export const reportGenerations = mysqlTable("report_generations", {
 	fileName: varchar("file_name", { length: 255 }),
 	filterKey: varchar("filter_key", { length: 255 }).notNull().default(""),
 });
+
+// ─────────────────────────────────────────────────────────────
+// VISITOR LOGS (public-site traffic, deduped 1x/day via cookie)
+// ─────────────────────────────────────────────────────────────
+export const visitorLogs = mysqlTable(
+	"visitor_logs",
+	{
+		id: int("id").autoincrement().primaryKey(),
+		// UUID stored in the visitor's cookie — one row per visitorId per day.
+		visitorId: varchar("visitor_id", { length: 100 }).notNull(),
+		path: varchar("path", { length: 255 }),
+		visitedAt: timestamp("visited_at").notNull().defaultNow(),
+	},
+	(table) => ({
+		visitorIdx: index("visitor_logs_visitor_idx").on(table.visitorId),
+		visitedAtIdx: index("visitor_logs_visited_at_idx").on(table.visitedAt),
+	}),
+);
+

@@ -423,5 +423,10 @@
     "mtime": 1784433837.9123929,
     "ast_hash": "c0daab348738f543bf78c3997a0acea2",
     "semantic_hash": ""
+  },
+  "src/server/db/seed-categories.ts": {
+    "mtime": 1784434761.535138,
+    "ast_hash": "5259f407bf405ee2722d013bb3a2aed9",
+    "semantic_hash": ""
   }
 }

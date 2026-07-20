@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 378 nodes · 734 edges · 48 communities (23 shown, 25 thin omitted)
+- 380 nodes · 738 edges · 46 communities (21 shown, 25 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7c321e98`
+- Built from commit: `13012656`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -49,8 +49,6 @@
 - survey.$surveySlug.tsx
 - FileRoutesByPath
 - router.tsx
-- login.tsx
-- surveys.new.tsx
 - 09-individual-response-delete-print-and-csv-filter-fix.md
 - 0009_flat_zarda.sql
 - 03-FIX_SURVEY_TAKING_HOOKS_ERROR.md
@@ -86,7 +84,7 @@
 ## Hyperedges (group relationships)
 - **Project Tech Stack** — tanstack_start, rsbuild, bun [EXTRACTED 1.00]
 
-## Communities (48 total, 25 thin omitted)
+## Communities (46 total, 25 thin omitted)
 
 ### Community 0 - "seed.ts"
 Cohesion: 0.08
@@ -102,11 +100,11 @@ Nodes (23): AdminAnalyticsRoute, AdminIndexRoute, AdminRouteRoute, AdminRouteRou
 
 ### Community 3 - "analytics.tsx"
 Cohesion: 0.22
-Nodes (6): ALL_SURVEYS, Route, Route, getAdminDashboardStatsFn, getAdminSurveysListFn, getSessionFn
+Nodes (5): ALL_SURVEYS, Route, Route, getAdminDashboardStatsFn, getAdminSurveysListFn
 
 ### Community 4 - "adminSurveyFunctions.ts"
-Cohesion: 0.10
-Nodes (32): chartElementToPngBase64(), chartElementToPngBlob(), copyElementChartAsPng(), ChartCard(), formatAnswerForPrint(), pickChartKind(), safeKey(), SurveyDetailComponent() (+24 more)
+Cohesion: 0.09
+Nodes (35): chartElementToPngBase64(), chartElementToPngBlob(), copyElementChartAsPng(), CreateSurveyComponent(), ChartCard(), formatAnswerForPrint(), pickChartKind(), safeKey() (+27 more)
 
 ### Community 5 - "surveys.index.tsx"
 Cohesion: 0.20
@@ -125,8 +123,8 @@ Cohesion: 0.06
 Nodes (52): buttonVariants, Button(), Command(), CommandDialog(), CommandEmpty(), CommandGroup(), CommandInput(), CommandItem() (+44 more)
 
 ### Community 29 - "useToast.ts"
-Cohesion: 0.18
-Nodes (11): ToastContainer(), Listener, listeners, toast, toasts, ToastType, useToast(), AdminLayoutComponent() (+3 more)
+Cohesion: 0.14
+Nodes (16): ToastContainer(), Listener, listeners, toast, toasts, ToastType, useToast(), AdminLayoutComponent() (+8 more)
 
 ### Community 35 - "surveys.$surveyId.live.ts"
 Cohesion: 0.31
@@ -137,20 +135,12 @@ Cohesion: 0.39
 Nodes (7): useSurveyLive(), getFormattedPeriod(), isSurveyExpired(), SurveyTakingComponent(), getSurveyDetailsFn, startResponseFn, submitResponseFn
 
 ### Community 40 - "FileRoutesByPath"
-Cohesion: 0.22
-Nodes (7): Route, Route, Route, Route, Route, FileRoutesById, FileRoutesByPath
+Cohesion: 0.20
+Nodes (8): Route, Route, Route, Route, Route, Route, FileRoutesById, FileRoutesByPath
 
 ### Community 41 - "router.tsx"
 Cohesion: 0.33
 Nodes (5): getRouter(), Register, @tanstack/react-router, Register, routeTree
-
-### Community 42 - "login.tsx"
-Cohesion: 0.50
-Nodes (4): LoginComponent(), loginSchema, Route, loginFn
-
-### Community 43 - "surveys.new.tsx"
-Cohesion: 0.67
-Nodes (3): CreateSurveyComponent(), Route, createAdminSurveyFn
 
 ## Knowledge Gaps
 - **87 isolated node(s):** `chartData`, `chartData`, `chartData`, `chartData`, `chartData` (+82 more)
@@ -161,7 +151,7 @@ Nodes (3): CreateSurveyComponent(), Route, createAdminSurveyFn
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `cn()` connect `cn` to `chart.tsx`?**
-  _High betweenness centrality (0.210) - this node is a cross-community bridge._
+  _High betweenness centrality (0.209) - this node is a cross-community bridge._
 - **Why does `ChartContainer()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?**
   _High betweenness centrality (0.035) - this node is a cross-community bridge._
 - **Why does `ChartTooltipContent()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?**
@@ -169,7 +159,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `chartData`, `chartData`, `chartData` to the rest of the system?**
   _87 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `seed.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.07918552036199095 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0783744557329463 - nodes in this community are weakly interconnected._
 - **Should `chart.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.14714714714714713 - nodes in this community are weakly interconnected._
 - **Should `routeTree.gen.ts` be split into smaller, more focused modules?**

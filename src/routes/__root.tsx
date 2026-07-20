@@ -13,6 +13,7 @@ import { Home, LayoutDashboard, LogOut } from "lucide-react";
 import { ToastContainer } from "../components/ui/Toast";
 import { toast } from "../components/ui/useToast";
 import { getSessionFn, logoutFn } from "../server/authFunctions";
+import { trackVisitFn } from "../server/visitorFunctions";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -33,8 +34,21 @@ export const Route = createRootRoute({
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
     ],
   }),
-  loader: async () => {
+  loader: async ({ location }) => {
     const user = await getSessionFn();
+
+    // Only count real public visits — exclude admin panel, auth, and API routes
+    // so staff/admin traffic never inflates visitor stats.
+    const path = location.pathname;
+    const isTrackable =
+      !path.startsWith("/admin") &&
+      !path.startsWith("/api") &&
+      path !== "/login";
+
+    if (isTrackable) {
+      await trackVisitFn({ data: { path } });
+    }
+
     return { user };
   },
   component: RootComponent,
