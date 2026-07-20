@@ -13,6 +13,7 @@ import {
 	surveys,
 	users,
 } from "./db/schema";
+import { detectSiakadField } from "./siakadFieldDetection";
 
 // Middleware to assert user is logged in
 async function assertUser() {
@@ -2285,4 +2286,93 @@ export const getLatestSurveyReportFn = createServerFn({ method: "GET" })
 			base64: latest.fileBase64,
 			generatedAt: latest.generatedAt.toISOString(),
 		};
+	});
+
+// Sarankan mapping otomatis berdasarkan judul pertanyaan yang sudah ada di survei.
+export const getSiakadAutofillSuggestionFn = createServerFn({ method: "GET" })
+	.validator((surveyId: number) => surveyId)
+	.handler(async ({ data: surveyId }) => {
+		await assertAdmin();
+
+		const surveyQuestions = await db
+			.select({
+				id: questions.id,
+				title: questions.title,
+				type: questions.type,
+			})
+			.from(questions)
+			.where(eq(questions.surveyId, surveyId));
+
+		const shortTextQuestions = surveyQuestions.filter(
+			(q) => q.type === "short_text",
+		);
+
+		let nimQuestionId: number | null = null;
+		const mappings: { questionId: number; field: string }[] = [];
+
+		for (const q of shortTextQuestions) {
+			const field = detectSiakadField(q.title);
+			if (!field) continue;
+			if (field === "nim") {
+				nimQuestionId = q.id;
+			} else {
+				mappings.push({ questionId: q.id, field });
+			}
+		}
+
+		return {
+			candidateQuestions: shortTextQuestions,
+			suggestedNimQuestionId: nimQuestionId,
+			suggestedMappings: mappings,
+		};
+	});
+
+// Simpan konfigurasi auto-isi SIAKAD untuk sebuah survei.
+export const updateSiakadAutofillConfigFn = createServerFn({ method: "POST" })
+	.validator(
+		(data: {
+			surveyId: number;
+			enabled: boolean;
+			nimQuestionId: number | null;
+			mappings: { questionId: number; field: string }[];
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		await assertAdmin();
+
+		if (data.enabled && !data.nimQuestionId) {
+			throw new Error("Pilih pertanyaan NIM terlebih dahulu.");
+		}
+
+		await db
+			.update(surveys)
+			.set({
+				siakadAutofillConfig: {
+					enabled: data.enabled,
+					nimQuestionId: data.nimQuestionId,
+					mappings: data.mappings as any,
+				},
+				updatedAt: new Date(),
+			})
+			.where(eq(surveys.id, data.surveyId));
+
+		// Otomatis tandai pertanyaan NIM sebagai "Jawaban Unik" supaya enforcement
+		// 1-NIM-1-kali-isi di submitResponseFn (lihat §0) aktif.
+		if (data.enabled && data.nimQuestionId) {
+			const [nimQuestion] = await db
+				.select({ id: questions.id, config: questions.config })
+				.from(questions)
+				.where(eq(questions.id, data.nimQuestionId));
+
+			if (nimQuestion) {
+				await db
+					.update(questions)
+					.set({
+						config: { ...(nimQuestion.config as any), uniqueAnswer: true },
+					})
+					.where(eq(questions.id, data.nimQuestionId));
+			}
+		}
+
+		return { success: true };
 	});

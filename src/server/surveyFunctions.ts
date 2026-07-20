@@ -10,6 +10,7 @@ import {
 	surveys,
 } from "./db/schema";
 import { broadcast } from "./liveRegistry";
+import { fetchMahasiswaByNim } from "./siakadClient";
 
 // 1. Fetch published surveys for landing page
 export const getPublishedSurveysFn = createServerFn({ method: "GET" }).handler(
@@ -382,3 +383,87 @@ export const getPublicLandingStatsFn = createServerFn({
 
 	return data;
 });
+
+export const lookupMahasiswaByNimFn = createServerFn({ method: "POST" })
+	.validator((data: { surveyId: number; nim: string }) => data)
+	.handler(async ({ data }) => {
+		const [survey] = await db
+			.select()
+			.from(surveys)
+			.where(eq(surveys.id, data.surveyId));
+
+		const config = (survey as any)?.siakadAutofillConfig as {
+			enabled: boolean;
+			nimQuestionId: number | null;
+			mappings: { questionId: number; field: string }[];
+		} | null;
+
+		if (!survey || !config?.enabled || !config.nimQuestionId) {
+			return { enabled: false as const };
+		}
+
+		const nim = data.nim.trim();
+		if (!nim)
+			return {
+				enabled: true as const,
+				found: false as const,
+				alreadyUsed: false,
+			};
+
+		// Cek dulu apakah NIM ini sudah pernah submit lengkap untuk survei ini —
+		// hindari fetch ke SIAKAD kalau memang sudah tidak relevan.
+		const [dup] = await db
+			.select({ id: answers.id })
+			.from(answers)
+			.innerJoin(responses, eq(answers.responseId, responses.id))
+			.where(
+				and(
+					eq(answers.questionId, config.nimQuestionId),
+					eq(responses.surveyId, data.surveyId),
+					eq(responses.status, "completed"),
+					sql`${answers.valueText} = ${nim}`,
+				),
+			);
+
+		if (dup) {
+			return {
+				enabled: true as const,
+				found: false as const,
+				alreadyUsed: true,
+			};
+		}
+
+		try {
+			const student = await fetchMahasiswaByNim(nim);
+			if (!student) {
+				return {
+					enabled: true as const,
+					found: false as const,
+					alreadyUsed: false,
+				};
+			}
+
+			const values: Record<number, string> = {};
+			for (const m of config.mappings) {
+				const raw = (student as any)[m.field];
+				if (raw === null || raw === undefined) continue;
+				values[m.questionId] = String(raw);
+			}
+
+			return {
+				enabled: true as const,
+				found: true as const,
+				alreadyUsed: false,
+				values,
+			};
+		} catch (err) {
+			console.error("Gagal fetch data SIAKAD:", err);
+			// Jangan blokir pengisian manual kalau SIAKAD sedang down.
+			return {
+				enabled: true as const,
+				found: false as const,
+				alreadyUsed: false,
+				error: true,
+			};
+		}
+	});

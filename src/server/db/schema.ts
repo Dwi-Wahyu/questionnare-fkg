@@ -62,7 +62,16 @@ export const surveys = mysqlTable("surveys", {
 	createdBy: int("created_by")
 		.references(() => users.id)
 		.notNull(),
+	siakadAutofillConfig: json("siakad_autofill_config").$type<{
+		enabled: boolean;
+		nimQuestionId: number | null;
+		mappings: {
+			questionId: number;
+			field: "nama" | "angkatan" | "kelas" | "jenis_kelamin";
+		}[];
+	}>(),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
+
 	updatedAt: timestamp("updated_at").notNull().defaultNow().onUpdateNow(),
 });
 
@@ -232,4 +241,3 @@ export const visitorLogs = mysqlTable(
 		visitedAtIdx: index("visitor_logs_visited_at_idx").on(table.visitedAt),
 	}),
 );
-

@@ -38,3 +38,4 @@ sqlite.db
 graphify-out/cache/*
 
 rsbuild.config.ts
+.siakad-token.json

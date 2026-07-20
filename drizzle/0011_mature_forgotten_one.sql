@@ -1,0 +1,1 @@
+ALTER TABLE `surveys` ADD `siakad_autofill_config` json;
