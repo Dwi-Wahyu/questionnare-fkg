@@ -3220,7 +3220,7 @@ function SurveyDetailComponent() {
 								disabled={user?.role === "visitor"}
 								className="w-fit bg-white border border-slate-200 text-[#434652] hover:bg-slate-50 hover:text-[#B00000] font-semibold px-4 py-2 rounded-lg text-xs shadow-sm transition-colors"
 							>
-								Atur Auto-Isi dari SIAKAD
+								Konfigurasi
 							</button>
 						</div>
 
