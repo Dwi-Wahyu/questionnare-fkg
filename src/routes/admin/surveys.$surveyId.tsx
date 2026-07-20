@@ -3208,7 +3208,7 @@ function SurveyDetailComponent() {
 
 						<div className="flex flex-col gap-1.5">
 							<label className="text-sm font-bold text-[#1a1b21]">
-								Integrasi Data SIAKAD
+								Integrasi Data
 							</label>
 							<p className="text-xxs text-[#747683] italic">
 								Isi otomatis field seperti Nama dan Angkatan berdasarkan NIM
@@ -3276,7 +3276,7 @@ function SurveyDetailComponent() {
 			<Dialog
 				isOpen={isSiakadDialogOpen}
 				onClose={() => setIsSiakadDialogOpen(false)}
-				title="Auto-Isi dari Data SIAKAD"
+				title="Auto-Isi dari Data"
 			>
 				<div className="space-y-4">
 					<label className="flex items-center gap-2 text-sm font-semibold cursor-pointer">
@@ -3286,7 +3286,7 @@ function SurveyDetailComponent() {
 							onChange={(e) => setSiakadEnabled(e.target.checked)}
 							className="rounded text-[#4A0000] focus:ring-[#4A0000]"
 						/>
-						Aktifkan auto-isi dari SIAKAD untuk survei ini
+						Aktifkan auto-isi dari Database Mahasiswa untuk survei ini
 					</label>
 
 					<div>
