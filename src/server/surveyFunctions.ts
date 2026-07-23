@@ -9,7 +9,7 @@ import {
 	sections,
 	surveys,
 } from "./db/schema";
-import { broadcast } from "./liveRegistry";
+import { markAnswered } from "./livePresence";
 import { fetchMahasiswaByNim } from "./siakadClient";
 
 // 1. Fetch published surveys for landing page
@@ -311,12 +311,8 @@ export const submitResponseFn = createServerFn({ method: "POST" })
 			};
 		});
 
-		// Notify live SSE viewers that a response was submitted
-		try {
-			broadcast(data.surveyId, "answer", { at: Date.now() });
-		} catch (err) {
-			console.error("Failed to broadcast response notification:", err);
-		}
+		// Mark this survey's last-activity timestamp so polling viewers pick it up.
+		markAnswered(data.surveyId);
 
 		return result;
 	});

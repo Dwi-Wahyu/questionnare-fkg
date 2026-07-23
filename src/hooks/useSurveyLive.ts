@@ -1,4 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import {
+	getLiveStatusFn,
+	heartbeatFn,
+	leaveFillerFn,
+} from "../server/livePresenceFunctions";
+
+const POLL_MS = 4000;
+const HEARTBEAT_MS = 5000;
 
 export function useSurveyLive(
 	surveyId: number,
@@ -7,68 +15,74 @@ export function useSurveyLive(
 ) {
 	const [presenceCount, setPresenceCount] = useState(0);
 	const onAnswerRef = useRef(onAnswer);
+	const lastActivityRef = useRef<number | null>(null);
+	const clientIdRef = useRef<string>(
+		typeof crypto !== "undefined" && crypto.randomUUID
+			? crypto.randomUUID()
+			: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+	);
 
-	// Keep the ref updated with the latest callback
 	useEffect(() => {
 		onAnswerRef.current = onAnswer;
 	}, [onAnswer]);
 
 	useEffect(() => {
 		if (!surveyId) return;
-		console.log(
-			`[useSurveyLive Client] Connecting to SSE for surveyId=${surveyId}, role=${role}`,
-		);
-		const es = new EventSource(`/api/surveys/${surveyId}/live?role=${role}`);
+		let cancelled = false;
+		const clientId = clientIdRef.current;
+		lastActivityRef.current = null; // reset baseline per survey/role mount
 
-		es.onopen = () => {
-			console.log(
-				`[useSurveyLive Client] Connection opened for surveyId=${surveyId}, role=${role}`,
-			);
-		};
-
-		es.onerror = () => {
-			// EventSource auto-reconnects; only log if it stays closed.
-			if (es.readyState === EventSource.CLOSED) {
-				console.warn(
-					`[useSurveyLive Client] SSE closed for surveyId=${surveyId}, role=${role}`,
-				);
-			}
-		};
-
-		es.addEventListener("presence", (e) => {
+		async function poll() {
 			try {
-				const data = JSON.parse(e.data);
-				console.log(
-					`[useSurveyLive Client] Presence count update for surveyId=${surveyId}:`,
-					data.count,
-				);
-				setPresenceCount(data.count);
-			} catch (err) {
-				console.error("Error parsing presence event data:", err);
-			}
-		});
+				const status = await getLiveStatusFn({ data: { surveyId } });
+				if (cancelled) return;
+				setPresenceCount(status.presenceCount);
 
-		let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-		es.addEventListener("answer", (e) => {
-			console.log(
-				`[useSurveyLive Client] Answer event received for surveyId=${surveyId}`,
-			);
-			if (debounceTimer) clearTimeout(debounceTimer);
-			// Merge burst submissions to 1 refetch every 2.5 seconds
-			debounceTimer = setTimeout(() => {
-				console.log(
-					`[useSurveyLive Client] Triggering onAnswer callback for surveyId=${surveyId}`,
+				if (lastActivityRef.current === null) {
+					// First tick after mount: just record the baseline, don't fire onAnswer
+					// (avoids refetching immediately on every navigation to the page).
+					lastActivityRef.current = status.lastActivityAt;
+				} else if (status.lastActivityAt > lastActivityRef.current) {
+					lastActivityRef.current = status.lastActivityAt;
+					onAnswerRef.current?.();
+				}
+			} catch (err) {
+				console.error(
+					`[useSurveyLive] poll failed for surveyId=${surveyId}:`,
+					err,
 				);
-				onAnswerRef.current?.();
-			}, 2500);
-		});
+			}
+		}
+
+		async function sendHeartbeat() {
+			try {
+				await heartbeatFn({ data: { surveyId, clientId, role } });
+			} catch (err) {
+				console.error(
+					`[useSurveyLive] heartbeat failed for surveyId=${surveyId}:`,
+					err,
+				);
+			}
+		}
+
+		poll();
+		const pollInterval = setInterval(poll, POLL_MS);
+
+		let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
+		if (role === "filler") {
+			sendHeartbeat();
+			heartbeatInterval = setInterval(sendHeartbeat, HEARTBEAT_MS);
+		}
 
 		return () => {
-			console.log(
-				`[useSurveyLive Client] Closing EventSource for surveyId=${surveyId}, role=${role}`,
-			);
-			if (debounceTimer) clearTimeout(debounceTimer);
-			es.close(); // Crucial to prevent memory leaks
+			cancelled = true;
+			clearInterval(pollInterval);
+			if (heartbeatInterval) clearInterval(heartbeatInterval);
+			if (role === "filler") {
+				// Best-effort immediate leave so the badge drops without waiting
+				// for the 12s stale timeout. Fire-and-forget on unmount.
+				leaveFillerFn({ data: { surveyId, clientId } }).catch(() => {});
+			}
 		};
 	}, [surveyId, role]);
 

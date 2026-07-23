@@ -19,6 +19,7 @@ import {
 	deleteAdminSurveyFn,
 	getAdminSurveysListFn,
 } from "../../server/adminSurveyFunctions";
+import { getAggregatePresenceFn } from "../../server/livePresenceFunctions";
 
 export const Route = createFileRoute("/admin/surveys/")({
 	loader: async () => {
@@ -48,19 +49,20 @@ function SurveysIndexComponent() {
 	const [liveCounts, setLiveCounts] = useState<Record<number, number>>({});
 
 	useEffect(() => {
-		const es = new EventSource("/api/surveys/live");
-		es.addEventListener("presence", (e) => {
+		let cancelled = false;
+		async function poll() {
 			try {
-				const data = JSON.parse(e.data);
-				if (data && typeof data === "object") {
-					setLiveCounts(data);
-				}
+				const data = await getAggregatePresenceFn();
+				if (!cancelled) setLiveCounts(data);
 			} catch (err) {
-				console.error("Error parsing aggregate presence SSE:", err);
+				console.error("Error fetching aggregate presence:", err);
 			}
-		});
+		}
+		poll();
+		const interval = setInterval(poll, 4000);
 		return () => {
-			es.close();
+			cancelled = true;
+			clearInterval(interval);
 		};
 	}, []);
 

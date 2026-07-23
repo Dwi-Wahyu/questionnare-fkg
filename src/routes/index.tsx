@@ -17,6 +17,7 @@ import {
 	getPublicLandingStatsFn,
 	getPublishedSurveysFn,
 } from "../server/surveyFunctions";
+import { getAggregatePresenceFn } from "../server/livePresenceFunctions";
 
 export const Route = createFileRoute("/")({
 	loader: async () => {
@@ -80,21 +81,22 @@ function HomeComponent() {
 	const [isPending, setIsPending] = useState(false);
 	const [liveCounts, setLiveCounts] = useState<Record<number, number>>({});
 
-	// Listen to aggregate live survey presence (SSE)
+	// Listen to aggregate live survey presence (polling)
 	useEffect(() => {
-		const es = new EventSource("/api/surveys/live");
-		es.addEventListener("presence", (e) => {
+		let cancelled = false;
+		async function poll() {
 			try {
-				const data = JSON.parse(e.data);
-				if (data && typeof data === "object") {
-					setLiveCounts(data);
-				}
+				const data = await getAggregatePresenceFn();
+				if (!cancelled) setLiveCounts(data);
 			} catch (err) {
-				console.error("Error parsing aggregate presence SSE:", err);
+				console.error("Error fetching aggregate presence:", err);
 			}
-		});
+		}
+		poll();
+		const interval = setInterval(poll, 4000);
 		return () => {
-			es.close();
+			cancelled = true;
+			clearInterval(interval);
 		};
 	}, []);
 

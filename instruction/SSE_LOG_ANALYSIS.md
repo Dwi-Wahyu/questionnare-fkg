@@ -1,5 +1,9 @@
 # PM2 Log Analysis — SSE Listener Drops & "Jawaban" Tab Not Auto‑Refreshing
 
+> [!WARNING]
+> **Deprecated:** The Server-Sent Events (SSE) implementation analyzed in this document has been replaced by short-interval polling + heartbeats (see [FIX_LIVE_PRESENCE_PRODUCTION.md](file:///home/dwiwahyuilahi/Personal/Projects/FKG/tracert-study/source-code/instruction/FIX_LIVE_PRESENCE_PRODUCTION.md)) to avoid connection-buffering issues when routing traffic through a Cloudflare Tunnel (`cloudflared`) in production.
+
+
 **App:** `tracerst` (pm2 process id `8`)
 **Log window:** 2026‑07‑19 09:17:16 → 09:19:55 (~2m 39s)
 **Files involved:** `src/server/liveRegistry.ts`, `src/routes/api/surveys.$surveyId.live.ts`,

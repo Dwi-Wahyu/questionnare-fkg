@@ -1,5 +1,9 @@
 # Fix: "Jawaban" Tab Not Auto‑Refreshing on New Response Submit
 
+> [!WARNING]
+> **Deprecated:** The Server-Sent Events (SSE) implementation fixed in this document has been replaced by short-interval polling + heartbeats (see [FIX_LIVE_PRESENCE_PRODUCTION.md](file:///home/dwiwahyuilahi/Personal/Projects/FKG/tracert-study/source-code/instruction/FIX_LIVE_PRESENCE_PRODUCTION.md)) to avoid connection-buffering issues when routing traffic through a Cloudflare Tunnel (`cloudflared`) in production.
+
+
 Companion to `01-SSE_LOG_ANALYSIS.md`. Two fixes: a required one (dead code) and an optional
 hardening one (multi‑instance pm2), plus a small dev-noise reduction.
 

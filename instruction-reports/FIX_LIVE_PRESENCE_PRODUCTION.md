@@ -1,0 +1,23 @@
+# Laporan Perbaikan Live Presence Produksi (Fix Live Presence & Auto Refresh Buffering)
+
+- **Modified Files:**
+  - `src/server/livePresence.ts` (Created)
+  - `src/server/livePresenceFunctions.ts` (Created)
+  - `src/server/surveyFunctions.ts` (Modified)
+  - `src/hooks/useSurveyLive.ts` (Modified)
+  - `src/routes/admin/surveys.index.tsx` (Modified)
+  - `src/routes/index.tsx` (Modified)
+  - `src/server/liveRegistry.ts` (Deleted)
+  - `src/routes/api/surveys.$surveyId.live.ts` (Deleted)
+  - `src/routes/api/surveys.live.ts` (Deleted)
+  - `instruction/SSE_LOG_ANALYSIS.md` (Modified)
+  - `instruction/FIX_SSE_AUTO_REFRESH.md` (Modified)
+- **Logic Changes:**
+  - **Dihapusnya Transport SSE (`liveRegistry.ts`, `/api/surveys/*`):** Menghapus transport Server-Sent Events yang terhambat oleh buffering edge proxy/Cloudflare Tunnel (`cloudflared`) pada lingkungan produksi.
+  - **Implementasi State Presence Baru (`livePresence.ts`):** Menggunakan registry berbasis `globalThis` yang melacak last-seen timestamp masing-masing filler. Filler dianggap tidak aktif jika tidak mengirimkan heartbeat selama lebih dari 12 detik.
+  - **Fungsi Server TanStack (`livePresenceFunctions.ts`):** Menyediakan endpoint aman (`heartbeatFn`, `leaveFillerFn`, `getLiveStatusFn`, `getAggregatePresenceFn`) menggunakan React Start server functions yang berjalan via request/response reguler dan imun dari Cloudflare connection pooling/buffering.
+  - **Integrasi Hook Client (`useSurveyLive.ts`):** Di-rewrite untuk memanggil `getLiveStatusFn` setiap 4 detik untuk update presence/cek aktivitas baru, dan mengirimkan heartbeat via `heartbeatFn` setiap 5 detik (khusus untuk role filler). Menggunakan logic baseline untuk mencegah refetch tidak perlu saat pertama kali dimuat.
+  - **Refactor Landing Page & Admin Dashboard (`index.tsx`, `surveys.index.tsx`):** Mengganti inline `EventSource` dengan polling interval 4 detik memanfaatkan `getAggregatePresenceFn` agar total pengisi survei real-time di card landing page dan dashboard admin terupdate secara berkala.
+- **Impact on Graph:**
+  - Menghapus 3 file lama (`liveRegistry.ts` dan route SSE).
+  - Menambahkan relasi dependensi baru ke modul `livePresence.ts` dan server functions di `livePresenceFunctions.ts` dari hook `useSurveyLive.ts`, page index admin, dan landing page index utama.
