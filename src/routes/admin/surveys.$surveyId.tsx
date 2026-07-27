@@ -1457,7 +1457,8 @@ function SurveyDetailComponent() {
 																(() => {
 																	const parent = questions.find(
 																		(p) =>
-																			p.id === q.conditionalParentQuestionId,
+																			String(p.id) ===
+																			String(q.conditionalParentQuestionId),
 																	);
 																	if (!parent) return null;
 																	const matchLabels = (
@@ -1764,7 +1765,8 @@ function SurveyDetailComponent() {
 																(() => {
 																	const parentQ = questions.find(
 																		(p) =>
-																			p.id === q.conditionalParentQuestionId,
+																			String(p.id) ===
+																			String(q.conditionalParentQuestionId),
 																	);
 																	if (!parentQ) return null;
 																	const opts = parentQ.options || [];

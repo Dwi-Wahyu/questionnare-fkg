@@ -280,13 +280,20 @@ function SurveyTakingComponent() {
 
 	const currentSection =
 		currentSectionIndex >= 0 ? sections[currentSectionIndex] : null;
-	const currentQuestions = currentSection
-		? questions.filter(
-				(q) =>
-					q.sectionId === currentSection.id &&
-					(!enableConditional || isQuestionVisible(q, answersState)),
-			)
-		: [];
+	const currentQuestions =
+		currentSectionIndex >= 0
+			? survey?.category === "layanan-pengaduan"
+				? questions.filter(
+						(q) => !enableConditional || isQuestionVisible(q, answersState),
+					)
+				: currentSection
+					? questions.filter(
+							(q) =>
+								q.sectionId === currentSection.id &&
+								(!enableConditional || isQuestionVisible(q, answersState)),
+						)
+					: []
+			: [];
 
 	const handleStartSurvey = () => {
 		updateDraft(answersState, 0);
@@ -720,7 +727,7 @@ function SurveyTakingComponent() {
 							return (
 								<div
 									key={q.id}
-									className={`flex flex-col gap-1 py-4 transition-all border-b border-slate-100 last:border-b-0 ${
+									className={`flex flex-col gap-1 py-4 transition-all border-b border-slate-100 last:border-b-0 animate-ease-slide-up ${
 										isError
 											? "border-l-4 border-l-[#ba1a1a] bg-[#ffdad6]/10 px-4 rounded-r-lg error-highlight"
 											: ""
@@ -1014,12 +1021,13 @@ function SurveyTakingComponent() {
 							<span>Kembali</span>
 						</button>
 
-						{currentSectionIndex === sections.length - 1 ? (
+						{survey?.category === "layanan-pengaduan" ||
+						currentSectionIndex === sections.length - 1 ? (
 							<button
 								type="button"
 								onClick={handleSubmit}
 								disabled={loading}
-								className="bg-primary text-white hover:bg-[#741e15] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm"
+								className="bg-[#4A0000] text-white hover:bg-[#B00000] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm cursor-pointer"
 							>
 								{loading ? "Mengirim..." : "Kirim Jawaban"}
 								<CircleCheck className="h-4 w-4" />
@@ -1028,7 +1036,7 @@ function SurveyTakingComponent() {
 							<button
 								type="button"
 								onClick={handleNext}
-								className="bg-[#4A0000] text-white hover:bg-[#B00000] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm"
+								className="bg-[#4A0000] text-white hover:bg-[#B00000] font-bold px-8 py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors scale-98 active:scale-95 shadow-sm cursor-pointer"
 							>
 								<span>Lanjutkan</span>
 							</button>

@@ -60,23 +60,14 @@ export async function seedLayananPengaduan() {
 
 	const surveyId = (surveyResult as any).insertId;
 
-	// Section 1: Klarifikasi Laporan
+	// Section 1: Layanan Pengaduan
 	const [section1Result] = await db.insert(sections).values({
 		surveyId,
-		title: "Klarifikasi Laporan",
-		description: "Pilih klasifikasi laporan Anda.",
+		title: "Layanan Pengaduan",
+		description: "Sampaikan Laporan Anda!",
 		order: 0,
 	});
 	const section1Id = (section1Result as any).insertId;
-
-	// Section 2: Detail Laporan
-	const [section2Result] = await db.insert(sections).values({
-		surveyId,
-		title: "Detail Laporan",
-		description: "Lengkapi detail laporan Anda.",
-		order: 1,
-	});
-	const section2Id = (section2Result as any).insertId;
 
 	// Q1: Klarifikasi Laporan (Section 1)
 	const [q1Result] = await db.insert(questions).values({
@@ -104,10 +95,10 @@ export async function seedLayananPengaduan() {
 		q1OptionIds[label] = (optResult as any).insertId;
 	}
 
-	// Q2: Akademik dan Kemahasiswaan (Section 2, conditional to Q1 = PENGADUAN)
+	// Q2: Akademik dan Kemahasiswaan (Section 1, conditional to Q1 = PENGADUAN)
 	const [q2Result] = await db.insert(questions).values({
 		surveyId,
-		sectionId: section2Id,
+		sectionId: section1Id,
 		type: "multiple_choice",
 		title: "Akademik dan Kemahasiswaan",
 		required: false,
@@ -136,10 +127,10 @@ export async function seedLayananPengaduan() {
 		});
 	}
 
-	// Q3: Sarana dan Prasarana (Section 2, conditional to Q1 = PENGADUAN)
+	// Q3: Sarana dan Prasarana (Section 1, conditional to Q1 = PENGADUAN)
 	const [q3Result] = await db.insert(questions).values({
 		surveyId,
-		sectionId: section2Id,
+		sectionId: section1Id,
 		type: "multiple_choice",
 		title: "Sarana dan Prasarana",
 		required: false,
@@ -166,11 +157,11 @@ export async function seedLayananPengaduan() {
 		});
 	}
 
-	// Q4: Uraian Laporan (Section 2, conditional to Q1 = ASPIRASI/ SARAN or PERMINTAAN INFORMASI)
+	// Q4: Uraian Laporan (Section 1, conditional to Q1 = ASPIRASI/ SARAN or PERMINTAAN INFORMASI)
 	// TODO: Q2 & Q3 required: false, check if at least one is filled in custom validation if requested.
 	await db.insert(questions).values({
 		surveyId,
-		sectionId: section2Id,
+		sectionId: section1Id,
 		type: "paragraph",
 		title: "Uraian Laporan",
 		required: true,

@@ -10,18 +10,22 @@
   - `src/server/db/seedLayananPengaduan.ts` (New File)
   - `src/server/db/seed-layanan-pengaduan.ts` (New File)
   - `src/utils/surveyVisibility.ts` (New File)
+  - `src/styles.css`
 
 - **Logic Changes:**
   - **Database & Seeder:**
     - Added `conditionalParentQuestionId` and `conditionalParentOptionIds` columns to `questions` table with cascade delete references and index.
     - Added `requirePeriod` and `enableConditional` columns to `survey_categories` table to store per-category settings.
     - Seeded `"layanan-pengaduan"` category with `enableConditional = true` and `requirePeriod = false`. Seeded other categories with `enableConditional = false` and `requirePeriod = true`.
-    - Updated `seedLayananPengaduan.ts` to automatically ensure the `"layanan-pengaduan"` category exists in the `survey_categories` table before seeding the survey, fixing issues where executing the seeder alone failed to create the category.
+    - Updated `seedLayananPengaduan.ts` to automatically ensure the `"layanan-pengaduan"` category exists in the `survey_categories` table before seeding the survey. Modified the seeder to group all questions inside a single section ("Layanan Pengaduan") instead of partition them into two.
   - **Dynamic Period & Conditional Visibility Configuration:**
     - Modified settings save handlers (both in `surveys.$surveyId.tsx` on client side and `updateAdminSurveySettingsFn` on server side) to bypass period requirements unless configured as `requirePeriod = true` for the survey's category.
     - Adjusted public page (`survey.$surveySlug.tsx`), admin builder cards, and preview branches inside `surveys.$surveyId.tsx` to conditionally execute and render conditional visibility editors/features ONLY if the category settings has `enableConditional = true`.
+    - Resolved parent options tag loading issues in the question display conditions panel and badges by normalizing parent ID checks using explicit `String(p.id) === String(q.conditionalParentQuestionId)` type comparisons.
     - Added a "Hapus Periode" button to clear period values in the survey settings tab, and rendered the inputs' HTML `required` attributes conditionally based on `requirePeriod`.
     - Changed vertical alignment of the branch preview filter container from `md:items-center` to `md:items-start` so that elements do not center vertically.
+    - Enabled layout-bypassing on public survey pages for `layanan-pengaduan` category surveys: all visible questions from all sections are automatically consolidated onto a single page without section paging transitions, and the primary action button always defaults to "Kirim Jawaban".
+    - Added a CSS slide-up fade-in transition (`animate-ease-slide-up` powered by keyframes in `src/styles.css`) for public question cards when they mount or become visible.
   - **Admin Settings Page:**
     - Renamed and restructured the old user management page `/admin/users` into a new Settings page under `/admin/settings` (updated nav links in `route.tsx` to "Pengaturan" with `Settings` icon).
     - Settings page contains two columns: "Kelola Pengguna" (users search, role filter, active toggle, list, and edit dialogs) and "Daftar Kategori" (lists all categories with their slug, requirePeriod, and enableConditional flags).
