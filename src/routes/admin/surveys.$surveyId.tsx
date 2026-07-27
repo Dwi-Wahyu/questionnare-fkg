@@ -1718,11 +1718,15 @@ function SurveyDetailComponent() {
 														</span>
 														<div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-slate-200">
 															<div className="space-y-1">
-																<label className="text-xxs font-bold text-[#434652] uppercase block">
+																<label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
 																	Tampilkan hanya jika (Pertanyaan Induk)
 																</label>
 																<select
-																	value={q.conditionalParentQuestionId || ""}
+																	value={
+																		q.conditionalParentQuestionId
+																			? String(q.conditionalParentQuestionId)
+																			: ""
+																	}
 																	onChange={(e) => {
 																		const val = e.target.value;
 																		const parentId = val
@@ -1753,7 +1757,7 @@ function SurveyDetailComponent() {
 																					questions.indexOf(q),
 																		)
 																		.map((p) => (
-																			<option key={p.id} value={p.id}>
+																			<option key={p.id} value={String(p.id)}>
 																				{p.title ||
 																					`Pertanyaan #${questions.indexOf(p) + 1}`}
 																			</option>
@@ -1773,14 +1777,16 @@ function SurveyDetailComponent() {
 
 																	return (
 																		<div className="space-y-1">
-																			<label className="text-xxs font-bold text-[#434652] uppercase block">
+																			<label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
 																				Pilihan Jawaban Induk yang Memenuhi
 																			</label>
 																			<div className="flex flex-wrap gap-2 pt-1">
 																				{opts.map((opt: any) => {
 																					const selected = (
 																						q.conditionalParentOptionIds || []
-																					).includes(opt.id);
+																					)
+																						.map(String)
+																						.includes(String(opt.id));
 																					return (
 																						<button
 																							key={opt.id}
@@ -1796,7 +1802,9 @@ function SurveyDetailComponent() {
 																									[];
 																								if (selected) {
 																									nextIds = nextIds.filter(
-																										(id) => id !== opt.id,
+																										(id) =>
+																											String(id) !==
+																											String(opt.id),
 																									);
 																								} else {
 																									nextIds = [
