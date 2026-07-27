@@ -1,0 +1,33 @@
+- **Modified Files:**
+  - `src/server/db/schema.ts`
+  - `src/server/db/seedCategories.ts`
+  - `package.json`
+  - `src/routes/survey.$surveySlug.tsx`
+  - `src/server/adminSurveyFunctions.ts`
+  - `src/routes/admin/surveys.$surveyId.tsx`
+  - `src/routes/admin/route.tsx`
+  - `src/routes/admin/settings.tsx` (New File, replacing `src/routes/admin/users.tsx`)
+  - `src/server/db/seedLayananPengaduan.ts` (New File)
+  - `src/server/db/seed-layanan-pengaduan.ts` (New File)
+  - `src/utils/surveyVisibility.ts` (New File)
+
+- **Logic Changes:**
+  - **Database & Seeder:**
+    - Added `conditionalParentQuestionId` and `conditionalParentOptionIds` columns to `questions` table with cascade delete references and index.
+    - Added `requirePeriod` and `enableConditional` columns to `survey_categories` table to store per-category settings.
+    - Seeded `"layanan-pengaduan"` category with `enableConditional = true` and `requirePeriod = false`. Seeded other categories with `enableConditional = false` and `requirePeriod = true`.
+  - **Dynamic Period & Conditional Visibility Configuration:**
+    - Modified settings save handlers (both in `surveys.$surveyId.tsx` on client side and `updateAdminSurveySettingsFn` on server side) to bypass period requirements unless configured as `requirePeriod = true` for the survey's category.
+    - Adjusted public page (`survey.$surveySlug.tsx`), admin builder cards, and preview branches inside `surveys.$surveyId.tsx` to conditionally execute and render conditional visibility editors/features ONLY if the category settings has `enableConditional = true`.
+    - Added a "Hapus Periode" button to clear period values in the survey settings tab, and rendered the inputs' HTML `required` attributes conditionally based on `requirePeriod`.
+    - Changed vertical alignment of the branch preview filter container from `md:items-center` to `md:items-start` so that elements do not center vertically.
+  - **Admin Settings Page:**
+    - Renamed and restructured the old user management page `/admin/users` into a new Settings page under `/admin/settings` (updated nav links in `route.tsx` to "Pengaturan" with `Settings` icon).
+    - Settings page contains two columns: "Kelola Pengguna" (users search, role filter, active toggle, list, and edit dialogs) and "Daftar Kategori" (lists all categories with their slug, requirePeriod, and enableConditional flags).
+    - Added an edit dialog for categories in `/admin/settings` that allows administrators to change category names and toggle `requirePeriod` and `enableConditional` configurations via checkboxes.
+  - **Export Customizations:** Handled category `"layanan-pengaduan"` exports by making Klarifikasi Laporan filter mandatory, skipping the Klarifikasi Laporan column from export data, implementing 2-row colspan header merges in Excel, and merging label strings in CSV.
+
+- **Impact on Graph:**
+  - `src/routes/admin/route.tsx` now points to `src/routes/admin/settings.tsx` instead of `src/routes/admin/users.tsx`.
+  - `src/routes/admin/settings.tsx` imports user management operations and category settings updates (`updateSurveyCategorySettingsFn` and `getSurveyCategoriesFn` from `src/server/adminSurveyFunctions.ts`).
+  - `src/routes/survey.$surveySlug.tsx` and `src/routes/admin/surveys.$surveyId.tsx` now check the category configuration flags dynamically.

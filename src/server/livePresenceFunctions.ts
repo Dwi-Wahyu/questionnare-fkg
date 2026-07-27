@@ -10,11 +10,8 @@ import {
 
 export const heartbeatFn = createServerFn({ method: "POST" })
 	.validator(
-		(data: {
-			surveyId: number;
-			clientId: string;
-			role: "filler" | "viewer";
-		}) => data,
+		(data: { surveyId: number; clientId: string; role: "filler" | "viewer" }) =>
+			data,
 	)
 	.handler(async ({ data }) => {
 		if (data.role === "filler") {

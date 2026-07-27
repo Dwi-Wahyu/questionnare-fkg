@@ -14,7 +14,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SurveySurveySlugRouteImport } from './routes/survey.$surveySlug'
-import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminSurveysIndexRouteImport } from './routes/admin/surveys.index'
 import { Route as SurveySurveySlugThankYouRouteImport } from './routes/survey.$surveySlug.thank-you'
@@ -46,9 +46,9 @@ const SurveySurveySlugRoute = SurveySurveySlugRouteImport.update({
   path: '/survey/$surveySlug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
@@ -83,7 +83,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/survey/$surveySlug': typeof SurveySurveySlugRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/surveys/$surveyId': typeof AdminSurveysSurveyIdRoute
@@ -95,7 +95,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/survey/$surveySlug': typeof SurveySurveySlugRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/admin/surveys/$surveyId': typeof AdminSurveysSurveyIdRoute
@@ -109,7 +109,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/survey/$surveySlug': typeof SurveySurveySlugRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/surveys/$surveyId': typeof AdminSurveysSurveyIdRoute
@@ -124,7 +124,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/admin/analytics'
-    | '/admin/users'
+    | '/admin/settings'
     | '/survey/$surveySlug'
     | '/admin/'
     | '/admin/surveys/$surveyId'
@@ -136,7 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/analytics'
-    | '/admin/users'
+    | '/admin/settings'
     | '/survey/$surveySlug'
     | '/admin'
     | '/admin/surveys/$surveyId'
@@ -149,7 +149,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/admin/analytics'
-    | '/admin/users'
+    | '/admin/settings'
     | '/survey/$surveySlug'
     | '/admin/'
     | '/admin/surveys/$surveyId'
@@ -202,11 +202,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SurveySurveySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/analytics': {
@@ -249,7 +249,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
-  AdminUsersRoute: typeof AdminUsersRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminSurveysSurveyIdRoute: typeof AdminSurveysSurveyIdRoute
   AdminSurveysNewRoute: typeof AdminSurveysNewRoute
@@ -258,7 +258,7 @@ interface AdminRouteRouteChildren {
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
-  AdminUsersRoute: AdminUsersRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminSurveysSurveyIdRoute: AdminSurveysSurveyIdRoute,
   AdminSurveysNewRoute: AdminSurveysNewRoute,

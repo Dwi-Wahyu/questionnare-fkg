@@ -155,6 +155,8 @@ export const getSurveyCategoriesFn = createServerFn({ method: "GET" }).handler(
 			.select({
 				slug: surveyCategories.slug,
 				name: surveyCategories.name,
+				requirePeriod: surveyCategories.requirePeriod,
+				enableConditional: surveyCategories.enableConditional,
 			})
 			.from(surveyCategories)
 			.orderBy(surveyCategories.order);
@@ -286,18 +288,27 @@ export const updateAdminSurveySettingsFn = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		await assertAdmin();
 
-		if (!data.periodValue || !data.periodValueEnd) {
+		const [categoryObj] = await db
+			.select()
+			.from(surveyCategories)
+			.where(eq(surveyCategories.slug, data.category));
+
+		const requirePeriod = categoryObj?.requirePeriod ?? false;
+
+		if (requirePeriod && (!data.periodValue || !data.periodValueEnd)) {
 			throw new Error("Periode survei (mulai dan berakhir) wajib diisi.");
 		}
 
-		const regex =
-			data.periodType === "date" ? /^\d{4}-\d{2}-\d{2}$/ : /^\d{4}-\d{2}$/;
-		if (!regex.test(data.periodValue) || !regex.test(data.periodValueEnd)) {
-			throw new Error("Format periode survei tidak valid.");
-		}
+		if (data.periodValue && data.periodValueEnd) {
+			const regex =
+				data.periodType === "date" ? /^\d{4}-\d{2}-\d{2}$/ : /^\d{4}-\d{2}$/;
+			if (!regex.test(data.periodValue) || !regex.test(data.periodValueEnd)) {
+				throw new Error("Format periode survei tidak valid.");
+			}
 
-		if (data.periodValueEnd < data.periodValue) {
-			throw new Error("Periode berakhir tidak boleh mendahului periode mulai.");
+			if (data.periodValueEnd < data.periodValue) {
+				throw new Error("Periode berakhir tidak boleh mendahului periode mulai.");
+			}
 		}
 
 		await db
@@ -310,8 +321,8 @@ export const updateAdminSurveySettingsFn = createServerFn({ method: "POST" })
 				description: data.description || "",
 				bannerUrl: data.bannerUrl || null,
 				periodType: data.periodType || "month",
-				periodValue: data.periodValue,
-				periodValueEnd: data.periodValueEnd,
+				periodValue: data.periodValue || null,
+				periodValueEnd: data.periodValueEnd || null,
 				targetRespondentCount: data.targetRespondentCount ?? null,
 				updatedAt: new Date(),
 			})
@@ -875,7 +886,7 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 				order: number;
 			}[];
 			questions: {
-				id?: number;
+				id?: number | string;
 				sectionOrder: number; // mapped to section order
 				type:
 					| "short_text"
@@ -891,8 +902,10 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 				required: boolean;
 				order: number;
 				config?: Record<string, unknown> | null;
+				conditionalParentQuestionId?: number | string | null;
+				conditionalParentOptionIds?: (number | string)[] | null;
 				options?: {
-					id?: number;
+					id?: number | string;
 					group: "choice" | "row" | "column";
 					label: string;
 					order: number;
@@ -902,6 +915,44 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 	)
 	.handler(async ({ data }) => {
 		await assertAdmin();
+
+		// Validate parent type and circular reference
+		for (const q of data.questions) {
+			if (q.conditionalParentQuestionId) {
+				const parent = data.questions.find(
+					(x) => x.id === q.conditionalParentQuestionId,
+				);
+				if (!parent) {
+					throw new Error("Pertanyaan induk tidak ditemukan.");
+				}
+				if (parent.type !== "multiple_choice") {
+					throw new Error(
+						`Pertanyaan induk "${parent.title}" harus bertipe Pilihan Ganda.`,
+					);
+				}
+				// Circular reference check
+				let current: typeof q | undefined = parent;
+				const visited = new Set<string | number>();
+				while (current) {
+					if (current.id) {
+						if (current.id === q.id) {
+							throw new Error(
+								`Referensi sirkular terdeteksi pada pertanyaan "${q.title}".`,
+							);
+						}
+						if (visited.has(current.id)) {
+							break;
+						}
+						visited.add(current.id);
+					}
+					current = current.conditionalParentQuestionId
+						? data.questions.find(
+								(x) => x.id === current?.conditionalParentQuestionId,
+							)
+						: undefined;
+				}
+			}
+		}
 
 		return await db.transaction(async (tx) => {
 			// 1. Process sections. We will sync sections:
@@ -944,7 +995,11 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 				await tx.delete(sections).where(inArray(sections.id, sectionsToDelete));
 			}
 
-			// 2. Process questions
+			// Maps for Pass 1
+			const questionIdMap = new Map<string | number, number>();
+			const optionIdMap = new Map<string | number, number>();
+
+			// 2. Process questions (Pass 1)
 			const sentQuestionIds: number[] = [];
 
 			for (const q of data.questions) {
@@ -952,8 +1007,9 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 				if (!mappedSectionId) continue;
 
 				let questionId: number;
+				const existingId = typeof q.id === "number" ? q.id : undefined;
 
-				if (q.id) {
+				if (existingId) {
 					await tx
 						.update(questions)
 						.set({
@@ -964,10 +1020,12 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 							required: q.required,
 							config: q.config ?? null,
 							order: q.order,
+							conditionalParentQuestionId: null,
+							conditionalParentOptionIds: null,
 						})
-						.where(eq(questions.id, q.id));
+						.where(eq(questions.id, existingId));
 
-					questionId = q.id;
+					questionId = existingId;
 					sentQuestionIds.push(questionId);
 				} else {
 					const [inserted] = await tx.insert(questions).values({
@@ -979,16 +1037,26 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 						required: q.required,
 						config: q.config ?? null,
 						order: q.order,
+						conditionalParentQuestionId: null,
+						conditionalParentOptionIds: null,
 					});
 					questionId = (inserted as any).insertId;
 					sentQuestionIds.push(questionId);
+				}
+
+				if (q.id) {
+					questionIdMap.set(q.id, questionId);
 				}
 
 				// 3. Process question options
 				const sentOptionIds: number[] = [];
 				if (q.options && q.options.length > 0) {
 					for (const opt of q.options) {
-						if (opt.id) {
+						const existingOptId =
+							typeof opt.id === "number" ? opt.id : undefined;
+						let optionId: number;
+
+						if (existingOptId) {
 							await tx
 								.update(questionOptions)
 								.set({
@@ -997,8 +1065,9 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 									value: opt.label,
 									order: opt.order,
 								})
-								.where(eq(questionOptions.id, opt.id));
-							sentOptionIds.push(opt.id);
+								.where(eq(questionOptions.id, existingOptId));
+							optionId = existingOptId;
+							sentOptionIds.push(optionId);
 						} else {
 							const [insertedOpt] = await tx.insert(questionOptions).values({
 								questionId,
@@ -1007,7 +1076,12 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 								value: opt.label,
 								order: opt.order,
 							});
-							sentOptionIds.push((insertedOpt as any).insertId);
+							optionId = (insertedOpt as any).insertId;
+							sentOptionIds.push(optionId);
+						}
+
+						if (opt.id) {
+							optionIdMap.set(opt.id, optionId);
 						}
 					}
 				}
@@ -1041,6 +1115,37 @@ export const updateAdminSurveyQuestionsFn = createServerFn({ method: "POST" })
 				await tx
 					.delete(questions)
 					.where(inArray(questions.id, questionsToDelete));
+			}
+
+			// Pass 2: Update conditional references
+			for (const q of data.questions) {
+				const dbQuestionId = q.id ? questionIdMap.get(q.id) : undefined;
+				if (!dbQuestionId) continue;
+
+				let dbParentQuestionId: number | null = null;
+				let dbParentOptionIds: number[] | null = null;
+
+				if (q.conditionalParentQuestionId) {
+					dbParentQuestionId =
+						questionIdMap.get(q.conditionalParentQuestionId) ?? null;
+				}
+
+				if (
+					q.conditionalParentOptionIds &&
+					q.conditionalParentOptionIds.length > 0
+				) {
+					dbParentOptionIds = q.conditionalParentOptionIds
+						.map((id) => optionIdMap.get(id))
+						.filter((id): id is number => id !== undefined);
+				}
+
+				await tx
+					.update(questions)
+					.set({
+						conditionalParentQuestionId: dbParentQuestionId,
+						conditionalParentOptionIds: dbParentOptionIds,
+					})
+					.where(eq(questions.id, dbQuestionId));
 			}
 
 			return { success: true };
@@ -1372,6 +1477,18 @@ async function buildSurveyResponseExport(data: {
 	let filterQuestion: (typeof surveyQuestions)[number] | undefined;
 	let filterOptions: (typeof surveyOptions)[number][] = [];
 
+	if (survey.category === "layanan-pengaduan") {
+		if (
+			filterQuestionId == null ||
+			!filterOptionIds ||
+			filterOptionIds.length !== 1
+		) {
+			throw new Error(
+				"Pilih Klarifikasi Laporan terlebih dahulu untuk mengekspor data",
+			);
+		}
+	}
+
 	if (
 		filterQuestionId != null &&
 		filterOptionIds &&
@@ -1438,16 +1555,23 @@ async function buildSurveyResponseExport(data: {
 	// 4. Build column plans
 	interface ColumnPlan {
 		header: string;
+		parentHeader?: string;
+		childHeader?: string;
+		isGrouped?: boolean;
 		resolve: (r: any, idx: number, ansList: any[]) => string;
 	}
 
 	const columnPlans: ColumnPlan[] = [
 		{
 			header: "No. Respon",
+			parentHeader: "No. Respon",
+			childHeader: "No. Respon",
 			resolve: (r, idx) => String(idx + 1),
 		},
 		{
 			header: "Timestamp",
+			parentHeader: "Timestamp",
+			childHeader: "Timestamp",
 			resolve: (r) =>
 				r.submittedAt ? new Date(r.submittedAt).toISOString() : "",
 		},
@@ -1471,78 +1595,130 @@ async function buildSurveyResponseExport(data: {
 		}
 	}
 
-	for (const q of surveyQuestions) {
-		const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
-		if (q.type === "grid") {
-			const rows = qOptions.filter((o) => o.group === "row");
-			const cols = qOptions.filter((o) => o.group === "column");
-			for (const r of rows) {
-				const headerText = duplicateGridRowLabels.has(r.label)
-					? `${q.title} — ${r.label}`
-					: r.label;
+	const isLayananPengaduan = survey.category === "layanan-pengaduan";
+	const selectedOptionId =
+		isLayananPengaduan && filterOptionIds && filterOptionIds.length > 0
+			? filterOptionIds[0]
+			: null;
 
+	for (const q of surveyQuestions) {
+		// Skip Klarifikasi Laporan (filter question)
+		if (isLayananPengaduan && q.id === filterQuestionId) {
+			continue;
+		}
+
+		const qOptions = surveyOptions.filter((o) => o.questionId === q.id);
+
+		// Check if it should be a grouped column for layanan-pengaduan
+		const isGroupedQuestion =
+			isLayananPengaduan &&
+			selectedOptionId !== null &&
+			q.conditionalParentQuestionId !== null &&
+			(q.conditionalParentOptionIds || []).includes(selectedOptionId) &&
+			(q.type === "multiple_choice" ||
+				q.type === "dropdown" ||
+				q.type === "checkboxes");
+
+		if (isGroupedQuestion) {
+			// For each choice option, create a column
+			const choices = qOptions.filter((o) => o.group === "choice");
+			for (const opt of choices) {
 				columnPlans.push({
-					header: headerText,
+					header: `${q.title} — ${opt.label}`,
+					parentHeader: q.title,
+					childHeader: opt.label,
+					isGrouped: true,
 					resolve: (rObj, idx, ansList) => {
 						const answer = ansList.find((a) => a.questionId === q.id);
-						if (!answer || !answer.valueGrid) return "";
-						const gridVal = answer.valueGrid as Record<string, number>;
-						const colOptId = gridVal[String(r.id)];
-						if (!colOptId) return "";
-						const colOpt = cols.find((c) => c.id === colOptId);
-						return colOpt ? colOpt.label : "";
+						if (!answer) return "";
+						const optIds = answer.valueOptionIds as number[] | null;
+						if (optIds && optIds.includes(opt.id)) {
+							return "✓";
+						}
+						return "";
 					},
 				});
 			}
-		} else if (
-			q.type === "multiple_choice" ||
-			q.type === "dropdown" ||
-			q.type === "linear_scale"
-		) {
-			columnPlans.push({
-				header: q.title,
-				resolve: (rObj, idx, ansList) => {
-					const answer = ansList.find((a) => a.questionId === q.id);
-					if (
-						!answer ||
-						!answer.valueOptionIds ||
-						answer.valueOptionIds.length === 0
-					)
-						return "";
-					const optId = answer.valueOptionIds[0];
-					const opt = qOptions.find((o) => o.id === optId);
-					return opt ? opt.label : "";
-				},
-			});
-		} else if (q.type === "checkboxes") {
-			columnPlans.push({
-				header: q.title,
-				resolve: (rObj, idx, ansList) => {
-					const answer = ansList.find((a) => a.questionId === q.id);
-					if (
-						!answer ||
-						!answer.valueOptionIds ||
-						answer.valueOptionIds.length === 0
-					)
-						return "";
-					const labels = answer.valueOptionIds
-						.map((id: number) => {
-							const opt = qOptions.find((o) => o.id === id);
-							return opt ? opt.label : null;
-						})
-						.filter((l: string | null): l is string => l !== null);
-					return labels.join("; ");
-				},
-			});
 		} else {
-			// short_text, paragraph, date
-			columnPlans.push({
-				header: q.title,
-				resolve: (rObj, idx, ansList) => {
-					const answer = ansList.find((a) => a.questionId === q.id);
-					return answer?.valueText ?? "";
-				},
-			});
+			if (q.type === "grid") {
+				const rows = qOptions.filter((o) => o.group === "row");
+				const cols = qOptions.filter((o) => o.group === "column");
+				for (const r of rows) {
+					const headerText = duplicateGridRowLabels.has(r.label)
+						? `${q.title} — ${r.label}`
+						: r.label;
+
+					columnPlans.push({
+						header: headerText,
+						parentHeader: q.title,
+						childHeader: r.label,
+						resolve: (rObj, idx, ansList) => {
+							const answer = ansList.find((a) => a.questionId === q.id);
+							if (!answer || !answer.valueGrid) return "";
+							const gridVal = answer.valueGrid as Record<string, number>;
+							const colOptId = gridVal[String(r.id)];
+							if (!colOptId) return "";
+							const colOpt = cols.find((c) => c.id === colOptId);
+							return colOpt ? colOpt.label : "";
+						},
+					});
+				}
+			} else if (
+				q.type === "multiple_choice" ||
+				q.type === "dropdown" ||
+				q.type === "linear_scale"
+			) {
+				columnPlans.push({
+					header: q.title,
+					parentHeader: q.title,
+					childHeader: q.title,
+					resolve: (rObj, idx, ansList) => {
+						const answer = ansList.find((a) => a.questionId === q.id);
+						if (
+							!answer ||
+							!answer.valueOptionIds ||
+							answer.valueOptionIds.length === 0
+						)
+							return "";
+						const optId = answer.valueOptionIds[0];
+						const opt = qOptions.find((o) => o.id === optId);
+						return opt ? opt.label : "";
+					},
+				});
+			} else if (q.type === "checkboxes") {
+				columnPlans.push({
+					header: q.title,
+					parentHeader: q.title,
+					childHeader: q.title,
+					resolve: (rObj, idx, ansList) => {
+						const answer = ansList.find((a) => a.questionId === q.id);
+						if (
+							!answer ||
+							!answer.valueOptionIds ||
+							answer.valueOptionIds.length === 0
+						)
+							return "";
+						const labels = answer.valueOptionIds
+							.map((id: number) => {
+								const opt = qOptions.find((o) => o.id === id);
+								return opt ? opt.label : null;
+							})
+							.filter((l: string | null): l is string => l !== null);
+						return labels.join("; ");
+					},
+				});
+			} else {
+				// short_text, paragraph, date
+				columnPlans.push({
+					header: q.title,
+					parentHeader: q.title,
+					childHeader: q.title,
+					resolve: (rObj, idx, ansList) => {
+						const answer = ansList.find((a) => a.questionId === q.id);
+						return answer?.valueText ?? "";
+					},
+				});
+			}
 		}
 	}
 
@@ -1648,22 +1824,90 @@ export const exportAdminSurveyResponsesXLSXFn = createServerFn({
 		});
 		sheet.addRow([]);
 
+		const isLayananPengaduan = survey.category === "layanan-pengaduan";
 		const headerRowIndex = summaryLines.length + 2;
-		const headerRow = sheet.addRow(columnPlans.map((cp) => cp.header));
+		let lastHeaderRowIndex = headerRowIndex;
 
-		headerRow.eachCell((cell) => {
-			cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-			cell.fill = {
-				type: "pattern",
-				pattern: "solid",
-				fgColor: { argb: "FF002972" },
-			};
-			cell.alignment = {
-				vertical: "middle",
-				horizontal: "left",
-				wrapText: true,
-			};
-		});
+		if (isLayananPengaduan) {
+			// Add Row 1: parentHeader
+			const row1Values = columnPlans.map((cp) => cp.parentHeader || cp.header);
+			const headerRow1 = sheet.addRow(row1Values);
+
+			// Add Row 2: childHeader
+			const row2Values = columnPlans.map((cp) => cp.childHeader || cp.header);
+			const headerRow2 = sheet.addRow(row2Values);
+
+			lastHeaderRowIndex = headerRowIndex + 1;
+
+			// Format both rows
+			[headerRow1, headerRow2].forEach((row) => {
+				row.eachCell((cell) => {
+					cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+					cell.fill = {
+						type: "pattern",
+						pattern: "solid",
+						fgColor: { argb: "FF002972" },
+					};
+					cell.alignment = {
+						vertical: "middle",
+						horizontal: "center",
+						wrapText: true,
+					};
+					cell.border = {
+						top: { style: "thin", color: { argb: "FFFFFFFF" } },
+						left: { style: "thin", color: { argb: "FFFFFFFF" } },
+						bottom: { style: "thin", color: { argb: "FFFFFFFF" } },
+						right: { style: "thin", color: { argb: "FFFFFFFF" } },
+					};
+				});
+			});
+
+			headerRow1.height = 24;
+			headerRow2.height = 24;
+
+			// Merge cells
+			let colIdx = 1;
+			while (colIdx <= columnPlans.length) {
+				const cp = columnPlans[colIdx - 1];
+				if (cp.isGrouped) {
+					let endColIdx = colIdx;
+					while (
+						endColIdx + 1 <= columnPlans.length &&
+						columnPlans[endColIdx].parentHeader === cp.parentHeader &&
+						columnPlans[endColIdx].isGrouped
+					) {
+						endColIdx++;
+					}
+
+					if (endColIdx > colIdx) {
+						sheet.mergeCells(headerRowIndex, colIdx, headerRowIndex, endColIdx);
+						colIdx = endColIdx + 1;
+					} else {
+						colIdx++;
+					}
+				} else {
+					sheet.mergeCells(headerRowIndex, colIdx, headerRowIndex + 1, colIdx);
+					colIdx++;
+				}
+			}
+		} else {
+			const headerRow = sheet.addRow(columnPlans.map((cp) => cp.header));
+			headerRow.eachCell((cell) => {
+				cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+				cell.fill = {
+					type: "pattern",
+					pattern: "solid",
+					fgColor: { argb: "FF002972" },
+				};
+				cell.alignment = {
+					vertical: "middle",
+					horizontal: "left",
+					wrapText: true,
+				};
+			});
+			headerRow.height = 22;
+		}
+
 		filteredResponses.forEach((r, idx) => {
 			const ansList = answersByResponseId.get(r.id) || [];
 			sheet.addRow(columnPlans.map((cp) => cp.resolve(r, idx, ansList)));
@@ -1688,13 +1932,16 @@ export const exportAdminSurveyResponsesXLSXFn = createServerFn({
 			if (lines > maxHeaderLines) maxHeaderLines = lines;
 		});
 
-		headerRow.height = Math.max(maxHeaderLines * 15 + 6, 22);
+		if (!isLayananPengaduan) {
+			const headerRow = sheet.getRow(headerRowIndex);
+			headerRow.height = Math.max(maxHeaderLines * 15 + 6, 22);
+		}
 
-		sheet.views = [{ state: "frozen", xSplit: 0, ySplit: headerRowIndex }];
+		sheet.views = [{ state: "frozen", xSplit: 0, ySplit: lastHeaderRowIndex }];
 		sheet.autoFilter = {
-			from: { row: headerRowIndex, column: 1 },
+			from: { row: lastHeaderRowIndex, column: 1 },
 			to: {
-				row: headerRowIndex + filteredResponses.length,
+				row: lastHeaderRowIndex + filteredResponses.length,
 				column: columnPlans.length,
 			},
 		};
@@ -2373,6 +2620,30 @@ export const updateSiakadAutofillConfigFn = createServerFn({ method: "POST" })
 					.where(eq(questions.id, data.nimQuestionId));
 			}
 		}
+
+		return { success: true };
+	});
+
+export const updateSurveyCategorySettingsFn = createServerFn({ method: "POST" })
+	.validator(
+		(data: {
+			slug: string;
+			name: string;
+			requirePeriod: boolean;
+			enableConditional: boolean;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		await assertAdmin();
+
+		await db
+			.update(surveyCategories)
+			.set({
+				name: data.name,
+				requirePeriod: data.requirePeriod,
+				enableConditional: data.enableConditional,
+			})
+			.where(eq(surveyCategories.slug, data.slug));
 
 		return { success: true };
 	});

@@ -5,7 +5,7 @@ import {
 	redirect,
 	useRouter,
 } from "@tanstack/react-router";
-import { ChartBar, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { ChartBar, LayoutDashboard, LogOut, Settings } from "lucide-react";
 import { toast } from "../../components/ui/useToast";
 import { getSessionFn, logoutFn } from "../../server/authFunctions";
 
@@ -101,14 +101,14 @@ function AdminLayoutComponent() {
 
 						{user?.role === "admin" && (
 							<Link
-								to="/admin/users"
+								to="/admin/settings"
 								className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg hover:bg-[#eeedf6] transition-colors"
 								activeProps={{
 									className: "bg-[#dbe1ff] text-[#0f409e] font-bold",
 								}}
 							>
-								<Users className="h-[18px] w-[18px]" />
-								<span>Kelola Pengguna</span>
+								<Settings className="h-[18px] w-[18px]" />
+								<span>Pengaturan</span>
 							</Link>
 						)}
 					</nav>

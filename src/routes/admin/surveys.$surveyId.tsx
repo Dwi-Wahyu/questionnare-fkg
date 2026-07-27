@@ -171,6 +171,9 @@ function SurveyDetailComponent() {
 	const [questions, setQuestions] = useState<any[]>([]);
 	const [isSavingQuestions, setIsSavingQuestions] = useState(false);
 	const [deleteSectionId, setDeleteSectionId] = useState<any>(null);
+	const [previewFilterOptionId, setPreviewFilterOptionId] = useState<
+		number | string | "all"
+	>("all");
 
 	// Local state for Settings Tab
 	const [settingsTitle, setSettingsTitle] = useState("");
@@ -190,6 +193,11 @@ function SurveyDetailComponent() {
 		useState<number | null>(null);
 	const [isSavingSettings, setIsSavingSettings] = useState(false);
 
+	const selectedCategoryObj = categories.find(
+		(c) => c.slug === settingsCategory,
+	);
+	const requirePeriod = selectedCategoryObj?.requirePeriod ?? false;
+
 	// SIAKAD Auto-Fill state
 	const [isSiakadDialogOpen, setIsSiakadDialogOpen] = useState(false);
 	const [siakadEnabled, setSiakadEnabled] = useState(false);
@@ -207,7 +215,9 @@ function SurveyDetailComponent() {
 	const handleOpenSiakadDialog = async () => {
 		setIsSiakadDialogOpen(true);
 		try {
-			const res = await getSiakadAutofillSuggestionFn({ data: detail.survey.id });
+			const res = await getSiakadAutofillSuggestionFn({
+				data: detail.survey.id,
+			});
 			setSiakadCandidates(res.candidateQuestions);
 			const existing = (detail.survey as any).siakadAutofillConfig;
 			setSiakadEnabled(existing?.enabled ?? false);
@@ -240,7 +250,6 @@ function SurveyDetailComponent() {
 			setIsSavingSiakad(false);
 		}
 	};
-
 
 	const [isEditingResponse, setIsEditingResponse] = useState(false);
 
@@ -317,12 +326,15 @@ function SurveyDetailComponent() {
 		: [];
 
 	const selectItems = React.useMemo(() => {
-		const list = [{ value: "", label: "Semua Pertanyaan (Tanpa Filter)" }];
+		const list =
+			detail?.survey?.category === "layanan-pengaduan"
+				? []
+				: [{ value: "", label: "Semua Pertanyaan (Tanpa Filter)" }];
 		for (const q of filterableQuestions) {
 			list.push({ value: String(q.id), label: q.title });
 		}
 		return list;
-	}, [filterableQuestions]);
+	}, [filterableQuestions, detail?.survey?.category]);
 
 	const selectedFilterQuestion = filterableQuestions.find(
 		(q: any) => String(q.id) === csvFilterQuestionId,
@@ -392,8 +404,48 @@ function SurveyDetailComponent() {
 			setSettingsTargetRespondentCount(
 				(detail.survey as any).targetRespondentCount ?? null,
 			);
+
+			if (detail.survey.category === "layanan-pengaduan") {
+				const klarifikasi = detail.questions.find((q: any) =>
+					q.title.toLowerCase().includes("klarifikasi"),
+				);
+				if (klarifikasi) {
+					setCsvFilterQuestionId(String(klarifikasi.id));
+				}
+			}
 		}
 	}, [detail]);
+
+	const enableConditional = detail?.survey
+		? categories.find((c) => c.slug === detail.survey.category)
+				?.enableConditional ?? false
+		: false;
+
+	// Derived values for branch preview filter in builder
+	const mainFilterQuestion = questions.find(
+		(q) =>
+			q.type === "multiple_choice" &&
+			questions.some((other) => other.conditionalParentQuestionId === q.id),
+	);
+
+	const isQuestionVisibleInPreview = (q: any) => {
+		if (!enableConditional) return true;
+		if (previewFilterOptionId === "all") return true;
+		if (!q.conditionalParentQuestionId) return true;
+		let current = q;
+		while (current.conditionalParentQuestionId) {
+			if (current.conditionalParentQuestionId === mainFilterQuestion?.id) {
+				const allowedOptionIds = current.conditionalParentOptionIds || [];
+				return allowedOptionIds.includes(previewFilterOptionId);
+			}
+			const parent = questions.find(
+				(p) => p.id === current.conditionalParentQuestionId,
+			);
+			if (!parent) break;
+			current = parent;
+		}
+		return true;
+	};
 
 	// Save Questions Layout Action
 	const handleSaveQuestions = async () => {
@@ -420,7 +472,7 @@ function SurveyDetailComponent() {
 				const sectionOrder = section ? section.order : 0;
 
 				return {
-					id: typeof q.id === "number" ? q.id : undefined,
+					id: q.id,
 					sectionOrder,
 					type: q.type,
 					title: q.title,
@@ -428,8 +480,10 @@ function SurveyDetailComponent() {
 					required: !!q.required,
 					config: q.config ?? null,
 					order: q.order,
+					conditionalParentQuestionId: q.conditionalParentQuestionId || null,
+					conditionalParentOptionIds: q.conditionalParentOptionIds || null,
 					options: (q.options || []).map((o: any) => ({
-						id: typeof o.id === "number" ? o.id : undefined,
+						id: o.id,
 						group: o.group,
 						label: o.label,
 						order: o.order,
@@ -480,12 +534,16 @@ function SurveyDetailComponent() {
 
 	const handleSaveSettings = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!settingsPeriodValue || !settingsPeriodValueEnd) {
+		if (requirePeriod && (!settingsPeriodValue || !settingsPeriodValueEnd)) {
 			toast.error("Periode survei mulai dan berakhir wajib diisi");
 			return;
 		}
 
-		if (settingsPeriodValueEnd < settingsPeriodValue) {
+		if (
+			settingsPeriodValue &&
+			settingsPeriodValueEnd &&
+			settingsPeriodValueEnd < settingsPeriodValue
+		) {
 			toast.error("Periode berakhir tidak boleh mendahului periode mulai");
 			return;
 		}
@@ -1203,6 +1261,51 @@ function SurveyDetailComponent() {
 						</div>
 					</div>
 
+					{/* Preview Filter Card */}
+					{enableConditional && mainFilterQuestion && (
+						<div className="bg-white rounded-lg border border-[#c4c6d4] shadow-sm p-4 flex flex-col md:flex-row md:items-start justify-between gap-4">
+							<div className="space-y-1">
+								<h3 className="text-sm font-bold text-[#1a1b21]">
+									Preview Cabang Alur Pengisian
+								</h3>
+								<p className="text-xs text-slate-500">
+									Sembunyikan/redupkan pertanyaan berdasarkan opsi filter utama
+									"{mainFilterQuestion.title}".
+								</p>
+							</div>
+							<div className="flex flex-wrap gap-2">
+								<button
+									type="button"
+									onClick={() => setPreviewFilterOptionId("all")}
+									className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
+										previewFilterOptionId === "all"
+											? "bg-[#4A0000] text-white border-[#4A0000]"
+											: "bg-white text-[#1a1b21] border-slate-200 hover:bg-slate-50"
+									}`}
+								>
+									Semua Pertanyaan
+								</button>
+								{(mainFilterQuestion.options || []).map((opt: any) => {
+									const isSelected = previewFilterOptionId === opt.id;
+									return (
+										<button
+											key={opt.id}
+											type="button"
+											onClick={() => setPreviewFilterOptionId(opt.id)}
+											className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
+												isSelected
+													? "bg-[#4A0000] text-white border-[#4A0000]"
+													: "bg-white text-[#1a1b21] border-slate-200 hover:bg-slate-50"
+											}`}
+										>
+											Cabang: {opt.label}
+										</button>
+									);
+								})}
+							</div>
+						</div>
+					)}
+
 					{/* Sections loop */}
 					{sections.map((sec, secIdx) => {
 						const secQuestions = questions.filter(
@@ -1288,362 +1391,530 @@ function SurveyDetailComponent() {
 											bawah untuk menambahkan.
 										</div>
 									) : (
-										secQuestions.map((q, qIdx) => (
-											<div
-												key={q.id}
-												className="p-4 rounded-lg border border-slate-100 bg-slate-50/50 space-y-4 relative group"
-											>
-												{/* Arrow Reordering Controls */}
-												{user?.role !== "visitor" && (
-													<div className="absolute right-3 top-3 hidden group-hover:flex items-center gap-1 bg-white p-1 rounded-md border border-slate-200 shadow-sm">
-														<button
-															onClick={() =>
-																handleMoveQuestion(questions.indexOf(q), "up")
-															}
-															disabled={questions.indexOf(q) === 0}
-															className="p-1 text-[#434652] hover:text-[#4A0000] disabled:opacity-30 disabled:pointer-events-none"
-															title="Pindah Ke Atas"
-														>
-															<ArrowUp className="h-4 w-4 block" />
-														</button>
-														<button
-															onClick={() =>
-																handleMoveQuestion(questions.indexOf(q), "down")
-															}
-															disabled={
-																questions.indexOf(q) === questions.length - 1
-															}
-															className="p-1 text-[#434652] hover:text-[#4A0000] disabled:opacity-30 disabled:pointer-events-none"
-															title="Pindah Ke Bawah"
-														>
-															<ArrowDown className="h-4 w-4 block" />
-														</button>
-													</div>
-												)}
+										secQuestions.map((q, qIdx) => {
+											const isVisibleInPreview = isQuestionVisibleInPreview(q);
+											return (
+												<div
+													key={q.id}
+													className={`p-4 rounded-lg border border-slate-100 bg-slate-50/50 space-y-4 relative group transition-all duration-300 ${
+														!isVisibleInPreview
+															? "opacity-25 grayscale-[30%] select-none hover:opacity-40"
+															: ""
+													}`}
+												>
+													{/* Arrow Reordering Controls */}
+													{user?.role !== "visitor" && (
+														<div className="absolute right-3 top-3 hidden group-hover:flex items-center gap-1 bg-white p-1 rounded-md border border-slate-200 shadow-sm">
+															<button
+																onClick={() =>
+																	handleMoveQuestion(questions.indexOf(q), "up")
+																}
+																disabled={questions.indexOf(q) === 0}
+																className="p-1 text-[#434652] hover:text-[#4A0000] disabled:opacity-30 disabled:pointer-events-none"
+																title="Pindah Ke Atas"
+															>
+																<ArrowUp className="h-4 w-4 block" />
+															</button>
+															<button
+																onClick={() =>
+																	handleMoveQuestion(
+																		questions.indexOf(q),
+																		"down",
+																	)
+																}
+																disabled={
+																	questions.indexOf(q) === questions.length - 1
+																}
+																className="p-1 text-[#434652] hover:text-[#4A0000] disabled:opacity-30 disabled:pointer-events-none"
+																title="Pindah Ke Bawah"
+															>
+																<ArrowDown className="h-4 w-4 block" />
+															</button>
+														</div>
+													)}
 
-												{/* Title and Type Select */}
-												<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-													<div className="md:col-span-2 space-y-1">
+													{/* Title and Type Select */}
+													<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+														<div className="md:col-span-2 space-y-1">
+															<label className="text-xs font-bold text-[#434652] uppercase">
+																Judul Pertanyaan
+															</label>
+															<input
+																type="text"
+																value={q.title}
+																onChange={(e) =>
+																	handleQuestionFieldChange(
+																		q.id,
+																		"title",
+																		e.target.value,
+																	)
+																}
+																className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none"
+																placeholder="Masukkan label pertanyaan..."
+																disabled={user?.role === "visitor"}
+															/>
+															{enableConditional && q.conditionalParentQuestionId &&
+																(() => {
+																	const parent = questions.find(
+																		(p) =>
+																			p.id === q.conditionalParentQuestionId,
+																	);
+																	if (!parent) return null;
+																	const matchLabels = (
+																		q.conditionalParentOptionIds || []
+																	)
+																		.map(
+																			(optId) =>
+																				parent.options?.find(
+																					(o: any) => o.id === optId,
+																				)?.label,
+																		)
+																		.filter(Boolean)
+																		.join(", ");
+																	return (
+																		<div className="inline-flex items-center gap-1 bg-[#0B3E9C]/10 text-[#0B3E9C] text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-[#0B3E9C]/10 mt-1.5 w-fit">
+																			Tampil jika: {parent.title} ={" "}
+																			{matchLabels || "(kosong)"}
+																		</div>
+																	);
+																})()}
+														</div>
+														<div className="space-y-1">
+															<label className="text-xs font-bold text-[#434652] uppercase">
+																Tipe Bidang
+															</label>
+															<select
+																value={q.type}
+																onChange={(e) =>
+																	handleQuestionFieldChange(
+																		q.id,
+																		"type",
+																		e.target.value,
+																	)
+																}
+																className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none cursor-pointer"
+																disabled={user?.role === "visitor"}
+															>
+																<option value="short_text">
+																	Jawaban Singkat
+																</option>
+																<option value="paragraph">Paragraf</option>
+																<option value="multiple_choice">
+																	Pilihan Ganda (Radios)
+																</option>
+																<option value="checkboxes">
+																	Kotak Centang (Checkboxes)
+																</option>
+																<option value="dropdown">
+																	Dropdown Pilihan
+																</option>
+																<option value="linear_scale">
+																	Skala Linier (1-5)
+																</option>
+																<option value="grid">
+																	Kisi Pilihan Ganda (Matrix)
+																</option>
+																<option value="date">Tanggal</option>
+															</select>
+														</div>
+													</div>
+
+													{/* Description */}
+													<div className="space-y-1">
 														<label className="text-xs font-bold text-[#434652] uppercase">
-															Judul Pertanyaan
+															Deskripsi / Petunjuk Tambahan (Opsional)
 														</label>
 														<input
 															type="text"
-															value={q.title}
+															value={q.description || ""}
 															onChange={(e) =>
 																handleQuestionFieldChange(
 																	q.id,
-																	"title",
+																	"description",
 																	e.target.value,
 																)
 															}
-															className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none"
-															placeholder="Masukkan label pertanyaan..."
+															className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-slate-500 focus:border-[#4A0000] outline-none"
+															placeholder="Petunjuk pengisian untuk responden..."
 															disabled={user?.role === "visitor"}
 														/>
 													</div>
-													<div className="space-y-1">
-														<label className="text-xs font-bold text-[#434652] uppercase">
-															Tipe Bidang
-														</label>
-														<select
-															value={q.type}
-															onChange={(e) =>
-																handleQuestionFieldChange(
-																	q.id,
-																	"type",
-																	e.target.value,
-																)
-															}
-															className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-[#1a1b21] focus:border-[#4A0000] outline-none cursor-pointer"
-															disabled={user?.role === "visitor"}
-														>
-															<option value="short_text">
-																Jawaban Singkat
-															</option>
-															<option value="paragraph">Paragraf</option>
-															<option value="multiple_choice">
-																Pilihan Ganda (Radios)
-															</option>
-															<option value="checkboxes">
-																Kotak Centang (Checkboxes)
-															</option>
-															<option value="dropdown">Dropdown Pilihan</option>
-															<option value="linear_scale">
-																Skala Linier (1-5)
-															</option>
-															<option value="grid">
-																Kisi Pilihan Ganda (Matrix)
-															</option>
-															<option value="date">Tanggal</option>
-														</select>
-													</div>
-												</div>
 
-												{/* Description */}
-												<div className="space-y-1">
-													<label className="text-xs font-bold text-[#434652] uppercase">
-														Deskripsi / Petunjuk Tambahan (Opsional)
-													</label>
-													<input
-														type="text"
-														value={q.description || ""}
-														onChange={(e) =>
-															handleQuestionFieldChange(
-																q.id,
-																"description",
-																e.target.value,
-															)
-														}
-														className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-slate-500 focus:border-[#4A0000] outline-none"
-														placeholder="Petunjuk pengisian untuk responden..."
-														disabled={user?.role === "visitor"}
-													/>
-												</div>
+													{/* Render Option Manager (Only for choice/grid fields) */}
+													{(q.type === "multiple_choice" ||
+														q.type === "dropdown" ||
+														q.type === "checkboxes") && (
+														<div className="space-y-2.5 pt-2 border-t border-slate-100">
+															<span className="text-xs font-bold text-[#434652] uppercase block">
+																Daftar Opsi Pilihan
+															</span>
+															<div className="space-y-2 pl-4 border-l-2 border-slate-200">
+																{(q.options || []).map((opt: any) => (
+																	<div
+																		key={opt.id}
+																		className="flex items-center gap-2"
+																	>
+																		<Circle className="h-3.5 w-3.5 text-slate-300" />
+																		<input
+																			type="text"
+																			value={opt.label}
+																			onChange={(e) =>
+																				handleUpdateOptionLabel(
+																					q.id,
+																					opt.id,
+																					e.target.value,
+																				)
+																			}
+																			className="flex-1 bg-white border border-slate-200 rounded-md py-1 px-2.5 text-xs text-[#1a1b21] focus:border-[#4A0000] outline-none"
+																			disabled={user?.role === "visitor"}
+																		/>
+																		{user?.role !== "visitor" && (
+																			<button
+																				type="button"
+																				onClick={() =>
+																					handleDeleteOption(q.id, opt.id)
+																				}
+																				className="p-1 hover:text-[#ba1a1a]"
+																				title="Hapus Opsi"
+																			>
+																				<X className="h-4 w-4" />
+																			</button>
+																		)}
+																	</div>
+																))}
+																{user?.role !== "visitor" && (
+																	<button
+																		type="button"
+																		onClick={() => handleAddOption(q.id)}
+																		className="text-xs font-bold text-[#B00000] hover:underline flex items-center gap-1 mt-1"
+																	>
+																		<Plus className="h-3.5 w-3.5" />
+																		<span>Tambah Opsi Pilihan</span>
+																	</button>
+																)}
+															</div>
+														</div>
+													)}
 
-												{/* Render Option Manager (Only for choice/grid fields) */}
-												{(q.type === "multiple_choice" ||
-													q.type === "dropdown" ||
-													q.type === "checkboxes") && (
-													<div className="space-y-2.5 pt-2 border-t border-slate-100">
-														<span className="text-xs font-bold text-[#434652] uppercase block">
-															Daftar Opsi Pilihan
-														</span>
-														<div className="space-y-2 pl-4 border-l-2 border-slate-200">
-															{(q.options || []).map((opt: any) => (
-																<div
-																	key={opt.id}
-																	className="flex items-center gap-2"
-																>
-																	<Circle className="h-3.5 w-3.5 text-slate-300" />
-																	<input
-																		type="text"
-																		value={opt.label}
-																		onChange={(e) =>
-																			handleUpdateOptionLabel(
-																				q.id,
-																				opt.id,
-																				e.target.value,
-																			)
-																		}
-																		className="flex-1 bg-white border border-slate-200 rounded-md py-1 px-2.5 text-xs text-[#1a1b21] focus:border-[#4A0000] outline-none"
-																		disabled={user?.role === "visitor"}
-																	/>
+													{/* Render Matrix Grid Option Manager */}
+													{q.type === "grid" && (
+														<div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-3 border-t border-slate-100">
+															{/* Rows manager */}
+															<div className="space-y-2">
+																<span className="text-xs font-bold text-[#434652] uppercase block">
+																	Pernyataan Baris (Rows)
+																</span>
+																<div className="space-y-1.5 pl-2 border-l border-slate-200">
+																	{(q.options || [])
+																		.filter((o: any) => o.group === "row")
+																		.map((opt: any) => (
+																			<div
+																				key={opt.id}
+																				className="flex items-center gap-2"
+																			>
+																				<input
+																					type="text"
+																					value={opt.label}
+																					onChange={(e) =>
+																						handleUpdateOptionLabel(
+																							q.id,
+																							opt.id,
+																							e.target.value,
+																						)
+																					}
+																					className="flex-1 bg-white border border-slate-200 rounded-md py-1 px-2.5 text-xs text-[#1a1b21] focus:border-[#4A0000] outline-none"
+																					disabled={user?.role === "visitor"}
+																				/>
+																				{user?.role !== "visitor" && (
+																					<button
+																						type="button"
+																						onClick={() =>
+																							handleDeleteOption(q.id, opt.id)
+																						}
+																						className="p-1 hover:text-[#ba1a1a]"
+																					>
+																						<X className="h-4 w-4" />
+																					</button>
+																				)}
+																			</div>
+																		))}
 																	{user?.role !== "visitor" && (
 																		<button
 																			type="button"
 																			onClick={() =>
-																				handleDeleteOption(q.id, opt.id)
+																				handleAddOption(q.id, "row")
 																			}
-																			className="p-1 hover:text-[#ba1a1a]"
-																			title="Hapus Opsi"
+																			className="text-xxs font-bold text-[#B00000] hover:underline flex items-center gap-1"
 																		>
-																			<X className="h-4 w-4" />
+																			<Plus className="h-3.5 w-3.5" />
+																			<span>Tambah Baris</span>
 																		</button>
 																	)}
 																</div>
-															))}
-															{user?.role !== "visitor" && (
+															</div>
+
+															{/* Columns manager */}
+															<div className="space-y-2">
+																<span className="text-xs font-bold text-[#434652] uppercase block">
+																	Kolom Skala (Columns)
+																</span>
+																<div className="space-y-1.5 pl-2 border-l border-slate-200">
+																	{(q.options || [])
+																		.filter((o: any) => o.group === "column")
+																		.map((opt: any) => (
+																			<div
+																				key={opt.id}
+																				className="flex items-center gap-2"
+																			>
+																				<input
+																					type="text"
+																					value={opt.label}
+																					onChange={(e) =>
+																						handleUpdateOptionLabel(
+																							q.id,
+																							opt.id,
+																							e.target.value,
+																						)
+																					}
+																					className="flex-1 bg-white border border-slate-200 rounded-md py-1 px-2.5 text-xs text-[#1a1b21] focus:border-[#4A0000] outline-none"
+																					disabled={user?.role === "visitor"}
+																				/>
+																				{user?.role !== "visitor" && (
+																					<button
+																						type="button"
+																						onClick={() =>
+																							handleDeleteOption(q.id, opt.id)
+																						}
+																						className="p-1 hover:text-[#ba1a1a]"
+																					>
+																						<X className="h-4 w-4" />
+																					</button>
+																				)}
+																			</div>
+																		))}
+																	{user?.role !== "visitor" && (
+																		<button
+																			type="button"
+																			onClick={() =>
+																				handleAddOption(q.id, "column")
+																			}
+																			className="text-xxs font-bold text-[#B00000] hover:underline flex items-center gap-1"
+																		>
+																			<Plus className="h-3.5 w-3.5" />
+																			<span>Tambah Kolom</span>
+																		</button>
+																	)}
+																</div>
+															</div>
+														</div>
+													)}
+
+													{/* Conditional Visibility Section */}
+													{enableConditional && (
+														<div className="space-y-2 pt-2 border-t border-slate-100">
+														<span className="text-xs font-bold text-[#434652] uppercase block">
+															Kondisi Tampilan (Conditional Visibility)
+														</span>
+														<div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-slate-200">
+															<div className="space-y-1">
+																<label className="text-xxs font-bold text-[#434652] uppercase block">
+																	Tampilkan hanya jika (Pertanyaan Induk)
+																</label>
+																<select
+																	value={q.conditionalParentQuestionId || ""}
+																	onChange={(e) => {
+																		const val = e.target.value;
+																		const parentId = val
+																			? isNaN(Number(val))
+																				? val
+																				: Number(val)
+																			: null;
+																		handleQuestionFieldChange(
+																			q.id,
+																			"conditionalParentQuestionId",
+																			parentId,
+																		);
+																		handleQuestionFieldChange(
+																			q.id,
+																			"conditionalParentOptionIds",
+																			[],
+																		);
+																	}}
+																	className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-[#1a1b21] focus:border-[#4A0000] outline-none cursor-pointer"
+																	disabled={user?.role === "visitor"}
+																>
+																	<option value="">Selalu Tampilkan</option>
+																	{questions
+																		.filter(
+																			(p) =>
+																				p.type === "multiple_choice" &&
+																				questions.indexOf(p) <
+																					questions.indexOf(q),
+																		)
+																		.map((p) => (
+																			<option key={p.id} value={p.id}>
+																				{p.title ||
+																					`Pertanyaan #${questions.indexOf(p) + 1}`}
+																			</option>
+																		))}
+																</select>
+															</div>
+
+															{q.conditionalParentQuestionId &&
+																(() => {
+																	const parentQ = questions.find(
+																		(p) =>
+																			p.id === q.conditionalParentQuestionId,
+																	);
+																	if (!parentQ) return null;
+																	const opts = parentQ.options || [];
+
+																	return (
+																		<div className="space-y-1">
+																			<label className="text-xxs font-bold text-[#434652] uppercase block">
+																				Pilihan Jawaban Induk yang Memenuhi
+																			</label>
+																			<div className="flex flex-wrap gap-2 pt-1">
+																				{opts.map((opt: any) => {
+																					const selected = (
+																						q.conditionalParentOptionIds || []
+																					).includes(opt.id);
+																					return (
+																						<button
+																							key={opt.id}
+																							type="button"
+																							onClick={() => {
+																								if (user?.role === "visitor")
+																									return;
+																								let nextIds: (
+																									| number
+																									| string
+																								)[] =
+																									q.conditionalParentOptionIds ||
+																									[];
+																								if (selected) {
+																									nextIds = nextIds.filter(
+																										(id) => id !== opt.id,
+																									);
+																								} else {
+																									nextIds = [
+																										...nextIds,
+																										opt.id,
+																									];
+																								}
+																								handleQuestionFieldChange(
+																									q.id,
+																									"conditionalParentOptionIds",
+																									nextIds,
+																								);
+																							}}
+																							className={`px-2.5 py-1 text-xxs font-medium rounded-full border transition-all ${
+																								selected
+																									? "bg-[#B00000] text-white border-[#B00000]"
+																									: "bg-white text-[#434652] border-slate-200 hover:bg-slate-50"
+																							}`}
+																							disabled={
+																								user?.role === "visitor"
+																							}
+																						>
+																							{opt.label}
+																						</button>
+																					);
+																				})}
+																				{opts.length === 0 && (
+																					<span className="text-xxs text-amber-600 italic">
+																						Pertanyaan induk belum memiliki
+																						opsi. Tambahkan opsi di pertanyaan
+																						induk terlebih dahulu.
+																					</span>
+																				)}
+																			</div>
+																		</div>
+																	);
+																})()}
+														</div>
+													</div>
+												)}
+
+													{/* Bottom Controls */}
+													<div className="pt-2 border-t border-slate-200/60 flex justify-end items-center gap-4 text-[#747683]">
+														{user?.role !== "visitor" && (
+															<>
 																<button
 																	type="button"
-																	onClick={() => handleAddOption(q.id)}
-																	className="text-xs font-bold text-[#B00000] hover:underline flex items-center gap-1 mt-1"
+																	onClick={() => handleDeleteQuestion(q.id)}
+																	className="hover:text-[#ba1a1a] flex items-center gap-1 text-xs font-semibold"
+																	title="Hapus Pertanyaan"
 																>
-																	<Plus className="h-3.5 w-3.5" />
-																	<span>Tambah Opsi Pilihan</span>
+																	<Trash2 className="h-4 w-4" />
+																	Hapus
 																</button>
-															)}
-														</div>
-													</div>
-												)}
+																<div className="w-px h-5 bg-slate-200"></div>
+																{(() => {
+																	const sectionQuestions = questions
+																		.filter(
+																			(sq) => sq.sectionId === q.sectionId,
+																		)
+																		.sort((a, b) => a.order - b.order);
+																	const isFirstInSection =
+																		sectionQuestions[0]?.id === q.id;
 
-												{/* Render Matrix Grid Option Manager */}
-												{q.type === "grid" && (
-													<div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-3 border-t border-slate-100">
-														{/* Rows manager */}
-														<div className="space-y-2">
-															<span className="text-xs font-bold text-[#434652] uppercase block">
-																Pernyataan Baris (Rows)
-															</span>
-															<div className="space-y-1.5 pl-2 border-l border-slate-200">
-																{(q.options || [])
-																	.filter((o: any) => o.group === "row")
-																	.map((opt: any) => (
-																		<div
-																			key={opt.id}
-																			className="flex items-center gap-2"
+																	return (
+																		<button
+																			type="button"
+																			onClick={() =>
+																				handleSplitSectionAtQuestion(q.id)
+																			}
+																			disabled={isFirstInSection}
+																			className="hover:text-[#4A0000] flex items-center gap-1 text-xs font-semibold disabled:opacity-30 disabled:pointer-events-none"
+																			title="Pindahkan pertanyaan ini & semua di bawahnya ke bagian baru"
 																		>
-																			<input
-																				type="text"
-																				value={opt.label}
-																				onChange={(e) =>
-																					handleUpdateOptionLabel(
-																						q.id,
-																						opt.id,
-																						e.target.value,
-																					)
-																				}
-																				className="flex-1 bg-white border border-slate-200 rounded-md py-1 px-2.5 text-xs text-[#1a1b21] focus:border-[#4A0000] outline-none"
-																				disabled={user?.role === "visitor"}
-																			/>
-																			{user?.role !== "visitor" && (
-																				<button
-																					type="button"
-																					onClick={() =>
-																						handleDeleteOption(q.id, opt.id)
-																					}
-																					className="p-1 hover:text-[#ba1a1a]"
-																				>
-																					<X className="h-4 w-4" />
-																				</button>
-																			)}
-																		</div>
-																	))}
-																{user?.role !== "visitor" && (
-																	<button
-																		type="button"
-																		onClick={() => handleAddOption(q.id, "row")}
-																		className="text-xxs font-bold text-[#B00000] hover:underline flex items-center gap-1"
-																	>
-																		<Plus className="h-3.5 w-3.5" />
-																		<span>Tambah Baris</span>
-																	</button>
-																)}
-															</div>
-														</div>
-
-														{/* Columns manager */}
-														<div className="space-y-2">
-															<span className="text-xs font-bold text-[#434652] uppercase block">
-																Kolom Skala (Columns)
-															</span>
-															<div className="space-y-1.5 pl-2 border-l border-slate-200">
-																{(q.options || [])
-																	.filter((o: any) => o.group === "column")
-																	.map((opt: any) => (
-																		<div
-																			key={opt.id}
-																			className="flex items-center gap-2"
-																		>
-																			<input
-																				type="text"
-																				value={opt.label}
-																				onChange={(e) =>
-																					handleUpdateOptionLabel(
-																						q.id,
-																						opt.id,
-																						e.target.value,
-																					)
-																				}
-																				className="flex-1 bg-white border border-slate-200 rounded-md py-1 px-2.5 text-xs text-[#1a1b21] focus:border-[#4A0000] outline-none"
-																				disabled={user?.role === "visitor"}
-																			/>
-																			{user?.role !== "visitor" && (
-																				<button
-																					type="button"
-																					onClick={() =>
-																						handleDeleteOption(q.id, opt.id)
-																					}
-																					className="p-1 hover:text-[#ba1a1a]"
-																				>
-																					<X className="h-4 w-4" />
-																				</button>
-																			)}
-																		</div>
-																	))}
-																{user?.role !== "visitor" && (
-																	<button
-																		type="button"
-																		onClick={() =>
-																			handleAddOption(q.id, "column")
-																		}
-																		className="text-xxs font-bold text-[#B00000] hover:underline flex items-center gap-1"
-																	>
-																		<Plus className="h-3.5 w-3.5" />
-																		<span>Tambah Kolom</span>
-																	</button>
-																)}
-															</div>
-														</div>
-													</div>
-												)}
-
-												{/* Bottom Controls */}
-												<div className="pt-2 border-t border-slate-200/60 flex justify-end items-center gap-4 text-[#747683]">
-													{user?.role !== "visitor" && (
-														<>
-															<button
-																type="button"
-																onClick={() => handleDeleteQuestion(q.id)}
-																className="hover:text-[#ba1a1a] flex items-center gap-1 text-xs font-semibold"
-																title="Hapus Pertanyaan"
-															>
-																<Trash2 className="h-4 w-4" />
-																Hapus
-															</button>
-															<div className="w-px h-5 bg-slate-200"></div>
-															{(() => {
-																const sectionQuestions = questions
-																	.filter((sq) => sq.sectionId === q.sectionId)
-																	.sort((a, b) => a.order - b.order);
-																const isFirstInSection =
-																	sectionQuestions[0]?.id === q.id;
-
-																return (
-																	<button
-																		type="button"
-																		onClick={() =>
-																			handleSplitSectionAtQuestion(q.id)
-																		}
-																		disabled={isFirstInSection}
-																		className="hover:text-[#4A0000] flex items-center gap-1 text-xs font-semibold disabled:opacity-30 disabled:pointer-events-none"
-																		title="Pindahkan pertanyaan ini & semua di bawahnya ke bagian baru"
-																	>
-																		<PanelsTopLeft className="h-4 w-4" />
-																		Pisahkan ke Bagian Baru
-																	</button>
-																);
-															})()}
-															<div className="w-px h-5 bg-slate-200"></div>
-														</>
-													)}
-													<label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
-														<span>Wajib Diisi</span>
-														<input
-															type="checkbox"
-															checked={!!q.required}
-															onChange={(e) =>
-																handleQuestionFieldChange(
-																	q.id,
-																	"required",
-																	e.target.checked,
-																)
-															}
-															className="rounded border-slate-300 text-[#4A0000] focus:ring-[#4A0000] h-4 w-4"
-															disabled={user?.role === "visitor"}
-														/>
-													</label>
-
-													{q.type === "short_text" && (
+																			<PanelsTopLeft className="h-4 w-4" />
+																			Pisahkan ke Bagian Baru
+																		</button>
+																	);
+																})()}
+																<div className="w-px h-5 bg-slate-200"></div>
+															</>
+														)}
 														<label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
-															<span>Jawaban Unik (mis. NIM)</span>
+															<span>Wajib Diisi</span>
 															<input
 																type="checkbox"
-																checked={!!q.config?.uniqueAnswer}
+																checked={!!q.required}
 																onChange={(e) =>
-																	handleQuestionFieldChange(q.id, "config", {
-																		...(q.config || {}),
-																		uniqueAnswer: e.target.checked,
-																	})
+																	handleQuestionFieldChange(
+																		q.id,
+																		"required",
+																		e.target.checked,
+																	)
 																}
 																className="rounded border-slate-300 text-[#4A0000] focus:ring-[#4A0000] h-4 w-4"
 																disabled={user?.role === "visitor"}
 															/>
 														</label>
-													)}
+
+														{q.type === "short_text" && (
+															<label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+																<span>Jawaban Unik (mis. NIM)</span>
+																<input
+																	type="checkbox"
+																	checked={!!q.config?.uniqueAnswer}
+																	onChange={(e) =>
+																		handleQuestionFieldChange(q.id, "config", {
+																			...(q.config || {}),
+																			uniqueAnswer: e.target.checked,
+																		})
+																	}
+																	className="rounded border-slate-300 text-[#4A0000] focus:ring-[#4A0000] h-4 w-4"
+																	disabled={user?.role === "visitor"}
+																/>
+															</label>
+														)}
+													</div>
 												</div>
-											</div>
-										))
+											);
+										})
 									)}
 
 									{/* Add button inside Section */}
@@ -1815,16 +2086,26 @@ function SurveyDetailComponent() {
 												}`}
 											>
 												<input
-													type="checkbox"
+													type={
+														detail?.survey?.category === "layanan-pengaduan"
+															? "radio"
+															: "checkbox"
+													}
 													className="sr-only"
 													checked={checked}
 													onChange={() => {
 														const sid = String(o.id);
-														setCsvFilterOptionIds((prev) =>
-															prev.includes(sid)
-																? prev.filter((id) => id !== sid)
-																: [...prev, sid],
-														);
+														if (
+															detail?.survey?.category === "layanan-pengaduan"
+														) {
+															setCsvFilterOptionIds([sid]);
+														} else {
+															setCsvFilterOptionIds((prev) =>
+																prev.includes(sid)
+																	? prev.filter((id) => id !== sid)
+																	: [...prev, sid],
+															);
+														}
 													}}
 												/>
 												{o.label}
@@ -1834,19 +2115,20 @@ function SurveyDetailComponent() {
 								</div>
 							)}
 
-							{csvFilterQuestionId && (
-								<button
-									type="button"
-									onClick={() => {
-										setCsvFilterQuestionId("");
-										setCsvFilterOptionIds([]);
-									}}
-									className="text-xs font-bold text-[#ba1a1a] hover:underline flex items-center gap-0.5 whitespace-nowrap cursor-pointer"
-								>
-									<X className="h-4 w-4" />
-									<span>Reset</span>
-								</button>
-							)}
+							{csvFilterQuestionId &&
+								detail?.survey?.category !== "layanan-pengaduan" && (
+									<button
+										type="button"
+										onClick={() => {
+											setCsvFilterQuestionId("");
+											setCsvFilterOptionIds([]);
+										}}
+										className="text-xs font-bold text-[#ba1a1a] hover:underline flex items-center gap-0.5 whitespace-nowrap cursor-pointer"
+									>
+										<X className="h-4 w-4" />
+										<span>Reset</span>
+									</button>
+								)}
 
 							{/* {activeStats?.subtitle && (
 								<span className="text-xs text-[#434652] italic whitespace-nowrap">
@@ -1859,7 +2141,9 @@ function SurveyDetailComponent() {
 									type="button"
 									onClick={() => setIsExportMenuOpen((v) => !v)}
 									disabled={
-										!!csvFilterQuestionId && csvFilterOptionIds.length === 0
+										detail?.survey?.category === "layanan-pengaduan"
+											? !csvFilterQuestionId || csvFilterOptionIds.length !== 1
+											: !!csvFilterQuestionId && csvFilterOptionIds.length === 0
 									}
 									className="bg-[#B00000] text-white hover:bg-[#4A0000] disabled:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-50 text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm active:scale-95 transition-transform cursor-pointer whitespace-nowrap"
 								>
@@ -3029,33 +3313,48 @@ function SurveyDetailComponent() {
 
 						<div className="flex flex-col gap-1.5">
 							<label className="text-sm font-bold text-[#1a1b21]">
-								Periode Survei (Wajib Diisi)
+								Periode Survei {requirePeriod ? "(Wajib Diisi)" : "(Opsional)"}
 							</label>
-							<div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 w-fit">
-								<button
-									type="button"
-									onClick={() => {
-										setSettingsPeriodType("month");
-										setSettingsPeriodValue("");
-										setSettingsPeriodValueEnd("");
-									}}
-									className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${settingsPeriodType === "month" ? "bg-white shadow-sm text-[#4A0000]" : "text-[#747683]"}`}
-									disabled={isSavingSettings || user?.role === "visitor"}
-								>
-									Bulan
-								</button>
-								<button
-									type="button"
-									onClick={() => {
-										setSettingsPeriodType("date");
-										setSettingsPeriodValue("");
-										setSettingsPeriodValueEnd("");
-									}}
-									className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${settingsPeriodType === "date" ? "bg-white shadow-sm text-[#4A0000]" : "text-[#747683]"}`}
-									disabled={isSavingSettings || user?.role === "visitor"}
-								>
-									Tanggal Spesifik
-								</button>
+							<div className="flex justify-between items-center w-full max-w-sm">
+								<div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 w-fit">
+									<button
+										type="button"
+										onClick={() => {
+											setSettingsPeriodType("month");
+											setSettingsPeriodValue("");
+											setSettingsPeriodValueEnd("");
+										}}
+										className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${settingsPeriodType === "month" ? "bg-white shadow-sm text-[#4A0000]" : "text-[#747683]"}`}
+										disabled={isSavingSettings || user?.role === "visitor"}
+									>
+										Bulan
+									</button>
+									<button
+										type="button"
+										onClick={() => {
+											setSettingsPeriodType("date");
+											setSettingsPeriodValue("");
+											setSettingsPeriodValueEnd("");
+										}}
+										className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${settingsPeriodType === "date" ? "bg-white shadow-sm text-[#4A0000]" : "text-[#747683]"}`}
+										disabled={isSavingSettings || user?.role === "visitor"}
+									>
+										Tanggal Spesifik
+									</button>
+								</div>
+								{(settingsPeriodValue || settingsPeriodValueEnd) && (
+									<button
+										type="button"
+										onClick={() => {
+											setSettingsPeriodValue("");
+											setSettingsPeriodValueEnd("");
+										}}
+										className="text-xs font-bold text-[#ba1a1a] hover:underline cursor-pointer flex items-center gap-1"
+										disabled={isSavingSettings || user?.role === "visitor"}
+									>
+										Hapus Periode
+									</button>
+								)}
 							</div>
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								<div className="flex flex-col gap-1">
@@ -3067,7 +3366,7 @@ function SurveyDetailComponent() {
 										value={settingsPeriodValue}
 										onChange={(e) => setSettingsPeriodValue(e.target.value)}
 										className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors"
-										required
+										required={requirePeriod}
 										disabled={isSavingSettings || user?.role === "visitor"}
 									/>
 								</div>
@@ -3080,7 +3379,7 @@ function SurveyDetailComponent() {
 										value={settingsPeriodValueEnd}
 										onChange={(e) => setSettingsPeriodValueEnd(e.target.value)}
 										className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 px-4 text-sm text-[#1a1b21] focus:border-[#4A0000] focus:ring-1 focus:ring-[#4A0000] focus:bg-white outline-none transition-colors"
-										required
+										required={requirePeriod}
 										disabled={isSavingSettings || user?.role === "visitor"}
 									/>
 								</div>

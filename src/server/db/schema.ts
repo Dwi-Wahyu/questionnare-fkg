@@ -36,6 +36,8 @@ export const surveyCategories = mysqlTable("survey_categories", {
 	// Human-readable label shown in dropdowns/filters, e.g. "Survey Kepuasan".
 	name: varchar("name", { length: 150 }).notNull(),
 	order: int("order").notNull().default(0),
+	requirePeriod: boolean("require_period").notNull().default(false),
+	enableConditional: boolean("enable_conditional").notNull().default(false),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -129,10 +131,19 @@ export const questions = mysqlTable(
 		// grid                 -> { rowsRequired?: boolean }
 		// date                 -> { minDate?, maxDate? }
 		config: json("config").$type<Record<string, unknown>>(),
+		conditionalParentQuestionId: int(
+			"conditional_parent_question_id",
+		).references(() => questions.id, { onDelete: "cascade" }),
+		conditionalParentOptionIds: json("conditional_parent_option_ids").$type<
+			number[]
+		>(),
 	},
 	(table) => ({
 		surveyIdx: index("questions_survey_idx").on(table.surveyId),
 		sectionIdx: index("questions_section_idx").on(table.sectionId),
+		conditionalParentQuestionIdx: index(
+			"questions_conditional_parent_question_idx",
+		).on(table.conditionalParentQuestionId),
 	}),
 );
 

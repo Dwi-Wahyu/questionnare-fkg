@@ -1,15 +1,15 @@
-# Graph Report - /home/dwiwahyuilahi/Personal/Projects/FKG/tracert-study/source-code  (2026-07-23)
+# Graph Report - /home/dwiwahyuilahi/Personal/Projects/FKG/tracert-study/source-code  (2026-07-27)
 
 ## Corpus Check
 - cluster-only mode — file stats not available
 
 ## Summary
-- 425 nodes · 812 edges · 52 communities (24 shown, 28 thin omitted)
+- 441 nodes · 845 edges · 54 communities (24 shown, 30 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ed21cc67`
+- Built from commit: `9a6b0c24`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -17,7 +17,7 @@
 - seed.ts
 - chart.tsx
 - routeTree.gen.ts
-- visitorFunctions.ts
+- index.tsx
 - adminSurveyFunctions.ts
 - surveys.index.tsx
 - survey.$surveySlug.tsx
@@ -47,15 +47,16 @@
 - Dialog.tsx
 - Input.tsx
 - FIX_LIVE_PRESENCE_PRODUCTION.md
+- 0013_sparkling_violations.sql
 - surveys.new.tsx
-- login.tsx
+- authFunctions.ts
 - 0010_third_tarot.sql
 - 09-individual-response-delete-print-and-csv-filter-fix.md
 - 0009_flat_zarda.sql
 - 03-FIX_SURVEY_TAKING_HOOKS_ERROR.md
 - 04-IMPLEMENT_SURVEY_CATEGORY_TABLE.md
 - Laporan Implementasi — Integrasi Auto-Isi Data SIAKAD ke TracerStudy
-- siakadClient.ts
+- `questions`
 - router.tsx
 - Visitor Statistics Implementation Summary
 - 0011_mature_forgotten_one.sql
@@ -64,25 +65,25 @@
 1. `cn()` - 63 edges
 2. `SurveyDetailComponent()` - 16 edges
 3. `FileRoutesByPath` - 13 edges
-4. `ChartTooltipContent()` - 10 edges
-5. `db` - 10 edges
+4. `db` - 11 edges
+5. `ChartTooltipContent()` - 10 edges
 6. `ChartContainer()` - 9 edges
-7. `getUserFromSession()` - 9 edges
-8. `Card()` - 8 edges
-9. `CardHeader()` - 8 edges
-10. `CardTitle()` - 8 edges
+7. `SurveyTakingComponent()` - 9 edges
+8. `getUserFromSession()` - 9 edges
+9. `Card()` - 8 edges
+10. `CardHeader()` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `docs/chart/base.md` --conceptually_related_to--> `TanStack Start`  [INFERRED]
   docs/chart/base.md → AGENTS.md
 - `CardAction()` --calls--> `cn()`  [EXTRACTED]
   src/components/ui/card.tsx → src/lib/utils.ts
+- `RootComponent()` --calls--> `logoutFn`  [EXTRACTED]
+  src/routes/__root.tsx → src/server/authFunctions.ts
 - `CommandEmpty()` --calls--> `cn()`  [EXTRACTED]
   src/components/ui/MultiSelect.tsx → src/lib/utils.ts
-- `Card()` --calls--> `cn()`  [EXTRACTED]
-  src/components/ui/card.tsx → src/lib/utils.ts
-- `CardHeader()` --calls--> `cn()`  [EXTRACTED]
-  src/components/ui/card.tsx → src/lib/utils.ts
+- `Badge()` --calls--> `cn()`  [EXTRACTED]
+  src/components/ui/badge.tsx → src/lib/utils.ts
 
 ## Import Cycles
 - None detected.
@@ -90,11 +91,11 @@
 ## Hyperedges (group relationships)
 - **Project Tech Stack** — tanstack_start, rsbuild, bun [EXTRACTED 1.00]
 
-## Communities (52 total, 28 thin omitted)
+## Communities (54 total, 30 thin omitted)
 
 ### Community 0 - "seed.ts"
-Cohesion: 0.07
-Nodes (41): UserManagementComponent(), assertAdmin(), assertAdmin(), createUserFn, listUsersFn, toggleUserStatusFn, updateUserFn, createSessionToken() (+33 more)
+Cohesion: 0.05
+Nodes (59): SettingsComponent(), assertAdmin(), updateSurveyCategorySettingsFn, assertAdmin(), createUserFn, listUsersFn, toggleUserStatusFn, updateUserFn (+51 more)
 
 ### Community 1 - "chart.tsx"
 Cohesion: 0.15
@@ -104,9 +105,9 @@ Nodes (23): chartData, chartData, chartData, chartData, chartData, Card(), CardA
 Cohesion: 0.08
 Nodes (30): Route, Route, Route, Route, Route, Route, Route, AdminAnalyticsRoute (+22 more)
 
-### Community 3 - "visitorFunctions.ts"
-Cohesion: 0.15
-Nodes (10): ALL_SURVEYS, Route, getAdminDashboardStatsFn, getAdminSurveysListFn, getSessionFn, visitorLogs, getVisitorStatsFn, statsCache (+2 more)
+### Community 3 - "index.tsx"
+Cohesion: 0.20
+Nodes (6): ALL_SURVEYS, Route, Route, getAdminDashboardStatsFn, getAdminSurveysListFn, getVisitorStatsFn
 
 ### Community 4 - "adminSurveyFunctions.ts"
 Cohesion: 0.09
@@ -117,8 +118,8 @@ Cohesion: 0.18
 Nodes (9): ConfirmDialog(), ConfirmDialogProps, Select(), SelectOption, SelectProps, Route, SurveysIndexComponent(), deleteAdminSurveyFn (+1 more)
 
 ### Community 6 - "survey.$surveySlug.tsx"
-Cohesion: 0.15
-Nodes (20): useSurveyLive(), getFormattedPeriod(), isSurveyExpired(), SurveyTakingComponent(), g, getAggregatePresence(), getLastActivity(), getPresenceCount() (+12 more)
+Cohesion: 0.12
+Nodes (24): Badge(), badgeVariants, useSurveyLive(), getFormattedPeriod(), isSurveyExpired(), SurveyTakingComponent(), g, getAggregatePresence() (+16 more)
 
 ### Community 7 - "0000_brave_pixie.sql"
 Cohesion: 0.54
@@ -126,11 +127,11 @@ Nodes (7): `answers`, `question_options`, `questions`, `responses`, `sections`, 
 
 ### Community 10 - "cn"
 Cohesion: 0.06
-Nodes (54): Badge(), badgeVariants, buttonVariants, Button(), Command(), CommandDialog(), CommandEmpty(), CommandGroup() (+46 more)
+Nodes (52): buttonVariants, Button(), Command(), CommandDialog(), CommandEmpty(), CommandGroup(), CommandInput(), CommandItem() (+44 more)
 
 ### Community 29 - "useToast.ts"
-Cohesion: 0.18
-Nodes (10): ToastContainer(), Listener, listeners, toasts, ToastType, useToast(), AdminLayoutComponent(), Route (+2 more)
+Cohesion: 0.23
+Nodes (7): ToastContainer(), Listener, listeners, toasts, ToastType, useToast(), RootComponent()
 
 ### Community 35 - "index.tsx"
 Cohesion: 0.21
@@ -140,17 +141,13 @@ Nodes (7): getAnchorAndDir(), hexToRgb(), LightRays(), Skeleton(), SkeletonProps
 Cohesion: 0.67
 Nodes (3): CreateSurveyComponent(), Route, createAdminSurveyFn
 
-### Community 42 - "login.tsx"
-Cohesion: 0.40
-Nodes (5): toast, LoginComponent(), loginSchema, Route, loginFn
+### Community 42 - "authFunctions.ts"
+Cohesion: 0.31
+Nodes (8): toast, AdminLayoutComponent(), LoginComponent(), loginSchema, Route, getSessionFn, loginFn, logoutFn
 
 ### Community 48 - "Laporan Implementasi — Integrasi Auto-Isi Data SIAKAD ke TracerStudy"
 Cohesion: 0.40
 Nodes (4): Impact on Graph, Laporan Implementasi — Integrasi Auto-Isi Data SIAKAD ke TracerStudy, Logic Changes, Modified Files
-
-### Community 50 - "siakadClient.ts"
-Cohesion: 0.39
-Nodes (8): baseUrl(), fetchMahasiswaByNim(), getToken(), login(), readCache(), SiakadStudent, TokenCache, writeCache()
 
 ### Community 52 - "router.tsx"
 Cohesion: 0.33
@@ -161,23 +158,23 @@ Cohesion: 0.40
 Nodes (4): Impact on Graph, Logic Changes, Modified Files, Visitor Statistics Implementation Summary
 
 ## Knowledge Gaps
-- **101 isolated node(s):** `chartData`, `chartData`, `chartData`, `chartData`, `chartData` (+96 more)
+- **104 isolated node(s):** `chartData`, `chartData`, `chartData`, `chartData`, `chartData` (+99 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **30 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `cn` to `chart.tsx`?**
-  _High betweenness centrality (0.190) - this node is a cross-community bridge._
+- **Why does `cn()` connect `cn` to `chart.tsx`, `survey.$surveySlug.tsx`?**
+  _High betweenness centrality (0.183) - this node is a cross-community bridge._
 - **Why does `ChartContainer()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
-- **Why does `ChartTooltipContent()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?**
   _High betweenness centrality (0.027) - this node is a cross-community bridge._
+- **Why does `ChartTooltipContent()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?**
+  _High betweenness centrality (0.026) - this node is a cross-community bridge._
 - **What connects `chartData`, `chartData`, `chartData` to the rest of the system?**
-  _101 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _104 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `seed.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.07407407407407407 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05228070175438596 - nodes in this community are weakly interconnected._
 - **Should `chart.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.14714714714714713 - nodes in this community are weakly interconnected._
 - **Should `routeTree.gen.ts` be split into smaller, more focused modules?**

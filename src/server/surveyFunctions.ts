@@ -7,6 +7,7 @@ import {
 	questions,
 	responses,
 	sections,
+	surveyCategories,
 	surveys,
 } from "./db/schema";
 import { markAnswered } from "./livePresence";
@@ -59,6 +60,11 @@ export const getSurveyDetailsFn = createServerFn({ method: "GET" })
 			throw new Error("Survei tidak ditemukan atau belum dipublikasikan");
 		}
 
+		const [categoryObj] = await db
+			.select()
+			.from(surveyCategories)
+			.where(eq(surveyCategories.slug, survey.category));
+
 		const surveySections = await db
 			.select()
 			.from(sections)
@@ -91,6 +97,7 @@ export const getSurveyDetailsFn = createServerFn({ method: "GET" })
 				...q,
 				options: surveyOptions.filter((o) => o.questionId === q.id),
 			})),
+			enableConditional: categoryObj?.enableConditional ?? false,
 		};
 	});
 

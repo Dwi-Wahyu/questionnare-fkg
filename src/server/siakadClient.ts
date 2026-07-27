@@ -74,7 +74,6 @@ async function getToken(forceRefresh = false): Promise<string> {
 	return fresh.token;
 }
 
-
 export interface SiakadStudent {
 	id: string;
 	nim: string;

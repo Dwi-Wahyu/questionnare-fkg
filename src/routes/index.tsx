@@ -13,11 +13,11 @@ import { useEffect, useState } from "react";
 import LightRays from "../components/LightRays";
 import { Skeleton } from "../components/ui/Skeleton";
 import { getSurveyCategoriesFn } from "../server/adminSurveyFunctions";
+import { getAggregatePresenceFn } from "../server/livePresenceFunctions";
 import {
 	getPublicLandingStatsFn,
 	getPublishedSurveysFn,
 } from "../server/surveyFunctions";
-import { getAggregatePresenceFn } from "../server/livePresenceFunctions";
 
 export const Route = createFileRoute("/")({
 	loader: async () => {
