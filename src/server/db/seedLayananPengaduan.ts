@@ -1,9 +1,35 @@
 import { eq } from "drizzle-orm";
 import { db } from "./index";
-import { questionOptions, questions, sections, surveys, users } from "./schema";
+import {
+	questionOptions,
+	questions,
+	sections,
+	surveyCategories,
+	surveys,
+	users,
+} from "./schema";
 
 export async function seedLayananPengaduan() {
 	console.log("📝 Seeding Layanan Pengaduan survey...");
+
+	// Ensure category exists
+	await db
+		.insert(surveyCategories)
+		.values({
+			slug: "layanan-pengaduan",
+			name: "Layanan Pengaduan",
+			order: 3,
+			requirePeriod: false,
+			enableConditional: true,
+		})
+		.onDuplicateKeyUpdate({
+			set: {
+				name: "Layanan Pengaduan",
+				order: 3,
+				requirePeriod: false,
+				enableConditional: true,
+			},
+		});
 
 	// Find admin user
 	const [admin] = await db

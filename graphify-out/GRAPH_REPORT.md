@@ -1,15 +1,16 @@
-# Graph Report - /home/dwiwahyuilahi/Personal/Projects/FKG/tracert-study/source-code  (2026-07-27)
+# Graph Report - source-code  (2026-07-27)
 
 ## Corpus Check
-- cluster-only mode — file stats not available
+- 97 files · ~67,875 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 441 nodes · 845 edges · 54 communities (24 shown, 30 thin omitted)
+- 441 nodes · 846 edges · 54 communities (24 shown, 30 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 13 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9a6b0c24`
+- Built from commit: `6411e7d0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -174,7 +175,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `chartData`, `chartData`, `chartData` to the rest of the system?**
   _104 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `seed.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.05228070175438596 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05263157894736842 - nodes in this community are weakly interconnected._
 - **Should `chart.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.14714714714714713 - nodes in this community are weakly interconnected._
 - **Should `routeTree.gen.ts` be split into smaller, more focused modules?**
