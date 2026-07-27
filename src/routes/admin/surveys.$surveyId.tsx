@@ -678,11 +678,18 @@ function SurveyDetailComponent() {
 		setQuestions(questions.filter((q) => q.id !== qId));
 	};
 
-	const handleQuestionFieldChange = (qId: any, key: string, val: any) => {
-		setQuestions(
-			questions.map((q) => {
+	const handleQuestionFieldChange = (
+		qId: any,
+		keyOrFields: string | Record<string, any>,
+		val?: any,
+	) => {
+		setQuestions((prevQuestions) =>
+			prevQuestions.map((q) => {
 				if (q.id === qId) {
-					return { ...q, [key]: val };
+					if (typeof keyOrFields === "string") {
+						return { ...q, [keyOrFields]: val };
+					}
+					return { ...q, ...keyOrFields };
 				}
 				return q;
 			}),
@@ -1734,16 +1741,10 @@ function SurveyDetailComponent() {
 																				? val
 																				: Number(val)
 																			: null;
-																		handleQuestionFieldChange(
-																			q.id,
-																			"conditionalParentQuestionId",
-																			parentId,
-																		);
-																		handleQuestionFieldChange(
-																			q.id,
-																			"conditionalParentOptionIds",
-																			[],
-																		);
+																		handleQuestionFieldChange(q.id, {
+																			conditionalParentQuestionId: parentId,
+																			conditionalParentOptionIds: [],
+																		});
 																	}}
 																	className="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-[#1a1b21] focus:border-[#4A0000] outline-none cursor-pointer"
 																	disabled={user?.role === "visitor"}
