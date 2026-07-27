@@ -1,8 +1,7 @@
-# Graph Report - source-code  (2026-07-27)
+# Graph Report - /home/dwiwahyuilahi/Personal/Projects/FKG/tracert-study/source-code  (2026-07-27)
 
 ## Corpus Check
-- 97 files · ~67,875 words
-- Verdict: corpus is large enough that graph structure adds value.
+- cluster-only mode — file stats not available
 
 ## Summary
 - 441 nodes · 846 edges · 54 communities (24 shown, 30 thin omitted)

@@ -57,7 +57,7 @@
       "src_server_db_seedcategories_category_seed_data",
       "src_server_db_seedcategories_seedsurveycategories",
       "src_server_db_seedlayananpengaduan",
-      "src_server_db_seedlayananpengaduan_rationale_144",
+      "src_server_db_seedlayananpengaduan_rationale_170",
       "src_server_db_seedlayananpengaduan_seedlayananpengaduan",
       "src_server_livepresence_markanswered",
       "src_server_siakadclient",
@@ -551,7 +551,7 @@
     ]
   },
   "cohesion": {
-    "0": 0.05228070175438596,
+    "0": 0.05263157894736842,
     "1": 0.14714714714714713,
     "2": 0.07765151515151515,
     "3": 0.2,
@@ -739,7 +739,7 @@
     {
       "type": "low_cohesion",
       "question": "Should `seed.ts` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.05228070175438596 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.05263157894736842 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",

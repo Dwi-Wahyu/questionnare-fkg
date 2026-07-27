@@ -16,6 +16,7 @@
     - Added `conditionalParentQuestionId` and `conditionalParentOptionIds` columns to `questions` table with cascade delete references and index.
     - Added `requirePeriod` and `enableConditional` columns to `survey_categories` table to store per-category settings.
     - Seeded `"layanan-pengaduan"` category with `enableConditional = true` and `requirePeriod = false`. Seeded other categories with `enableConditional = false` and `requirePeriod = true`.
+    - Updated `seedLayananPengaduan.ts` to automatically ensure the `"layanan-pengaduan"` category exists in the `survey_categories` table before seeding the survey, fixing issues where executing the seeder alone failed to create the category.
   - **Dynamic Period & Conditional Visibility Configuration:**
     - Modified settings save handlers (both in `surveys.$surveyId.tsx` on client side and `updateAdminSurveySettingsFn` on server side) to bypass period requirements unless configured as `requirePeriod = true` for the survey's category.
     - Adjusted public page (`survey.$surveySlug.tsx`), admin builder cards, and preview branches inside `surveys.$surveyId.tsx` to conditionally execute and render conditional visibility editors/features ONLY if the category settings has `enableConditional = true`.
