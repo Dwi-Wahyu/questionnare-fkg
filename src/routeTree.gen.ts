@@ -14,6 +14,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SurveySurveySlugRouteImport } from './routes/survey.$surveySlug'
+import { Route as SCategorySlugRouteImport } from './routes/s.$categorySlug'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AdminSurveysIndexRouteImport } from './routes/admin/surveys.index'
@@ -44,6 +45,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const SurveySurveySlugRoute = SurveySurveySlugRouteImport.update({
   id: '/survey/$surveySlug',
   path: '/survey/$surveySlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SCategorySlugRoute = SCategorySlugRouteImport.update({
+  id: '/s/$categorySlug',
+  path: '/s/$categorySlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/s/$categorySlug': typeof SCategorySlugRoute
   '/survey/$surveySlug': typeof SurveySurveySlugRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/surveys/$surveyId': typeof AdminSurveysSurveyIdRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/s/$categorySlug': typeof SCategorySlugRoute
   '/survey/$surveySlug': typeof SurveySurveySlugRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/admin/surveys/$surveyId': typeof AdminSurveysSurveyIdRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/s/$categorySlug': typeof SCategorySlugRoute
   '/survey/$surveySlug': typeof SurveySurveySlugRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/admin/surveys/$surveyId': typeof AdminSurveysSurveyIdRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin/analytics'
     | '/admin/settings'
+    | '/s/$categorySlug'
     | '/survey/$surveySlug'
     | '/admin/'
     | '/admin/surveys/$surveyId'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin/analytics'
     | '/admin/settings'
+    | '/s/$categorySlug'
     | '/survey/$surveySlug'
     | '/admin'
     | '/admin/surveys/$surveyId'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin/analytics'
     | '/admin/settings'
+    | '/s/$categorySlug'
     | '/survey/$surveySlug'
     | '/admin/'
     | '/admin/surveys/$surveyId'
@@ -162,6 +174,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
+  SCategorySlugRoute: typeof SCategorySlugRoute
   SurveySurveySlugRoute: typeof SurveySurveySlugRouteWithChildren
 }
 
@@ -200,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/survey/$surveySlug'
       fullPath: '/survey/$surveySlug'
       preLoaderRoute: typeof SurveySurveySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$categorySlug': {
+      id: '/s/$categorySlug'
+      path: '/s/$categorySlug'
+      fullPath: '/s/$categorySlug'
+      preLoaderRoute: typeof SCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/settings': {
@@ -284,6 +304,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
   LoginRoute: LoginRoute,
+  SCategorySlugRoute: SCategorySlugRoute,
   SurveySurveySlugRoute: SurveySurveySlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport

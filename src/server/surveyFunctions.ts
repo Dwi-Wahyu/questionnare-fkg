@@ -2,471 +2,512 @@ import { createServerFn } from "@tanstack/react-start";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "./db";
 import {
-	answers,
-	questionOptions,
-	questions,
-	responses,
-	sections,
-	surveyCategories,
-	surveys,
+  answers,
+  questionOptions,
+  questions,
+  responses,
+  sections,
+  surveyCategories,
+  surveys,
 } from "./db/schema";
 import { markAnswered } from "./livePresence";
 import { fetchMahasiswaByNim } from "./siakadClient";
 
 // 1. Fetch published surveys for landing page
 export const getPublishedSurveysFn = createServerFn({ method: "GET" }).handler(
-	async () => {
-		const list = await db
-			.select({
-				id: surveys.id,
-				slug: surveys.slug,
-				title: surveys.title,
-				description: surveys.description,
-				category: surveys.category,
-				bannerUrl: surveys.bannerUrl,
-				createdAt: surveys.createdAt,
-			})
-			.from(surveys)
-			.where(eq(surveys.status, "published"));
+  async () => {
+    const list = await db
+      .select({
+        id: surveys.id,
+        slug: surveys.slug,
+        title: surveys.title,
+        description: surveys.description,
+        category: surveys.category,
+        bannerUrl: surveys.bannerUrl,
+        createdAt: surveys.createdAt,
+      })
+      .from(surveys)
+      .where(eq(surveys.status, "published"));
 
-		// Fetch question counts for each
-		const surveysWithCounts = await Promise.all(
-			list.map(async (s) => {
-				const [qCount] = await db
-					.select({ count: sql<number>`count(*)` })
-					.from(questions)
-					.where(eq(questions.surveyId, s.id));
-				return {
-					...s,
-					questionCount: qCount?.count || 0,
-				};
-			}),
-		);
+    // Fetch question counts for each
+    const surveysWithCounts = await Promise.all(
+      list.map(async (s) => {
+        const [qCount] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(questions)
+          .where(eq(questions.surveyId, s.id));
+        return {
+          ...s,
+          questionCount: qCount?.count || 0,
+        };
+      }),
+    );
 
-		return surveysWithCounts;
-	},
+    return surveysWithCounts;
+  },
 );
+
+// 1b. Resolve the current "active" survey for a category slug — this is
+// what powers the stable per-category subdomains (e.g.
+// kepuasan-mahasiswa.minmat2026.my.id -> /s/survey-kepuasan -> whichever
+// survey in that category is currently published). Only the DB record
+// changes each period; nginx never needs a new server block.
+//
+// "Active" = published, most recently created. Expiry (periodValueEnd) is
+// intentionally NOT checked here — the /survey/$surveySlug page already
+// renders a proper "Survei Telah Berakhir" screen for expired surveys, so
+// redirecting there is correct even if the period has lapsed. Admins are
+// expected to set the OLD period's survey to "archived" when they publish
+// a new one in the same category, so there's normally at most one
+// published survey per category at a time; if more than one is published
+// simultaneously, the newest one wins.
+export const getActiveSurveyByCategoryFn = createServerFn({ method: "GET" })
+  .validator((categorySlug: string) => categorySlug)
+  .handler(async ({ data: categorySlug }) => {
+    const [category] = await db
+      .select()
+      .from(surveyCategories)
+      .where(eq(surveyCategories.slug, categorySlug));
+
+    if (!category) {
+      return { category: null, survey: null };
+    }
+
+    const [survey] = await db
+      .select({ slug: surveys.slug, title: surveys.title })
+      .from(surveys)
+      .where(
+        and(
+          eq(surveys.category, categorySlug),
+          eq(surveys.status, "published"),
+        ),
+      )
+      .orderBy(sql`${surveys.createdAt} DESC`)
+      .limit(1);
+
+    return { category, survey: survey ?? null };
+  });
 
 // 2. Fetch full survey structure by slug (for survey taking)
 export const getSurveyDetailsFn = createServerFn({ method: "GET" })
-	.validator((slug: string) => slug)
-	.handler(async ({ data: slug }) => {
-		const [survey] = await db
-			.select()
-			.from(surveys)
-			.where(and(eq(surveys.slug, slug), eq(surveys.status, "published")));
+  .validator((slug: string) => slug)
+  .handler(async ({ data: slug }) => {
+    const [survey] = await db
+      .select()
+      .from(surveys)
+      .where(and(eq(surveys.slug, slug), eq(surveys.status, "published")));
 
-		if (!survey) {
-			throw new Error("Survei tidak ditemukan atau belum dipublikasikan");
-		}
+    if (!survey) {
+      throw new Error("Survei tidak ditemukan atau belum dipublikasikan");
+    }
 
-		const [categoryObj] = await db
-			.select()
-			.from(surveyCategories)
-			.where(eq(surveyCategories.slug, survey.category));
+    const [categoryObj] = await db
+      .select()
+      .from(surveyCategories)
+      .where(eq(surveyCategories.slug, survey.category));
 
-		const surveySections = await db
-			.select()
-			.from(sections)
-			.where(eq(sections.surveyId, survey.id))
-			.orderBy(sections.order);
+    const surveySections = await db
+      .select()
+      .from(sections)
+      .where(eq(sections.surveyId, survey.id))
+      .orderBy(sections.order);
 
-		const surveyQuestions = await db
-			.select()
-			.from(questions)
-			.where(eq(questions.surveyId, survey.id))
-			.orderBy(questions.order);
+    const surveyQuestions = await db
+      .select()
+      .from(questions)
+      .where(eq(questions.surveyId, survey.id))
+      .orderBy(questions.order);
 
-		const questionIds = surveyQuestions.map((q) => q.id);
+    const questionIds = surveyQuestions.map((q) => q.id);
 
-		const surveyOptions =
-			questionIds.length > 0
-				? await db
-						.select()
-						.from(questionOptions)
-						.where(
-							sql`${questionOptions.questionId} IN (${sql.join(questionIds, sql`, `)})`,
-						)
-						.orderBy(questionOptions.order)
-				: [];
+    const surveyOptions =
+      questionIds.length > 0
+        ? await db
+            .select()
+            .from(questionOptions)
+            .where(
+              sql`${questionOptions.questionId} IN (${sql.join(questionIds, sql`, `)})`,
+            )
+            .orderBy(questionOptions.order)
+        : [];
 
-		return {
-			survey,
-			sections: surveySections,
-			questions: surveyQuestions.map((q) => ({
-				...q,
-				options: surveyOptions.filter((o) => o.questionId === q.id),
-			})),
-			enableConditional: categoryObj?.enableConditional ?? false,
-		};
-	});
+    return {
+      survey,
+      sections: surveySections,
+      questions: surveyQuestions.map((q) => ({
+        ...q,
+        options: surveyOptions.filter((o) => o.questionId === q.id),
+      })),
+      enableConditional: categoryObj?.enableConditional ?? false,
+    };
+  });
 
 // 3. Save draft response (when starting a survey)
 export const startResponseFn = createServerFn({ method: "POST" })
-	.validator((data: { surveyId: number; clientDraftId: string }) => data)
-	.handler(async ({ data }) => {
-		const [survey] = await db
-			.select()
-			.from(surveys)
-			.where(eq(surveys.id, data.surveyId));
-		if (!survey) throw new Error("Survei tidak ditemukan.");
+  .validator((data: { surveyId: number; clientDraftId: string }) => data)
+  .handler(async ({ data }) => {
+    const [survey] = await db
+      .select()
+      .from(surveys)
+      .where(eq(surveys.id, data.surveyId));
+    if (!survey) throw new Error("Survei tidak ditemukan.");
 
-		if (survey.periodValueEnd) {
-			const now = new Date();
-			let isExpired = false;
-			if (survey.periodType === "month") {
-				const [year, month] = survey.periodValueEnd.split("-");
-				const endOfPeriod = new Date(
-					Number(year),
-					Number(month),
-					0,
-					23,
-					59,
-					59,
-					999,
-				);
-				isExpired = now > endOfPeriod;
-			} else {
-				const [year, month, day] = survey.periodValueEnd.split("-");
-				const endOfPeriod = new Date(
-					Number(year),
-					Number(month) - 1,
-					Number(day),
-					23,
-					59,
-					59,
-					999,
-				);
-				isExpired = now > endOfPeriod;
-			}
-			if (isExpired) {
-				throw new Error(
-					"Maaf, periode pengisian kuesioner ini telah berakhir.",
-				);
-			}
-		}
+    if (survey.periodValueEnd) {
+      const now = new Date();
+      let isExpired = false;
+      if (survey.periodType === "month") {
+        const [year, month] = survey.periodValueEnd.split("-");
+        const endOfPeriod = new Date(
+          Number(year),
+          Number(month),
+          0,
+          23,
+          59,
+          59,
+          999,
+        );
+        isExpired = now > endOfPeriod;
+      } else {
+        const [year, month, day] = survey.periodValueEnd.split("-");
+        const endOfPeriod = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day),
+          23,
+          59,
+          59,
+          999,
+        );
+        isExpired = now > endOfPeriod;
+      }
+      if (isExpired) {
+        throw new Error(
+          "Maaf, periode pengisian kuesioner ini telah berakhir.",
+        );
+      }
+    }
 
-		const [inserted] = await db.insert(responses).values({
-			surveyId: data.surveyId,
-			status: "started",
-			clientDraftId: data.clientDraftId,
-			startedAt: new Date(),
-		});
+    const [inserted] = await db.insert(responses).values({
+      surveyId: data.surveyId,
+      status: "started",
+      clientDraftId: data.clientDraftId,
+      startedAt: new Date(),
+    });
 
-		return {
-			success: true,
-			responseId: (inserted as any).insertId,
-		};
-	});
+    return {
+      success: true,
+      responseId: (inserted as any).insertId,
+    };
+  });
 
 // 4. Submit completed response and its answers
 export const submitResponseFn = createServerFn({ method: "POST" })
-	.validator(
-		(data: {
-			surveyId: number;
-			clientDraftId: string;
-			answers: {
-				questionId: number;
-				valueText?: string | null;
-				valueOptionIds?: number[] | null;
-				valueGrid?: Record<string, number> | null;
-			}[];
-		}) => data,
-	)
-	.handler(async ({ data }) => {
-		const [survey] = await db
-			.select()
-			.from(surveys)
-			.where(eq(surveys.id, data.surveyId));
-		if (!survey) throw new Error("Survei tidak ditemukan.");
+  .validator(
+    (data: {
+      surveyId: number;
+      clientDraftId: string;
+      answers: {
+        questionId: number;
+        valueText?: string | null;
+        valueOptionIds?: number[] | null;
+        valueGrid?: Record<string, number> | null;
+      }[];
+    }) => data,
+  )
+  .handler(async ({ data }) => {
+    const [survey] = await db
+      .select()
+      .from(surveys)
+      .where(eq(surveys.id, data.surveyId));
+    if (!survey) throw new Error("Survei tidak ditemukan.");
 
-		if (survey.periodValueEnd) {
-			const now = new Date();
-			let isExpired = false;
-			if (survey.periodType === "month") {
-				const [year, month] = survey.periodValueEnd.split("-");
-				const endOfPeriod = new Date(
-					Number(year),
-					Number(month),
-					0,
-					23,
-					59,
-					59,
-					999,
-				);
-				isExpired = now > endOfPeriod;
-			} else {
-				const [year, month, day] = survey.periodValueEnd.split("-");
-				const endOfPeriod = new Date(
-					Number(year),
-					Number(month) - 1,
-					Number(day),
-					23,
-					59,
-					59,
-					999,
-				);
-				isExpired = now > endOfPeriod;
-			}
-			if (isExpired) {
-				throw new Error(
-					"Maaf, kuesioner ini sudah ditutup karena telah berakhir.",
-				);
-			}
-		}
+    if (survey.periodValueEnd) {
+      const now = new Date();
+      let isExpired = false;
+      if (survey.periodType === "month") {
+        const [year, month] = survey.periodValueEnd.split("-");
+        const endOfPeriod = new Date(
+          Number(year),
+          Number(month),
+          0,
+          23,
+          59,
+          59,
+          999,
+        );
+        isExpired = now > endOfPeriod;
+      } else {
+        const [year, month, day] = survey.periodValueEnd.split("-");
+        const endOfPeriod = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day),
+          23,
+          59,
+          59,
+          999,
+        );
+        isExpired = now > endOfPeriod;
+      }
+      if (isExpired) {
+        throw new Error(
+          "Maaf, kuesioner ini sudah ditutup karena telah berakhir.",
+        );
+      }
+    }
 
-		const uniqueQuestions = await db
-			.select({
-				id: questions.id,
-				title: questions.title,
-				config: questions.config,
-			})
-			.from(questions)
-			.where(eq(questions.surveyId, data.surveyId));
+    const uniqueQuestions = await db
+      .select({
+        id: questions.id,
+        title: questions.title,
+        config: questions.config,
+      })
+      .from(questions)
+      .where(eq(questions.surveyId, data.surveyId));
 
-		const uniqueQuestionIds = new Set(
-			uniqueQuestions
-				.filter((q) => (q.config as any)?.uniqueAnswer === true)
-				.map((q) => q.id),
-		);
+    const uniqueQuestionIds = new Set(
+      uniqueQuestions
+        .filter((q) => (q.config as any)?.uniqueAnswer === true)
+        .map((q) => q.id),
+    );
 
-		const result = await db.transaction(async (tx) => {
-			// Find if response already exists via clientDraftId, or create new
-			let responseId: number;
+    const result = await db.transaction(async (tx) => {
+      // Find if response already exists via clientDraftId, or create new
+      let responseId: number;
 
-			const [existing] = await tx
-				.select()
-				.from(responses)
-				.where(
-					and(
-						eq(responses.surveyId, data.surveyId),
-						eq(responses.clientDraftId, data.clientDraftId),
-					),
-				);
+      const [existing] = await tx
+        .select()
+        .from(responses)
+        .where(
+          and(
+            eq(responses.surveyId, data.surveyId),
+            eq(responses.clientDraftId, data.clientDraftId),
+          ),
+        );
 
-			if (existing) {
-				responseId = existing.id;
-				await tx
-					.update(responses)
-					.set({
-						status: "completed",
-						submittedAt: new Date(),
-					})
-					.where(eq(responses.id, responseId));
+      if (existing) {
+        responseId = existing.id;
+        await tx
+          .update(responses)
+          .set({
+            status: "completed",
+            submittedAt: new Date(),
+          })
+          .where(eq(responses.id, responseId));
 
-				// Delete old answers for this response to overwrite
-				await tx.delete(answers).where(eq(answers.responseId, responseId));
-			} else {
-				const [inserted] = await tx.insert(responses).values({
-					surveyId: data.surveyId,
-					status: "completed",
-					clientDraftId: data.clientDraftId,
-					startedAt: new Date(Date.now() - 5 * 60 * 1000), // assume started 5 mins ago
-					submittedAt: new Date(),
-				});
-				responseId = (inserted as any).insertId;
-			}
+        // Delete old answers for this response to overwrite
+        await tx.delete(answers).where(eq(answers.responseId, responseId));
+      } else {
+        const [inserted] = await tx.insert(responses).values({
+          surveyId: data.surveyId,
+          status: "completed",
+          clientDraftId: data.clientDraftId,
+          startedAt: new Date(Date.now() - 5 * 60 * 1000), // assume started 5 mins ago
+          submittedAt: new Date(),
+        });
+        responseId = (inserted as any).insertId;
+      }
 
-			// Validate unique answers, ignoring current responseId
-			for (const a of data.answers) {
-				if (!uniqueQuestionIds.has(a.questionId)) continue;
-				const value = (a.valueText || "").trim();
-				if (!value) continue;
+      // Validate unique answers, ignoring current responseId
+      for (const a of data.answers) {
+        if (!uniqueQuestionIds.has(a.questionId)) continue;
+        const value = (a.valueText || "").trim();
+        if (!value) continue;
 
-				const [dup] = await tx
-					.select({ id: answers.id })
-					.from(answers)
-					.innerJoin(responses, eq(answers.responseId, responses.id))
-					.where(
-						and(
-							eq(answers.questionId, a.questionId),
-							eq(responses.surveyId, data.surveyId),
-							eq(responses.status, "completed"),
-							sql`${answers.valueText} = ${value}`,
-						),
-					);
+        const [dup] = await tx
+          .select({ id: answers.id })
+          .from(answers)
+          .innerJoin(responses, eq(answers.responseId, responses.id))
+          .where(
+            and(
+              eq(answers.questionId, a.questionId),
+              eq(responses.surveyId, data.surveyId),
+              eq(responses.status, "completed"),
+              sql`${answers.valueText} = ${value}`,
+            ),
+          );
 
-				if (dup && dup.id !== undefined) {
-					const [dupResponse] = await tx
-						.select({ responseId: answers.responseId })
-						.from(answers)
-						.where(eq(answers.id, dup.id));
-					if (!dupResponse || dupResponse.responseId !== responseId) {
-						throw new Error(
-							"NIM ini sudah pernah mengirimkan jawaban untuk survei ini. Setiap NIM hanya dapat mengisi satu kali.",
-						);
-					}
-				}
-			}
+        if (dup && dup.id !== undefined) {
+          const [dupResponse] = await tx
+            .select({ responseId: answers.responseId })
+            .from(answers)
+            .where(eq(answers.id, dup.id));
+          if (!dupResponse || dupResponse.responseId !== responseId) {
+            throw new Error(
+              "NIM ini sudah pernah mengirimkan jawaban untuk survei ini. Setiap NIM hanya dapat mengisi satu kali.",
+            );
+          }
+        }
+      }
 
-			// Insert answers
-			const answerRows = data.answers.map((a) => ({
-				responseId,
-				questionId: a.questionId,
-				valueText: a.valueText || null,
-				valueOptionIds: a.valueOptionIds || null,
-				valueGrid: a.valueGrid || null,
-			}));
+      // Insert answers
+      const answerRows = data.answers.map((a) => ({
+        responseId,
+        questionId: a.questionId,
+        valueText: a.valueText || null,
+        valueOptionIds: a.valueOptionIds || null,
+        valueGrid: a.valueGrid || null,
+      }));
 
-			if (answerRows.length > 0) {
-				await tx.insert(answers).values(answerRows);
-			}
+      if (answerRows.length > 0) {
+        await tx.insert(answers).values(answerRows);
+      }
 
-			return {
-				success: true,
-				responseId,
-			};
-		});
+      return {
+        success: true,
+        responseId,
+      };
+    });
 
-		// Mark this survey's last-activity timestamp so polling viewers pick it up.
-		markAnswered(data.surveyId);
+    // Mark this survey's last-activity timestamp so polling viewers pick it up.
+    markAnswered(data.surveyId);
 
-		return result;
-	});
+    return result;
+  });
 
 // Cache for public landing stats to prevent heavy DB load
 const statsCache = ((globalThis as any).__statsCache ||
-	((globalThis as any).__statsCache = {
-		data: null,
-		timestamp: 0,
-	})) as {
-	data: {
-		activeSurveys: number;
-		totalParticipants: number;
-		avgTimeMinutes: number;
-	} | null;
-	timestamp: number;
+  ((globalThis as any).__statsCache = {
+    data: null,
+    timestamp: 0,
+  })) as {
+  data: {
+    activeSurveys: number;
+    totalParticipants: number;
+    avgTimeMinutes: number;
+  } | null;
+  timestamp: number;
 };
 
 export const getPublicLandingStatsFn = createServerFn({
-	method: "GET",
+  method: "GET",
 }).handler(async () => {
-	const now = Date.now();
-	if (statsCache.data && now - statsCache.timestamp < 60000) {
-		return statsCache.data;
-	}
+  const now = Date.now();
+  if (statsCache.data && now - statsCache.timestamp < 60000) {
+    return statsCache.data;
+  }
 
-	// 1. Active surveys count
-	const [activeCount] = await db
-		.select({ count: sql<number>`count(*)` })
-		.from(surveys)
-		.where(eq(surveys.status, "published"));
+  // 1. Active surveys count
+  const [activeCount] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(surveys)
+    .where(eq(surveys.status, "published"));
 
-	// 2. Total completed responses
-	const [completedCount] = await db
-		.select({ count: sql<number>`count(*)` })
-		.from(responses)
-		.where(eq(responses.status, "completed"));
+  // 2. Total completed responses
+  const [completedCount] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(responses)
+    .where(eq(responses.status, "completed"));
 
-	// 3. Average completion time in seconds
-	const [avgDuration] = await db
-		.select({
-			avgSeconds: sql<number>`coalesce(avg(timestampdiff(SECOND, ${responses.startedAt}, ${responses.submittedAt})), 0)`,
-		})
-		.from(responses)
-		.where(
-			and(
-				eq(responses.status, "completed"),
-				sql`${responses.submittedAt} is not null`,
-			),
-		);
+  // 3. Average completion time in seconds
+  const [avgDuration] = await db
+    .select({
+      avgSeconds: sql<number>`coalesce(avg(timestampdiff(SECOND, ${responses.startedAt}, ${responses.submittedAt})), 0)`,
+    })
+    .from(responses)
+    .where(
+      and(
+        eq(responses.status, "completed"),
+        sql`${responses.submittedAt} is not null`,
+      ),
+    );
 
-	// Convert to minutes, default to 5 if 0
-	const avgTimeMinutes =
-		Math.max(1, Math.round((avgDuration?.avgSeconds || 0) / 60)) || 5;
+  // Convert to minutes, default to 5 if 0
+  const avgTimeMinutes =
+    Math.max(1, Math.round((avgDuration?.avgSeconds || 0) / 60)) || 5;
 
-	const data = {
-		activeSurveys: activeCount?.count || 0,
-		totalParticipants: completedCount?.count || 0,
-		avgTimeMinutes,
-	};
+  const data = {
+    activeSurveys: activeCount?.count || 0,
+    totalParticipants: completedCount?.count || 0,
+    avgTimeMinutes,
+  };
 
-	statsCache.data = data;
-	statsCache.timestamp = now;
+  statsCache.data = data;
+  statsCache.timestamp = now;
 
-	return data;
+  return data;
 });
 
 export const lookupMahasiswaByNimFn = createServerFn({ method: "POST" })
-	.validator((data: { surveyId: number; nim: string }) => data)
-	.handler(async ({ data }) => {
-		const [survey] = await db
-			.select()
-			.from(surveys)
-			.where(eq(surveys.id, data.surveyId));
+  .validator((data: { surveyId: number; nim: string }) => data)
+  .handler(async ({ data }) => {
+    const [survey] = await db
+      .select()
+      .from(surveys)
+      .where(eq(surveys.id, data.surveyId));
 
-		const config = (survey as any)?.siakadAutofillConfig as {
-			enabled: boolean;
-			nimQuestionId: number | null;
-			mappings: { questionId: number; field: string }[];
-		} | null;
+    const config = (survey as any)?.siakadAutofillConfig as {
+      enabled: boolean;
+      nimQuestionId: number | null;
+      mappings: { questionId: number; field: string }[];
+    } | null;
 
-		if (!survey || !config?.enabled || !config.nimQuestionId) {
-			return { enabled: false as const };
-		}
+    if (!survey || !config?.enabled || !config.nimQuestionId) {
+      return { enabled: false as const };
+    }
 
-		const nim = data.nim.trim();
-		if (!nim)
-			return {
-				enabled: true as const,
-				found: false as const,
-				alreadyUsed: false,
-			};
+    const nim = data.nim.trim();
+    if (!nim)
+      return {
+        enabled: true as const,
+        found: false as const,
+        alreadyUsed: false,
+      };
 
-		// Cek dulu apakah NIM ini sudah pernah submit lengkap untuk survei ini —
-		// hindari fetch ke SIAKAD kalau memang sudah tidak relevan.
-		const [dup] = await db
-			.select({ id: answers.id })
-			.from(answers)
-			.innerJoin(responses, eq(answers.responseId, responses.id))
-			.where(
-				and(
-					eq(answers.questionId, config.nimQuestionId),
-					eq(responses.surveyId, data.surveyId),
-					eq(responses.status, "completed"),
-					sql`${answers.valueText} = ${nim}`,
-				),
-			);
+    // Cek dulu apakah NIM ini sudah pernah submit lengkap untuk survei ini —
+    // hindari fetch ke SIAKAD kalau memang sudah tidak relevan.
+    const [dup] = await db
+      .select({ id: answers.id })
+      .from(answers)
+      .innerJoin(responses, eq(answers.responseId, responses.id))
+      .where(
+        and(
+          eq(answers.questionId, config.nimQuestionId),
+          eq(responses.surveyId, data.surveyId),
+          eq(responses.status, "completed"),
+          sql`${answers.valueText} = ${nim}`,
+        ),
+      );
 
-		if (dup) {
-			return {
-				enabled: true as const,
-				found: false as const,
-				alreadyUsed: true,
-			};
-		}
+    if (dup) {
+      return {
+        enabled: true as const,
+        found: false as const,
+        alreadyUsed: true,
+      };
+    }
 
-		try {
-			const student = await fetchMahasiswaByNim(nim);
-			if (!student) {
-				return {
-					enabled: true as const,
-					found: false as const,
-					alreadyUsed: false,
-				};
-			}
+    try {
+      const student = await fetchMahasiswaByNim(nim);
+      if (!student) {
+        return {
+          enabled: true as const,
+          found: false as const,
+          alreadyUsed: false,
+        };
+      }
 
-			const values: Record<number, string> = {};
-			for (const m of config.mappings) {
-				const raw = (student as any)[m.field];
-				if (raw === null || raw === undefined) continue;
-				values[m.questionId] = String(raw);
-			}
+      const values: Record<number, string> = {};
+      for (const m of config.mappings) {
+        const raw = (student as any)[m.field];
+        if (raw === null || raw === undefined) continue;
+        values[m.questionId] = String(raw);
+      }
 
-			return {
-				enabled: true as const,
-				found: true as const,
-				alreadyUsed: false,
-				values,
-			};
-		} catch (err) {
-			console.error("Gagal fetch data SIAKAD:", err);
-			// Jangan blokir pengisian manual kalau SIAKAD sedang down.
-			return {
-				enabled: true as const,
-				found: false as const,
-				alreadyUsed: false,
-				error: true,
-			};
-		}
-	});
+      return {
+        enabled: true as const,
+        found: true as const,
+        alreadyUsed: false,
+        values,
+      };
+    } catch (err) {
+      console.error("Gagal fetch data SIAKAD:", err);
+      // Jangan blokir pengisian manual kalau SIAKAD sedang down.
+      return {
+        enabled: true as const,
+        found: false as const,
+        alreadyUsed: false,
+        error: true,
+      };
+    }
+  });

@@ -638,7 +638,7 @@ function SurveyTakingComponent() {
                 </div>
               </div>
 
-              <div className="mt-8 pt-4 grid grid-cols-2 gap-3">
+              <div className="mt-8 pt-4 flex justify-center items-center">
                 <Button
                   onClick={handleStartSurvey}
                   className="w-full  bg-[#4A0000] text-white font-bold py-3 px-8 rounded-lg shadow-sm hover:bg-[#B00000] hover:shadow-md transition-all flex items-center justify-center gap-2 group"
@@ -930,12 +930,12 @@ function SurveyTakingComponent() {
                               </th>
                               {q.options
                                 .filter((o) => o.group === "column")
-                                .map((col, index) => (
+                                .map((col) => (
                                   <th
                                     key={col.id}
                                     className="py-3 px-2 text-center text-xs font-bold text-[#434652] uppercase"
                                   >
-                                    {index + 1}
+                                    {col.label}
                                   </th>
                                 ))}
                             </tr>

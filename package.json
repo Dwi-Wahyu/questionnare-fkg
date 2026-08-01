@@ -12,6 +12,7 @@
     "db:seed-users": "bun run src/server/db/seed-users.ts",
     "db:seed-categories": "bun run src/server/db/seed-categories.ts",
     "db:seed:layanan-pengaduan": "bun run src/server/db/seed-layanan-pengaduan.ts",
+    "db:seed:survey-pengguna": "bun run src/server/db/seed-kuisioner-pengguna.ts",
     "db:seed": "bun run src/server/db/seed.ts",
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
