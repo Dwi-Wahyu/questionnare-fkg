@@ -108,6 +108,12 @@ const demographicKeywords = [
 	"alamat kantor",
 	"score",
 	"no telp",
+	"nik",
+	"npwp",
+	"nomor hp",
+	"nomor telepon",
+	"angkatan",
+	"jenis kelamin",
 ];
 
 function isDemographic(header: string): boolean {
