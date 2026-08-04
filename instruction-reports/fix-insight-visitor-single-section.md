@@ -1,0 +1,7 @@
+- **Modified Files:** 
+  - `src/server/adminSurveyFunctions.ts`
+  - `src/routes/admin/surveys.$surveyId.tsx`
+- **Logic Changes:** 
+  - Modified `getFirstSectionId` and `isPersonalInfoQuestion` to return `null` and `false` respectively when a survey has only 1 section. Previously, it assumed the only section was a "personal info" section and redacted it for visitors. This fixes the issue where Kuesioner Pengguna (which only has 1 section) showed no insights for visitors.
+  - Added an early return in `fetchLatestReport` to skip fetching if the user is a visitor, preventing the unauthorized access console error (`Gagal memuat laporan terakhir: Error: Akses ditolak. Hanya Admin yang dapat melakukan tindakan ini.`).
+- **Impact on Graph:** No new component relationships were added; internal server functions and component side-effects were updated to handle single-section survey permission logic accurately.

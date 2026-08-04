@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 469 nodes · 890 edges · 55 communities (22 shown, 33 thin omitted)
+- 470 nodes · 890 edges · 56 communities (23 shown, 33 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 14 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2699d933`
+- Built from commit: `ab50dc0f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -92,7 +92,7 @@
 ## Hyperedges (group relationships)
 - **Project Tech Stack** — tanstack_start, rsbuild, bun [EXTRACTED 1.00]
 
-## Communities (55 total, 33 thin omitted)
+## Communities (56 total, 33 thin omitted)
 
 ### Community 0 - "seed.ts"
 Cohesion: 0.08
@@ -159,7 +159,7 @@ Nodes (7): Catatan, `/etc/nginx/sites-enabled/kepuasan-mahasiswa-fkg`, `/etc/ngi
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `cn()` connect `cn` to `chart.tsx`, `survey.$surveySlug.tsx`?**
-  _High betweenness centrality (0.169) - this node is a cross-community bridge._
+  _High betweenness centrality (0.168) - this node is a cross-community bridge._
 - **Why does `ChartContainer()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?**
   _High betweenness centrality (0.025) - this node is a cross-community bridge._
 - **Why does `ChartTooltipContent()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?**

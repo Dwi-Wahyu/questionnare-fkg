@@ -409,6 +409,7 @@ function SurveyDetailComponent() {
   } | null>(null);
 
   const fetchLatestReport = async () => {
+    if (user?.role === "visitor") return;
     try {
       const report = await getLatestSurveyReportFn({
         data: {
@@ -2093,6 +2094,7 @@ function SurveyDetailComponent() {
               >
                 <TabsTrigger
                   value="ringkasan"
+                  nativeButton={false}
                   className="px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer"
                   render={
                     <Link
@@ -2106,6 +2108,7 @@ function SurveyDetailComponent() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="pertanyaan"
+                  nativeButton={false}
                   className="px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer"
                   render={
                     <Link
@@ -2119,6 +2122,7 @@ function SurveyDetailComponent() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="individual"
+                  nativeButton={false}
                   className="px-3 py-1 text-xs font-bold rounded-md transition-all cursor-pointer"
                   render={
                     <Link
@@ -2428,7 +2432,7 @@ function SurveyDetailComponent() {
                 (a, b) => a.order - b.order,
               );
               const firstSectionId =
-                sortedSections.length > 0 ? sortedSections[0].id : null;
+                sortedSections.length > 1 ? sortedSections[0].id : null;
 
               const displayQuestions = detail.questions.filter((q: any) => {
                 if (

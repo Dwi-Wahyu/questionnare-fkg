@@ -37,13 +37,14 @@ async function assertAdmin() {
 
 function isPersonalInfoQuestion(
 	question: { sectionId: number },
-	firstSectionId: number,
+	firstSectionId: number | null,
 ) {
+	if (firstSectionId === null) return false;
 	return question.sectionId === firstSectionId;
 }
 
 function getFirstSectionId(surveySections: { id: number; order: number }[]) {
-	if (surveySections.length === 0) return null;
+	if (surveySections.length <= 1) return null;
 	return [...surveySections].sort((a, b) => a.order - b.order)[0].id;
 }
 
