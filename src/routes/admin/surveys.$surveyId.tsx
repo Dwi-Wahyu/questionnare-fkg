@@ -284,7 +284,7 @@ function SurveyDetailComponent() {
   }, [stats]);
 
   useEffect(() => {
-    if (tab !== "responses" || user?.role === "visitor") return;
+    if (tab !== "responses") return;
     let cancelled = false;
     setIsLoadingStats(true);
     getAdminSurveyAnswersStatsFn({
