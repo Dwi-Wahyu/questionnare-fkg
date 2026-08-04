@@ -188,12 +188,12 @@ function SurveyTakingComponent() {
               Maaf, kuesioner yang Anda cari tidak dapat ditemukan atau belum
               dipublikasikan oleh administrator.
             </p>
-            <Link
+            {/* <Link
               to="/"
               className="mt-4 bg-[#4A0000] hover:bg-[#B00000] text-white text-sm font-semibold py-2 px-5 rounded-lg transition-colors"
             >
               Kembali ke Beranda
-            </Link>
+            </Link> */}
           </div>
         </div>
       </main>
@@ -223,12 +223,12 @@ function SurveyTakingComponent() {
                 (survey as any).periodType || "month",
               )}
             </div>
-            <Link
+            {/* <Link
               to="/"
               className="mt-4 bg-[#4A0000] hover:bg-[#B00000] text-white text-sm font-semibold py-2 px-5 rounded-lg transition-colors"
             >
               Kembali ke Beranda
-            </Link>
+            </Link> */}
           </div>
         </div>
       </main>

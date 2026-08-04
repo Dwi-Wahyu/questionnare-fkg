@@ -2,7 +2,9 @@
   "communities": {
     "0": [
       "src_server_auth",
+      "src_server_auth_createsessiontoken",
       "src_server_auth_sessionuser",
+      "src_server_authfunctions",
       "src_server_db_index",
       "src_server_db_index_db",
       "src_server_db_index_poolconnection",
@@ -17,7 +19,6 @@
       "src_server_db_schema_surveycategories",
       "src_server_db_schema_surveys",
       "src_server_db_schema_users",
-      "src_server_db_schema_visitorlogs",
       "src_server_db_seed",
       "src_server_db_seed_categories",
       "src_server_db_seed_categories_main",
@@ -56,11 +57,7 @@
       "src_server_db_seedlayananpengaduan_rationale_161",
       "src_server_db_seedlayananpengaduan_seedlayananpengaduan",
       "src_server_surveyfunctions",
-      "src_server_surveyfunctions_statscache",
-      "src_server_visitorfunctions",
-      "src_server_visitorfunctions_statscache",
-      "src_server_visitorfunctions_trackvisitfn",
-      "src_server_visitorfunctions_visitorstats"
+      "src_server_surveyfunctions_statscache"
     ],
     "1": [
       "docs_chart_examples_bar_chart_base",
@@ -81,7 +78,6 @@
       "docs_chart_examples_pie_with_legend_chartpielegend",
       "src_components_ui_card",
       "src_components_ui_card_card",
-      "src_components_ui_card_cardaction",
       "src_components_ui_card_cardcontent",
       "src_components_ui_card_carddescription",
       "src_components_ui_card_cardfooter",
@@ -106,6 +102,23 @@
       "src_router_getrouter",
       "src_router_register",
       "src_router_tanstack_react_router",
+      "src_routes_admin_analytics_route",
+      "src_routes_admin_index_route",
+      "src_routes_admin_route_route",
+      "src_routes_admin_settings_route",
+      "src_routes_admin_surveys_index_route",
+      "src_routes_admin_surveys_new_route",
+      "src_routes_admin_surveys_surveyid_route",
+      "src_routes_index_route",
+      "src_routes_login_route",
+      "src_routes_root_route",
+      "src_routes_s_categoryslug",
+      "src_routes_s_categoryslug_noactivesurveycomponent",
+      "src_routes_s_categoryslug_route",
+      "src_routes_survey_surveyslug_route",
+      "src_routes_survey_surveyslug_thank_you",
+      "src_routes_survey_surveyslug_thank_you_route",
+      "src_routes_survey_surveyslug_thank_you_thankyoucomponent",
       "src_routetree_gen",
       "src_routetree_gen_adminanalyticsroute",
       "src_routetree_gen_adminindexroute",
@@ -117,6 +130,8 @@
       "src_routetree_gen_adminsurveysnewroute",
       "src_routetree_gen_adminsurveyssurveyidroute",
       "src_routetree_gen_fileroutesbyfullpath",
+      "src_routetree_gen_fileroutesbyid",
+      "src_routetree_gen_fileroutesbypath",
       "src_routetree_gen_fileroutesbyto",
       "src_routetree_gen_fileroutetypes",
       "src_routetree_gen_indexroute",
@@ -130,19 +145,22 @@
       "src_routetree_gen_surveysurveyslugroutewithchildren",
       "src_routetree_gen_surveysurveyslugthankyouroute",
       "src_routetree_gen_tanstack_react_router",
-      "src_routetree_gen_tanstack_react_start"
+      "src_routetree_gen_tanstack_react_start",
+      "src_server_surveyfunctions_getactivesurveybycategoryfn"
     ],
     "3": [
-      "src_routes_admin_analytics",
-      "src_routes_admin_analytics_all_surveys",
-      "src_routes_admin_analytics_analyticsoverviewcomponent",
-      "src_routes_admin_analytics_route",
-      "src_routes_admin_index",
-      "src_routes_admin_index_dashboardcomponent",
-      "src_routes_admin_index_route",
-      "src_server_adminsurveyfunctions_getadmindashboardstatsfn",
-      "src_server_adminsurveyfunctions_getadminsurveyslistfn",
-      "src_server_visitorfunctions_getvisitorstatsfn"
+      "src_routes_admin_settings",
+      "src_routes_admin_settings_settingscomponent",
+      "src_server_adminsurveyfunctions_assertadmin",
+      "src_server_adminsurveyfunctions_updatesurveycategorysettingsfn",
+      "src_server_adminuserfunctions",
+      "src_server_adminuserfunctions_assertadmin",
+      "src_server_adminuserfunctions_createuserfn",
+      "src_server_adminuserfunctions_listusersfn",
+      "src_server_adminuserfunctions_toggleuserstatusfn",
+      "src_server_adminuserfunctions_updateuserfn",
+      "src_server_auth_getuserfromsession",
+      "src_server_visitorfunctions_assertuser"
     ],
     "4": [
       "src_lib_copychartimage",
@@ -193,19 +211,8 @@
       "src_server_siakadfielddetection_siakadfield"
     ],
     "5": [
-      "src_components_ui_confirmdialog",
-      "src_components_ui_confirmdialog_confirmdialog",
-      "src_components_ui_confirmdialog_confirmdialogprops",
-      "src_components_ui_select_select",
-      "src_components_ui_select_selectoption",
-      "src_components_ui_select_selectprops",
-      "src_components_ui_select_tsx_src_components_ui_select_899479",
-      "src_routes_admin_surveys_index",
-      "src_routes_admin_surveys_index_livefillingbadge",
-      "src_routes_admin_surveys_index_route",
-      "src_routes_admin_surveys_index_surveysindexcomponent",
-      "src_server_adminsurveyfunctions_deleteadminsurveyfn",
-      "src_server_livepresencefunctions_getaggregatepresencefn"
+      "instruction_reports_instruksi_spa_navigation_skeleton_survey_detail",
+      "instruction_reports_instruksi_spa_navigation_skeleton_survey_detail_ringkasan_perubahan_spa_navigation_skeleton_loading_halaman_detail_survey_admin"
     ],
     "6": [
       "src_components_ui_badge",
@@ -264,6 +271,7 @@
       "src_components_ui_button_buttonvariants",
       "src_components_ui_button_tsx_src_components_ui_button_button_ca8cd7",
       "src_components_ui_button_tsx_src_components_ui_button_ca8cd7",
+      "src_components_ui_card_cardaction",
       "src_components_ui_command",
       "src_components_ui_command_command",
       "src_components_ui_command_commanddialog",
@@ -398,9 +406,37 @@
       "src_components_ui_usetoast_emit",
       "src_components_ui_usetoast_listener",
       "src_components_ui_usetoast_listeners",
+      "src_components_ui_usetoast_toast",
       "src_components_ui_usetoast_toasts",
       "src_components_ui_usetoast_toasttype",
-      "src_components_ui_usetoast_usetoast"
+      "src_components_ui_usetoast_usetoast",
+      "src_routes_admin_analytics",
+      "src_routes_admin_analytics_all_surveys",
+      "src_routes_admin_analytics_analyticsoverviewcomponent",
+      "src_routes_admin_index",
+      "src_routes_admin_index_dashboardcomponent",
+      "src_routes_admin_route",
+      "src_routes_admin_route_adminlayoutcomponent",
+      "src_routes_admin_surveys_new",
+      "src_routes_admin_surveys_new_createsurveycomponent",
+      "src_routes_login",
+      "src_routes_login_logincomponent",
+      "src_routes_login_loginschema",
+      "src_routes_root",
+      "src_routes_root_rootcomponent",
+      "src_routes_root_rootdocument",
+      "src_server_adminsurveyfunctions_createadminsurveyfn",
+      "src_server_adminsurveyfunctions_getadmindashboardstatsfn",
+      "src_server_adminsurveyfunctions_getadminsurveyslistfn",
+      "src_server_authfunctions_getsessionfn",
+      "src_server_authfunctions_loginfn",
+      "src_server_authfunctions_logoutfn",
+      "src_server_db_schema_visitorlogs",
+      "src_server_visitorfunctions",
+      "src_server_visitorfunctions_getvisitorstatsfn",
+      "src_server_visitorfunctions_statscache",
+      "src_server_visitorfunctions_trackvisitfn",
+      "src_server_visitorfunctions_visitorstats"
     ],
     "30": [
       "peraturan_nim"
@@ -426,14 +462,25 @@
       "src_components_lightrays_getanchoranddir",
       "src_components_lightrays_hextorgb",
       "src_components_lightrays_lightrays",
+      "src_components_ui_confirmdialog",
+      "src_components_ui_confirmdialog_confirmdialog",
+      "src_components_ui_confirmdialog_confirmdialogprops",
+      "src_components_ui_select_select",
+      "src_components_ui_select_selectoption",
+      "src_components_ui_select_selectprops",
+      "src_components_ui_select_tsx_src_components_ui_select_899479",
       "src_components_ui_skeleton",
       "src_components_ui_skeleton_skeleton",
       "src_components_ui_skeleton_skeletonprops",
+      "src_routes_admin_surveys_index",
+      "src_routes_admin_surveys_index_livefillingbadge",
+      "src_routes_admin_surveys_index_surveysindexcomponent",
       "src_routes_index",
       "src_routes_index_animatedcounter",
       "src_routes_index_homecomponent",
       "src_routes_index_livefillingbadge",
-      "src_routes_index_route",
+      "src_server_adminsurveyfunctions_deleteadminsurveyfn",
+      "src_server_livepresencefunctions_getaggregatepresencefn",
       "src_server_surveyfunctions_getpubliclandingstatsfn",
       "src_server_surveyfunctions_getpublishedsurveysfn"
     ],
@@ -457,35 +504,6 @@
     "40": [
       "drizzle_0013_sparkling_violations",
       "drizzle_0013_sparkling_violations_survey_categories"
-    ],
-    "41": [
-      "src_routes_admin_route_route",
-      "src_routes_admin_settings_route",
-      "src_routes_admin_surveys_surveyid_route",
-      "src_routes_root_route",
-      "src_routes_survey_surveyslug_route",
-      "src_routes_survey_surveyslug_thank_you",
-      "src_routes_survey_surveyslug_thank_you_route",
-      "src_routes_survey_surveyslug_thank_you_thankyoucomponent",
-      "src_routetree_gen_fileroutesbyid",
-      "src_routetree_gen_fileroutesbypath"
-    ],
-    "42": [
-      "src_components_ui_usetoast_toast",
-      "src_routes_admin_route",
-      "src_routes_admin_route_adminlayoutcomponent",
-      "src_routes_login",
-      "src_routes_login_logincomponent",
-      "src_routes_login_loginschema",
-      "src_routes_login_route",
-      "src_routes_root",
-      "src_routes_root_rootcomponent",
-      "src_routes_root_rootdocument",
-      "src_server_auth_createsessiontoken",
-      "src_server_authfunctions",
-      "src_server_authfunctions_getsessionfn",
-      "src_server_authfunctions_loginfn",
-      "src_server_authfunctions_logoutfn"
     ],
     "43": [
       "drizzle_0010_third_tarot",
@@ -516,20 +534,6 @@
     ],
     "49": [
       "instruction_reports_instruksi_fitur_layanan_pengaduan"
-    ],
-    "50": [
-      "src_routes_admin_settings",
-      "src_routes_admin_settings_settingscomponent",
-      "src_server_adminsurveyfunctions_assertadmin",
-      "src_server_adminsurveyfunctions_updatesurveycategorysettingsfn",
-      "src_server_adminuserfunctions",
-      "src_server_adminuserfunctions_assertadmin",
-      "src_server_adminuserfunctions_createuserfn",
-      "src_server_adminuserfunctions_listusersfn",
-      "src_server_adminuserfunctions_toggleuserstatusfn",
-      "src_server_adminuserfunctions_updateuserfn",
-      "src_server_auth_getuserfromsession",
-      "src_server_visitorfunctions_assertuser"
     ],
     "51": [
       "drizzle_0012_supreme_blink",
@@ -564,34 +568,30 @@
       "docs_nginx_category_redirects_nginx_redirect_ke_kategori_bukan_ke_slug_survey"
     ],
     "55": [
-      "src_routes_admin_surveys_new",
-      "src_routes_admin_surveys_new_createsurveycomponent",
-      "src_routes_admin_surveys_new_route",
-      "src_server_adminsurveyfunctions_createadminsurveyfn"
+      "instruction_reports_instruksi_fix_kuisioner_pengguna",
+      "instruction_reports_instruksi_fix_kuisioner_pengguna_summary_of_changes_instruksi_fix_kuisioner_pengguna_md"
     ],
     "56": [
       "drizzle_0011_mature_forgotten_one",
       "drizzle_0011_mature_forgotten_one_surveys"
     ],
-    "57": [
-      "src_routes_s_categoryslug",
-      "src_routes_s_categoryslug_noactivesurveycomponent",
-      "src_routes_s_categoryslug_route",
-      "src_server_surveyfunctions_getactivesurveybycategoryfn"
+    "59": [
+      "instruction_reports_instruksi_single_section_responses_grid",
+      "instruction_reports_instruksi_single_section_responses_grid_ringkasan_perubahan_layout_grid_tab_jawaban_ringkasan"
     ]
   },
   "cohesion": {
-    "0": 0.07062146892655367,
-    "1": 0.14714714714714713,
-    "2": 0.07635467980295567,
-    "3": 0.2,
-    "4": 0.08599033816425121,
-    "5": 0.1794871794871795,
+    "0": 0.07706766917293233,
+    "1": 0.15396825396825398,
+    "2": 0.05697278911564626,
+    "3": 0.30303030303030304,
+    "4": 0.08792270531400966,
+    "5": 1.0,
     "6": 0.11290322580645161,
     "7": 0.5357142857142857,
     "8": 1.0,
     "9": 0.6666666666666666,
-    "10": 0.06340326340326341,
+    "10": 0.06196291270918137,
     "11": 1.0,
     "12": 1.0,
     "13": 1.0,
@@ -610,20 +610,18 @@
     "26": 1.0,
     "27": 1.0,
     "28": 1.0,
-    "29": 0.2777777777777778,
+    "29": 0.08408408408408409,
     "30": 1.0,
     "31": 1.0,
     "32": 1.0,
     "33": 1.0,
     "34": 1.0,
-    "35": 0.18681318681318682,
+    "35": 0.1,
     "36": 0.6666666666666666,
     "37": 0.6666666666666666,
     "38": 1.0,
     "39": 1.0,
     "40": 1.0,
-    "41": 0.2,
-    "42": 0.23809523809523808,
     "43": 1.0,
     "44": 1.0,
     "45": 1.0,
@@ -631,14 +629,13 @@
     "47": 1.0,
     "48": 0.4,
     "49": 1.0,
-    "50": 0.30303030303030304,
     "51": 2.0,
     "52": 0.3888888888888889,
     "53": 0.4,
     "54": 0.25,
-    "55": 0.6666666666666666,
+    "55": 1.0,
     "56": 1.0,
-    "57": 0.5
+    "59": 1.0
   },
   "gods": [
     {
@@ -649,7 +646,7 @@
     {
       "id": "src_routes_admin_surveys_surveyid_surveydetailcomponent",
       "label": "SurveyDetailComponent()",
-      "degree": 16
+      "degree": 18
     },
     {
       "id": "src_routetree_gen_fileroutesbypath",
@@ -705,17 +702,6 @@
       "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
     },
     {
-      "source": "CardAction()",
-      "target": "cn()",
-      "source_files": [
-        "src/components/ui/card.tsx",
-        "src/lib/utils.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "bridges separate communities; peripheral node `CardAction()` unexpectedly reaches hub `cn()`"
-    },
-    {
       "source": "CommandEmpty()",
       "target": "cn()",
       "source_files": [
@@ -747,43 +733,54 @@
       "confidence": "EXTRACTED",
       "relation": "calls",
       "why": "bridges separate communities"
+    },
+    {
+      "source": "CardHeader()",
+      "target": "cn()",
+      "source_files": [
+        "src/components/ui/card.tsx",
+        "src/lib/utils.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
     }
   ],
   "questions": [
     {
       "type": "bridge_node",
       "question": "Why does `cn()` connect `cn` to `chart.tsx`, `survey.$surveySlug.tsx`?",
-      "why": "High betweenness centrality (0.173) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.169) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
       "question": "Why does `ChartContainer()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?",
-      "why": "High betweenness centrality (0.026) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.025) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
       "question": "Why does `ChartTooltipContent()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?",
-      "why": "High betweenness centrality (0.025) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.024) - this node is a cross-community bridge."
     },
     {
       "type": "isolated_nodes",
       "question": "What connects `chartData`, `chartData`, `chartData` to the rest of the system?",
-      "why": "116 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "why": "119 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
       "type": "low_cohesion",
       "question": "Should `seed.ts` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.07062146892655367 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `chart.tsx` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.14714714714714713 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.07706766917293233 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `routeTree.gen.ts` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.07635467980295567 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.05697278911564626 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `adminSurveyFunctions.ts` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08792270531400966 - nodes in this community are weakly interconnected."
     }
   ]
 }

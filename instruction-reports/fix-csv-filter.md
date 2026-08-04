@@ -1,0 +1,3 @@
+- **Modified Files:** `src/routes/admin/surveys.$surveyId.tsx`
+- **Logic Changes:** Fixed a React rendering bug in the CSV Filter dropdown menu by replacing the render prop function child in `SelectTrigger` with a standard ReactNode component containing the `selectedFilterQuestion?.title` text. The `SelectTrigger` does not support function children, which was causing the error "Type '(value: any) => any' is not assignable to type 'ReactNode'".
+- **Impact on Graph:** No new component relationships were added; internal component rendering logic was corrected.
