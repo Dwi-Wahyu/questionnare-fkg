@@ -308,7 +308,9 @@ export const updateAdminSurveySettingsFn = createServerFn({ method: "POST" })
 			}
 
 			if (data.periodValueEnd < data.periodValue) {
-				throw new Error("Periode berakhir tidak boleh mendahului periode mulai.");
+				throw new Error(
+					"Periode berakhir tidak boleh mendahului periode mulai.",
+				);
 			}
 		}
 
@@ -1991,12 +1993,17 @@ function getNumericValueForOption(
 	if (!isLikert) return null;
 
 	const firstLabel = (sortedOptions[0].label || "").toLowerCase().trim();
+	const isNegativeFirst =
+		firstLabel.includes("tidak") ||
+		firstLabel.includes("kurang") ||
+		firstLabel.includes("buruk");
 	const isPositiveFirst =
-		firstLabel.includes("sangat") ||
-		firstLabel.includes("puas") ||
-		firstLabel.includes("baik") ||
-		firstLabel.includes("relevan") ||
-		firstLabel.includes("setuju");
+		!isNegativeFirst &&
+		(firstLabel.includes("sangat") ||
+			firstLabel.includes("puas") ||
+			firstLabel.includes("baik") ||
+			firstLabel.includes("relevan") ||
+			firstLabel.includes("setuju"));
 
 	if (isPositiveFirst) {
 		return sortedOptions.length - index;

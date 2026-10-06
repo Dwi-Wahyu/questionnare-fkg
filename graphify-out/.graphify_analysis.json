@@ -2,9 +2,9 @@
   "communities": {
     "0": [
       "src_server_auth",
-      "src_server_auth_createsessiontoken",
       "src_server_auth_sessionuser",
-      "src_server_authfunctions",
+      "src_server_db_fix_demographic_sections",
+      "src_server_db_fix_demographic_sections_main",
       "src_server_db_index",
       "src_server_db_index_db",
       "src_server_db_index_poolconnection",
@@ -14,6 +14,7 @@
       "src_server_db_schema_answers",
       "src_server_db_schema_questionoptions",
       "src_server_db_schema_questions",
+      "src_server_db_schema_reportgenerations",
       "src_server_db_schema_responses",
       "src_server_db_schema_sections",
       "src_server_db_schema_surveycategories",
@@ -26,7 +27,41 @@
       "src_server_db_seed_cleanstatementtitle",
       "src_server_db_seed_demographickeywords",
       "src_server_db_seed_isdemographic",
+      "src_server_db_seed_iso_surveys",
+      "src_server_db_seed_iso_surveys_seedallisosurveys",
       "src_server_db_seed_isstatementheader",
+      "src_server_db_seed_kepuasan_dosen_iso",
+      "src_server_db_seed_kepuasan_dosen_iso_matchscaleoption",
+      "src_server_db_seed_kepuasan_dosen_iso_matrix_questions",
+      "src_server_db_seed_kepuasan_dosen_iso_matrix_rows",
+      "src_server_db_seed_kepuasan_dosen_iso_parsecsv",
+      "src_server_db_seed_kepuasan_dosen_iso_parsetimestamp",
+      "src_server_db_seed_kepuasan_dosen_iso_scale_options",
+      "src_server_db_seed_kepuasan_dosen_iso_seedkepuasandoseniso",
+      "src_server_db_seed_kepuasan_mahasiswa_iso",
+      "src_server_db_seed_kepuasan_mahasiswa_iso_matchscaleoption",
+      "src_server_db_seed_kepuasan_mahasiswa_iso_matrix_questions",
+      "src_server_db_seed_kepuasan_mahasiswa_iso_matrix_rows",
+      "src_server_db_seed_kepuasan_mahasiswa_iso_parsecsv",
+      "src_server_db_seed_kepuasan_mahasiswa_iso_parsetimestamp",
+      "src_server_db_seed_kepuasan_mahasiswa_iso_scale_options",
+      "src_server_db_seed_kepuasan_mahasiswa_iso_seedkepuasanmahasiswaiso",
+      "src_server_db_seed_kepuasan_mitra_iso",
+      "src_server_db_seed_kepuasan_mitra_iso_matchscaleoption",
+      "src_server_db_seed_kepuasan_mitra_iso_matrix_questions",
+      "src_server_db_seed_kepuasan_mitra_iso_matrix_rows",
+      "src_server_db_seed_kepuasan_mitra_iso_parsecsv",
+      "src_server_db_seed_kepuasan_mitra_iso_parsetimestamp",
+      "src_server_db_seed_kepuasan_mitra_iso_scale_options",
+      "src_server_db_seed_kepuasan_mitra_iso_seedkepuasanmitraiso",
+      "src_server_db_seed_kepuasan_tendik_iso",
+      "src_server_db_seed_kepuasan_tendik_iso_matchscaleoption",
+      "src_server_db_seed_kepuasan_tendik_iso_matrix_questions",
+      "src_server_db_seed_kepuasan_tendik_iso_matrix_rows",
+      "src_server_db_seed_kepuasan_tendik_iso_parsecsv",
+      "src_server_db_seed_kepuasan_tendik_iso_parsetimestamp",
+      "src_server_db_seed_kepuasan_tendik_iso_scale_options",
+      "src_server_db_seed_kepuasan_tendik_iso_seedkepuasantendikiso",
       "src_server_db_seed_kuisioner_pengguna",
       "src_server_db_seed_kuisioner_pengguna_alumni_blocks",
       "src_server_db_seed_kuisioner_pengguna_alumniblock",
@@ -40,7 +75,7 @@
       "src_server_db_seed_layanan_pengaduan_main",
       "src_server_db_seed_main",
       "src_server_db_seed_parsecsv",
-      "src_server_db_seed_rationale_137",
+      "src_server_db_seed_rationale_143",
       "src_server_db_seed_rationale_21",
       "src_server_db_seed_relevanceoptions",
       "src_server_db_seed_satisfactionoptions",
@@ -55,29 +90,38 @@
       "src_server_db_seedcategories_seedsurveycategories",
       "src_server_db_seedlayananpengaduan",
       "src_server_db_seedlayananpengaduan_rationale_161",
-      "src_server_db_seedlayananpengaduan_seedlayananpengaduan",
-      "src_server_surveyfunctions",
-      "src_server_surveyfunctions_statscache"
+      "src_server_db_seedlayananpengaduan_seedlayananpengaduan"
     ],
     "1": [
       "docs_chart_examples_bar_chart_base",
       "docs_chart_examples_bar_chart_base_chartbardefault",
+      "docs_chart_examples_bar_chart_base_chartconfig",
       "docs_chart_examples_bar_chart_base_chartdata",
+      "docs_chart_examples_bar_chart_base_description",
       "docs_chart_examples_bar_chart_custom_label",
       "docs_chart_examples_bar_chart_custom_label_chartbarlabelcustom",
+      "docs_chart_examples_bar_chart_custom_label_chartconfig",
       "docs_chart_examples_bar_chart_custom_label_chartdata",
+      "docs_chart_examples_bar_chart_custom_label_description",
       "docs_chart_examples_bar_chart_horizontal",
       "docs_chart_examples_bar_chart_horizontal_chartbarhorizontal",
+      "docs_chart_examples_bar_chart_horizontal_chartconfig",
       "docs_chart_examples_bar_chart_horizontal_chartdata",
+      "docs_chart_examples_bar_chart_horizontal_description",
       "docs_chart_examples_bar_chart_multiple",
       "docs_chart_examples_bar_chart_multiple_chartbarmultiple",
+      "docs_chart_examples_bar_chart_multiple_chartconfig",
       "docs_chart_examples_bar_chart_multiple_chartdata",
+      "docs_chart_examples_bar_chart_multiple_description",
       "docs_chart_examples_pie_with_custom_label",
       "docs_chart_examples_pie_with_legend",
+      "docs_chart_examples_pie_with_legend_chartconfig",
       "docs_chart_examples_pie_with_legend_chartdata",
       "docs_chart_examples_pie_with_legend_chartpielegend",
+      "docs_chart_examples_pie_with_legend_description",
       "src_components_ui_card",
       "src_components_ui_card_card",
+      "src_components_ui_card_cardaction",
       "src_components_ui_card_cardcontent",
       "src_components_ui_card_carddescription",
       "src_components_ui_card_cardfooter",
@@ -102,23 +146,6 @@
       "src_router_getrouter",
       "src_router_register",
       "src_router_tanstack_react_router",
-      "src_routes_admin_analytics_route",
-      "src_routes_admin_index_route",
-      "src_routes_admin_route_route",
-      "src_routes_admin_settings_route",
-      "src_routes_admin_surveys_index_route",
-      "src_routes_admin_surveys_new_route",
-      "src_routes_admin_surveys_surveyid_route",
-      "src_routes_index_route",
-      "src_routes_login_route",
-      "src_routes_root_route",
-      "src_routes_s_categoryslug",
-      "src_routes_s_categoryslug_noactivesurveycomponent",
-      "src_routes_s_categoryslug_route",
-      "src_routes_survey_surveyslug_route",
-      "src_routes_survey_surveyslug_thank_you",
-      "src_routes_survey_surveyslug_thank_you_route",
-      "src_routes_survey_surveyslug_thank_you_thankyoucomponent",
       "src_routetree_gen",
       "src_routetree_gen_adminanalyticsroute",
       "src_routetree_gen_adminindexroute",
@@ -130,8 +157,6 @@
       "src_routetree_gen_adminsurveysnewroute",
       "src_routetree_gen_adminsurveyssurveyidroute",
       "src_routetree_gen_fileroutesbyfullpath",
-      "src_routetree_gen_fileroutesbyid",
-      "src_routetree_gen_fileroutesbypath",
       "src_routetree_gen_fileroutesbyto",
       "src_routetree_gen_fileroutetypes",
       "src_routetree_gen_indexroute",
@@ -145,24 +170,28 @@
       "src_routetree_gen_surveysurveyslugroutewithchildren",
       "src_routetree_gen_surveysurveyslugthankyouroute",
       "src_routetree_gen_tanstack_react_router",
-      "src_routetree_gen_tanstack_react_start",
-      "src_server_surveyfunctions_getactivesurveybycategoryfn"
+      "src_routetree_gen_tanstack_react_start"
     ],
     "3": [
+      "src_components_ui_dialog_dialogprops",
+      "src_components_ui_dialog_tsx_src_components_ui_dialog_257fec",
+      "src_components_ui_dialog_tsx_src_components_ui_dialog_dialog_257fec",
       "src_routes_admin_settings",
+      "src_routes_admin_settings_route",
       "src_routes_admin_settings_settingscomponent",
-      "src_server_adminsurveyfunctions_assertadmin",
       "src_server_adminsurveyfunctions_updatesurveycategorysettingsfn",
       "src_server_adminuserfunctions",
       "src_server_adminuserfunctions_assertadmin",
       "src_server_adminuserfunctions_createuserfn",
       "src_server_adminuserfunctions_listusersfn",
       "src_server_adminuserfunctions_toggleuserstatusfn",
-      "src_server_adminuserfunctions_updateuserfn",
-      "src_server_auth_getuserfromsession",
-      "src_server_visitorfunctions_assertuser"
+      "src_server_adminuserfunctions_updateuserfn"
     ],
     "4": [
+      "docx_templates",
+      "exceljs",
+      "node_fs",
+      "node_path",
       "src_lib_copychartimage",
       "src_lib_copychartimage_chartelementtopngbase64",
       "src_lib_copychartimage_chartelementtopngblob",
@@ -172,14 +201,17 @@
       "src_routes_admin_surveys_surveyid_formatanswerforprint",
       "src_routes_admin_surveys_surveyid_livefillingbadge",
       "src_routes_admin_surveys_surveyid_pickchartkind",
+      "src_routes_admin_surveys_surveyid_route",
       "src_routes_admin_surveys_surveyid_safekey",
       "src_routes_admin_surveys_surveyid_surveydetailcomponent",
       "src_server_adminsurveyfunctions",
+      "src_server_adminsurveyfunctions_assertadmin",
       "src_server_adminsurveyfunctions_assertreportratelimit",
       "src_server_adminsurveyfunctions_assertuser",
       "src_server_adminsurveyfunctions_buildfiltersubtitle",
       "src_server_adminsurveyfunctions_buildsurveyresponseexport",
       "src_server_adminsurveyfunctions_computesurveystats",
+      "src_server_adminsurveyfunctions_deleteadminsurveyfn",
       "src_server_adminsurveyfunctions_deleteadminsurveyresponsefn",
       "src_server_adminsurveyfunctions_duplicateadminsurveyfn",
       "src_server_adminsurveyfunctions_exportadminsurveyresponsescsvfn",
@@ -198,13 +230,12 @@
       "src_server_adminsurveyfunctions_getsiakadautofillsuggestionfn",
       "src_server_adminsurveyfunctions_getsurveycategoriesfn",
       "src_server_adminsurveyfunctions_ispersonalinfoquestion",
-      "src_server_adminsurveyfunctions_rationale_2010",
+      "src_server_adminsurveyfunctions_rationale_2017",
       "src_server_adminsurveyfunctions_slugify",
       "src_server_adminsurveyfunctions_updateadminsurveyquestionsfn",
       "src_server_adminsurveyfunctions_updateadminsurveyresponsefn",
       "src_server_adminsurveyfunctions_updateadminsurveysettingsfn",
       "src_server_adminsurveyfunctions_updatesiakadautofillconfigfn",
-      "src_server_db_schema_reportgenerations",
       "src_server_siakadfielddetection",
       "src_server_siakadfielddetection_detectsiakadfield",
       "src_server_siakadfielddetection_keywords",
@@ -215,32 +246,39 @@
       "instruction_reports_instruksi_spa_navigation_skeleton_survey_detail_ringkasan_perubahan_spa_navigation_skeleton_loading_halaman_detail_survey_admin"
     ],
     "6": [
-      "src_components_ui_badge",
-      "src_components_ui_badge_badge",
-      "src_components_ui_badge_badgevariants",
-      "src_hooks_usesurveylive",
-      "src_hooks_usesurveylive_usesurveylive",
+      "src_components_lightrays",
+      "src_components_lightrays_getanchoranddir",
+      "src_components_lightrays_hextorgb",
+      "src_components_lightrays_lightrays",
+      "src_components_ui_skeleton",
+      "src_components_ui_skeleton_skeleton",
+      "src_components_ui_skeleton_skeletonprops",
+      "src_routes_index",
+      "src_routes_index_animatedcounter",
+      "src_routes_index_livefillingbadge",
+      "src_routes_index_route",
       "src_routes_survey_surveyslug",
       "src_routes_survey_surveyslug_getformattedperiod",
       "src_routes_survey_surveyslug_issurveyexpired",
+      "src_routes_survey_surveyslug_route",
       "src_routes_survey_surveyslug_surveytakingcomponent",
-      "src_server_livepresence",
-      "src_server_livepresence_g",
-      "src_server_livepresence_getaggregatepresence",
-      "src_server_livepresence_getlastactivity",
-      "src_server_livepresence_getpresencecount",
-      "src_server_livepresence_heartbeat",
       "src_server_livepresence_markanswered",
-      "src_server_livepresence_presencestore",
-      "src_server_livepresence_prunestale",
-      "src_server_livepresence_removefiller",
-      "src_server_livepresencefunctions",
-      "src_server_livepresencefunctions_getlivestatusfn",
-      "src_server_livepresencefunctions_heartbeatfn",
-      "src_server_livepresencefunctions_leavefillerfn",
+      "src_server_siakadclient",
+      "src_server_siakadclient_baseurl",
+      "src_server_siakadclient_fetchmahasiswabynim",
+      "src_server_siakadclient_gettoken",
+      "src_server_siakadclient_login",
+      "src_server_siakadclient_readcache",
+      "src_server_siakadclient_siakadstudent",
+      "src_server_siakadclient_tokencache",
+      "src_server_siakadclient_writecache",
+      "src_server_surveyfunctions",
+      "src_server_surveyfunctions_getpubliclandingstatsfn",
+      "src_server_surveyfunctions_getpublishedsurveysfn",
       "src_server_surveyfunctions_getsurveydetailsfn",
       "src_server_surveyfunctions_lookupmahasiswabynimfn",
       "src_server_surveyfunctions_startresponsefn",
+      "src_server_surveyfunctions_statscache",
       "src_server_surveyfunctions_submitresponsefn",
       "src_utils_surveyvisibility",
       "src_utils_surveyvisibility_answerstateitem",
@@ -249,29 +287,39 @@
       "src_utils_surveyvisibility_questionvisibilityinput"
     ],
     "7": [
-      "drizzle_0000_brave_pixie",
-      "drizzle_0000_brave_pixie_answers",
-      "drizzle_0000_brave_pixie_question_options",
-      "drizzle_0000_brave_pixie_questions",
-      "drizzle_0000_brave_pixie_responses",
-      "drizzle_0000_brave_pixie_sections",
-      "drizzle_0000_brave_pixie_surveys",
-      "drizzle_0000_brave_pixie_users"
+      "src_components_ui_toast",
+      "src_components_ui_toast_toastcontainer",
+      "src_components_ui_usetoast",
+      "src_components_ui_usetoast_emit",
+      "src_components_ui_usetoast_listener",
+      "src_components_ui_usetoast_listeners",
+      "src_components_ui_usetoast_toasts",
+      "src_components_ui_usetoast_toasttype",
+      "src_components_ui_usetoast_usetoast",
+      "src_routes_root",
+      "src_routes_root_rootdocument",
+      "src_routes_root_route",
+      "src_routetree_gen_fileroutesbyid",
+      "src_server_visitorfunctions_trackvisitfn"
     ],
     "8": [
       "instruction_reports_instruksi_migrasi_lucide_icons",
       "instruction_reports_instruksi_migrasi_lucide_icons_laporan_migrasi_lucide_icons"
     ],
     "9": [
-      "src_components_ui_button_buttonprops",
-      "src_components_ui_button_tsx_src_components_ui_button_button_db29c2",
-      "src_components_ui_button_tsx_src_components_ui_button_db29c2"
+      "src_components_ui_usetoast_toast",
+      "src_routes_admin_surveys_new",
+      "src_routes_admin_surveys_new_createsurveycomponent",
+      "src_routes_admin_surveys_new_route",
+      "src_server_adminsurveyfunctions_createadminsurveyfn"
     ],
     "10": [
+      "src_components_ui_badge",
+      "src_components_ui_badge_badge",
+      "src_components_ui_badge_badgevariants",
       "src_components_ui_button_buttonvariants",
       "src_components_ui_button_tsx_src_components_ui_button_button_ca8cd7",
       "src_components_ui_button_tsx_src_components_ui_button_ca8cd7",
-      "src_components_ui_card_cardaction",
       "src_components_ui_command",
       "src_components_ui_command_command",
       "src_components_ui_command_commanddialog",
@@ -345,32 +393,36 @@
       "tanstack_start"
     ],
     "13": [
-      "drizzle_0001_cool_gorgon",
-      "drizzle_0001_cool_gorgon_surveys"
+      "src_routes_admin_surveys_index_route",
+      "src_routes_login_route",
+      "src_routes_s_categoryslug",
+      "src_routes_s_categoryslug_noactivesurveycomponent",
+      "src_routes_s_categoryslug_route",
+      "src_routes_survey_surveyslug_thank_you",
+      "src_routes_survey_surveyslug_thank_you_route",
+      "src_routes_survey_surveyslug_thank_you_thankyoucomponent",
+      "src_routetree_gen_fileroutesbypath",
+      "src_server_surveyfunctions_getactivesurveybycategoryfn"
     ],
     "14": [
-      "drizzle_0002_tricky_black_tarantula",
-      "drizzle_0002_tricky_black_tarantula_surveys"
+      "docs_chart_examples_pie_with_custom_label_description"
     ],
     "15": [
-      "drizzle_0003_ambitious_wendell_rand",
-      "drizzle_0003_ambitious_wendell_rand_surveys"
+      "instruction_reports_fix_insight_visitor_single_section"
     ],
     "16": [
-      "drizzle_0004_pale_vampiro",
-      "drizzle_0004_pale_vampiro_surveys"
+      "instruction_reports_seed_form_kepuasan_iso",
+      "instruction_reports_seed_form_kepuasan_iso_impact_on_graph",
+      "instruction_reports_seed_form_kepuasan_iso_laporan_perubahan_seeding_form_kepuasan_kategori_iso_dosen_mahasiswa_mitra_tendik",
+      "instruction_reports_seed_form_kepuasan_iso_logic_changes",
+      "instruction_reports_seed_form_kepuasan_iso_modified_files"
     ],
     "17": [
-      "drizzle_0005_blue_mercury",
-      "drizzle_0005_blue_mercury_report_generations"
-    ],
-    "18": [
-      "drizzle_0006_striped_jamie_braddock",
-      "drizzle_0006_striped_jamie_braddock_report_generations"
-    ],
-    "19": [
-      "drizzle_0007_lush_sasquatch",
-      "drizzle_0007_lush_sasquatch_report_generations"
+      "src_routes_admin_route",
+      "src_routes_admin_route_adminlayoutcomponent",
+      "src_routes_admin_route_route",
+      "src_routes_root_rootcomponent",
+      "src_server_authfunctions_logoutfn"
     ],
     "20": [
       "agents"
@@ -400,50 +452,26 @@
       "rsbuild"
     ],
     "29": [
-      "src_components_ui_toast",
-      "src_components_ui_toast_toastcontainer",
-      "src_components_ui_usetoast",
-      "src_components_ui_usetoast_emit",
-      "src_components_ui_usetoast_listener",
-      "src_components_ui_usetoast_listeners",
-      "src_components_ui_usetoast_toast",
-      "src_components_ui_usetoast_toasts",
-      "src_components_ui_usetoast_toasttype",
-      "src_components_ui_usetoast_usetoast",
       "src_routes_admin_analytics",
       "src_routes_admin_analytics_all_surveys",
       "src_routes_admin_analytics_analyticsoverviewcomponent",
+      "src_routes_admin_analytics_route",
       "src_routes_admin_index",
       "src_routes_admin_index_dashboardcomponent",
-      "src_routes_admin_route",
-      "src_routes_admin_route_adminlayoutcomponent",
-      "src_routes_admin_surveys_new",
-      "src_routes_admin_surveys_new_createsurveycomponent",
-      "src_routes_login",
-      "src_routes_login_logincomponent",
-      "src_routes_login_loginschema",
-      "src_routes_root",
-      "src_routes_root_rootcomponent",
-      "src_routes_root_rootdocument",
-      "src_server_adminsurveyfunctions_createadminsurveyfn",
+      "src_routes_admin_index_route",
       "src_server_adminsurveyfunctions_getadmindashboardstatsfn",
       "src_server_adminsurveyfunctions_getadminsurveyslistfn",
+      "src_server_auth_getuserfromsession",
       "src_server_authfunctions_getsessionfn",
-      "src_server_authfunctions_loginfn",
-      "src_server_authfunctions_logoutfn",
       "src_server_db_schema_visitorlogs",
       "src_server_visitorfunctions",
+      "src_server_visitorfunctions_assertuser",
       "src_server_visitorfunctions_getvisitorstatsfn",
       "src_server_visitorfunctions_statscache",
-      "src_server_visitorfunctions_trackvisitfn",
       "src_server_visitorfunctions_visitorstats"
     ],
     "30": [
       "peraturan_nim"
-    ],
-    "31": [
-      "drizzle_0008_true_boomer",
-      "drizzle_0008_true_boomer_surveys"
     ],
     "32": [
       "instruction_reports_instruksi_implementasi_survey",
@@ -458,10 +486,9 @@
       "instruction_reports_sse_log_analysis_laporan_analisis_log_sse_pm2_log_analysis"
     ],
     "35": [
-      "src_components_lightrays",
-      "src_components_lightrays_getanchoranddir",
-      "src_components_lightrays_hextorgb",
-      "src_components_lightrays_lightrays",
+      "src_components_ui_button_buttonprops",
+      "src_components_ui_button_tsx_src_components_ui_button_button_db29c2",
+      "src_components_ui_button_tsx_src_components_ui_button_db29c2",
       "src_components_ui_confirmdialog",
       "src_components_ui_confirmdialog_confirmdialog",
       "src_components_ui_confirmdialog_confirmdialogprops",
@@ -469,30 +496,41 @@
       "src_components_ui_select_selectoption",
       "src_components_ui_select_selectprops",
       "src_components_ui_select_tsx_src_components_ui_select_899479",
-      "src_components_ui_skeleton",
-      "src_components_ui_skeleton_skeleton",
-      "src_components_ui_skeleton_skeletonprops",
+      "src_hooks_usesurveylive",
+      "src_hooks_usesurveylive_usesurveylive",
+      "src_hooks_usesurveylive_usesurveylive_poll",
+      "src_hooks_usesurveylive_usesurveylive_sendheartbeat",
       "src_routes_admin_surveys_index",
       "src_routes_admin_surveys_index_livefillingbadge",
       "src_routes_admin_surveys_index_surveysindexcomponent",
-      "src_routes_index",
-      "src_routes_index_animatedcounter",
+      "src_routes_admin_surveys_index_surveysindexcomponent_poll",
       "src_routes_index_homecomponent",
-      "src_routes_index_livefillingbadge",
-      "src_server_adminsurveyfunctions_deleteadminsurveyfn",
+      "src_routes_index_homecomponent_poll",
+      "src_server_livepresence",
+      "src_server_livepresence_g",
+      "src_server_livepresence_getaggregatepresence",
+      "src_server_livepresence_getlastactivity",
+      "src_server_livepresence_getpresencecount",
+      "src_server_livepresence_heartbeat",
+      "src_server_livepresence_presencestore",
+      "src_server_livepresence_prunestale",
+      "src_server_livepresence_removefiller",
+      "src_server_livepresencefunctions",
       "src_server_livepresencefunctions_getaggregatepresencefn",
-      "src_server_surveyfunctions_getpubliclandingstatsfn",
-      "src_server_surveyfunctions_getpublishedsurveysfn"
-    ],
-    "36": [
-      "src_components_ui_dialog_dialogprops",
-      "src_components_ui_dialog_tsx_src_components_ui_dialog_257fec",
-      "src_components_ui_dialog_tsx_src_components_ui_dialog_dialog_257fec"
+      "src_server_livepresencefunctions_getlivestatusfn",
+      "src_server_livepresencefunctions_heartbeatfn",
+      "src_server_livepresencefunctions_leavefillerfn"
     ],
     "37": [
       "src_components_ui_input_inputprops",
       "src_components_ui_input_tsx_src_components_ui_input_e7c844",
-      "src_components_ui_input_tsx_src_components_ui_input_input_e7c844"
+      "src_components_ui_input_tsx_src_components_ui_input_input_e7c844",
+      "src_routes_login",
+      "src_routes_login_logincomponent",
+      "src_routes_login_loginschema",
+      "src_server_auth_createsessiontoken",
+      "src_server_authfunctions",
+      "src_server_authfunctions_loginfn"
     ],
     "38": [
       "instruction_reports_fix_live_presence_production",
@@ -501,24 +539,12 @@
     "39": [
       "instruction_reports_instruksi_redesign_landing_dan_realtime"
     ],
-    "40": [
-      "drizzle_0013_sparkling_violations",
-      "drizzle_0013_sparkling_violations_survey_categories"
-    ],
     "41": [
       "instruction_reports_fix_csv_filter"
-    ],
-    "43": [
-      "drizzle_0010_third_tarot",
-      "drizzle_0010_third_tarot_visitor_logs"
     ],
     "44": [
       "instruction_reports_09_individual_response_delete_print_and_csv_filter_fix",
       "instruction_reports_09_individual_response_delete_print_and_csv_filter_fix_laporan_perbaikan_csv_filter_select_layout_ringkasan_instruction_09"
-    ],
-    "45": [
-      "drizzle_0009_flat_zarda",
-      "drizzle_0009_flat_zarda_survey_categories"
     ],
     "46": [
       "instruction_reports_03_fix_survey_taking_hooks_error",
@@ -537,21 +563,6 @@
     ],
     "49": [
       "instruction_reports_instruksi_fitur_layanan_pengaduan"
-    ],
-    "51": [
-      "drizzle_0012_supreme_blink",
-      "drizzle_0012_supreme_blink_questions"
-    ],
-    "52": [
-      "src_server_siakadclient",
-      "src_server_siakadclient_baseurl",
-      "src_server_siakadclient_fetchmahasiswabynim",
-      "src_server_siakadclient_gettoken",
-      "src_server_siakadclient_login",
-      "src_server_siakadclient_readcache",
-      "src_server_siakadclient_siakadstudent",
-      "src_server_siakadclient_tokencache",
-      "src_server_siakadclient_writecache"
     ],
     "53": [
       "instruction_reports_visitor_stats_implementation",
@@ -574,36 +585,30 @@
       "instruction_reports_instruksi_fix_kuisioner_pengguna",
       "instruction_reports_instruksi_fix_kuisioner_pengguna_summary_of_changes_instruksi_fix_kuisioner_pengguna_md"
     ],
-    "56": [
-      "drizzle_0011_mature_forgotten_one",
-      "drizzle_0011_mature_forgotten_one_surveys"
-    ],
     "59": [
       "instruction_reports_instruksi_single_section_responses_grid",
       "instruction_reports_instruksi_single_section_responses_grid_ringkasan_perubahan_layout_grid_tab_jawaban_ringkasan"
     ]
   },
   "cohesion": {
-    "0": 0.07706766917293233,
-    "1": 0.15396825396825398,
-    "2": 0.05697278911564626,
-    "3": 0.30303030303030304,
-    "4": 0.08792270531400966,
+    "0": 0.054431960049937576,
+    "1": 0.09990749306197964,
+    "2": 0.07635467980295567,
+    "3": 0.3333333333333333,
+    "4": 0.09728506787330317,
     "5": 1.0,
-    "6": 0.11290322580645161,
-    "7": 0.5357142857142857,
+    "6": 0.09446693657219973,
+    "7": 0.1978021978021978,
     "8": 1.0,
-    "9": 0.6666666666666666,
-    "10": 0.06196291270918137,
+    "9": 0.5,
+    "10": 0.0639386189258312,
     "11": 1.0,
     "12": 1.0,
-    "13": 1.0,
+    "13": 0.2222222222222222,
     "14": 1.0,
     "15": 1.0,
-    "16": 1.0,
-    "17": 1.0,
-    "18": 1.0,
-    "19": 1.0,
+    "16": 0.4,
+    "17": 0.5,
     "20": 1.0,
     "21": 1.0,
     "22": 1.0,
@@ -613,32 +618,24 @@
     "26": 1.0,
     "27": 1.0,
     "28": 1.0,
-    "29": 0.08408408408408409,
+    "29": 0.19117647058823528,
     "30": 1.0,
-    "31": 1.0,
     "32": 1.0,
     "33": 1.0,
     "34": 1.0,
-    "35": 0.1,
-    "36": 0.6666666666666666,
-    "37": 0.6666666666666666,
+    "35": 0.10338680926916222,
+    "37": 0.3333333333333333,
     "38": 1.0,
     "39": 1.0,
-    "40": 1.0,
     "41": 1.0,
-    "43": 1.0,
     "44": 1.0,
-    "45": 1.0,
     "46": 1.0,
     "47": 1.0,
     "48": 0.4,
     "49": 1.0,
-    "51": 2.0,
-    "52": 0.3888888888888889,
     "53": 0.4,
     "54": 0.25,
     "55": 1.0,
-    "56": 1.0,
     "59": 1.0
   },
   "gods": [
@@ -653,82 +650,49 @@
       "degree": 18
     },
     {
+      "id": "src_server_db_index_db",
+      "label": "db",
+      "degree": 17
+    },
+    {
+      "id": "src_server_db_seedcategories_seedsurveycategories",
+      "label": "seedSurveyCategories()",
+      "degree": 15
+    },
+    {
       "id": "src_routetree_gen_fileroutesbypath",
       "label": "FileRoutesByPath",
       "degree": 14
     },
     {
-      "id": "src_server_db_index_db",
-      "label": "db",
-      "degree": 12
-    },
-    {
-      "id": "src_components_ui_chart_charttooltipcontent",
-      "label": "ChartTooltipContent()",
-      "degree": 10
-    },
-    {
-      "id": "src_components_ui_chart_chartcontainer",
-      "label": "ChartContainer()",
-      "degree": 9
-    },
-    {
-      "id": "src_routes_survey_surveyslug_surveytakingcomponent",
-      "label": "SurveyTakingComponent()",
-      "degree": 9
-    },
-    {
-      "id": "src_server_auth_getuserfromsession",
-      "label": "getUserFromSession()",
-      "degree": 9
+      "id": "src_server_adminsurveyfunctions_assertadmin",
+      "label": "assertAdmin()",
+      "degree": 14
     },
     {
       "id": "src_server_db_schema_users",
       "label": "users",
-      "degree": 9
+      "degree": 13
     },
     {
-      "id": "src_components_ui_card_card",
-      "label": "Card()",
-      "degree": 8
+      "id": "src_server_authfunctions_getsessionfn",
+      "label": "getSessionFn",
+      "degree": 13
+    },
+    {
+      "id": "src_server_db_schema_questions",
+      "label": "questions",
+      "degree": 11
+    },
+    {
+      "id": "src_server_db_schema_sections",
+      "label": "sections",
+      "degree": 11
     }
   ],
   "surprises": [
     {
-      "source": "docs/chart/base.md",
-      "target": "TanStack Start",
-      "source_files": [
-        "docs/chart/base.md",
-        "AGENTS.md"
-      ],
-      "confidence": "INFERRED",
-      "relation": "conceptually_related_to",
-      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
-    },
-    {
-      "source": "CommandEmpty()",
-      "target": "cn()",
-      "source_files": [
-        "src/components/ui/MultiSelect.tsx",
-        "src/lib/utils.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "peripheral node `CommandEmpty()` unexpectedly reaches hub `cn()`"
-    },
-    {
-      "source": "Badge()",
-      "target": "cn()",
-      "source_files": [
-        "src/components/ui/badge.tsx",
-        "src/lib/utils.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "calls",
-      "why": "bridges separate communities"
-    },
-    {
-      "source": "Card()",
+      "source": "CardAction()",
       "target": "cn()",
       "source_files": [
         "src/components/ui/card.tsx",
@@ -736,55 +700,88 @@
       ],
       "confidence": "EXTRACTED",
       "relation": "calls",
+      "why": "bridges separate communities; peripheral node `CardAction()` unexpectedly reaches hub `cn()`"
+    },
+    {
+      "source": "FileRoutesByPath",
+      "target": "Route",
+      "source_files": [
+        "src/routeTree.gen.ts",
+        "src/routes/admin/analytics.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
       "why": "bridges separate communities"
     },
     {
-      "source": "CardHeader()",
-      "target": "cn()",
+      "source": "FileRoutesByPath",
+      "target": "Route",
       "source_files": [
-        "src/components/ui/card.tsx",
-        "src/lib/utils.ts"
+        "src/routeTree.gen.ts",
+        "src/routes/admin/index.tsx"
       ],
       "confidence": "EXTRACTED",
-      "relation": "calls",
+      "relation": "references",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "FileRoutesByPath",
+      "target": "Route",
+      "source_files": [
+        "src/routeTree.gen.ts",
+        "src/routes/admin/route.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "FileRoutesByPath",
+      "target": "Route",
+      "source_files": [
+        "src/routeTree.gen.ts",
+        "src/routes/admin/settings.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
       "why": "bridges separate communities"
     }
   ],
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `cn()` connect `cn` to `chart.tsx`, `survey.$surveySlug.tsx`?",
-      "why": "High betweenness centrality (0.168) - this node is a cross-community bridge."
+      "question": "Why does `cn()` connect `cn` to `chart.tsx`?",
+      "why": "High betweenness centrality (0.167) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
       "question": "Why does `ChartContainer()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?",
-      "why": "High betweenness centrality (0.025) - this node is a cross-community bridge."
+      "why": "High betweenness centrality (0.035) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `ChartTooltipContent()` connect `chart.tsx` to `cn`, `adminSurveyFunctions.ts`?",
-      "why": "High betweenness centrality (0.024) - this node is a cross-community bridge."
+      "question": "Why does `db` connect `seed.ts` to `settings.tsx`, `adminSurveyFunctions.ts`, `authFunctions.ts`, `surveyFunctions.ts`, `getSessionFn`?",
+      "why": "High betweenness centrality (0.034) - this node is a cross-community bridge."
     },
     {
       "type": "isolated_nodes",
-      "question": "What connects `chartData`, `chartData`, `chartData` to the rest of the system?",
-      "why": "119 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "question": "What connects `SessionUser`, `AlumniBlock`, `SurveyConfig` to the rest of the system?",
+      "why": "131 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
       "type": "low_cohesion",
       "question": "Should `seed.ts` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.07706766917293233 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.054431960049937576 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `chart.tsx` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.09990749306197964 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `routeTree.gen.ts` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.05697278911564626 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `adminSurveyFunctions.ts` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.08792270531400966 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.07635467980295567 - nodes in this community are weakly interconnected."
     }
   ]
 }

@@ -1,18 +1,18 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { Pencil, Search, UserPlus, Settings } from "lucide-react";
+import { Pencil, Search, Settings, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { Dialog } from "../../components/ui/Dialog";
 import { toast } from "../../components/ui/useToast";
+import {
+	getSurveyCategoriesFn,
+	updateSurveyCategorySettingsFn,
+} from "../../server/adminSurveyFunctions";
 import {
 	createUserFn,
 	listUsersFn,
 	toggleUserStatusFn,
 	updateUserFn,
 } from "../../server/adminUserFunctions";
-import {
-	getSurveyCategoriesFn,
-	updateSurveyCategorySettingsFn,
-} from "../../server/adminSurveyFunctions";
 
 export const Route = createFileRoute("/admin/settings")({
 	loader: async () => {
@@ -215,7 +215,9 @@ function SettingsComponent() {
 				{/* ============================== CARD KELOLA PENGGUNA ============================== */}
 				<div className="bg-white rounded-xl p-6 shadow-sm border border-[#c4c6d4] flex flex-col gap-4">
 					<div className="flex justify-between items-center border-b border-slate-100 pb-3">
-						<h3 className="text-lg font-bold text-[#1a1b21]">Kelola Pengguna</h3>
+						<h3 className="text-lg font-bold text-[#1a1b21]">
+							Kelola Pengguna
+						</h3>
 						<button
 							onClick={handleOpenAddModal}
 							className="bg-[#4A0000] text-white hover:bg-[#B00000] text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1 shadow-sm transition-transform active:scale-95 cursor-pointer"

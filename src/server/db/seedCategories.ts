@@ -30,6 +30,13 @@ export const CATEGORY_SEED_DATA = [
 		requirePeriod: false,
 		enableConditional: true,
 	},
+	{
+		slug: "iso",
+		name: "ISO",
+		order: 4,
+		requirePeriod: false,
+		enableConditional: true,
+	},
 ] as const;
 
 export async function seedSurveyCategories() {
